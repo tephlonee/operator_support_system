@@ -38,6 +38,21 @@
           <svg id="minimap" aria-hidden="true" preserveAspectRatio="xMidYMid meet"></svg>
           <span data-i18n="zoomedHint"></span>
         </button>
+        <!-- Zoom by hand: select (arrow: taps pick parts) or move (hand: drag to move the view),
+             closer, further, and back to the whole view. Big buttons, for gloves. -->
+        <div class="zoom-controls" id="zoom-controls" hidden>
+          <div class="tool-pair" role="group" data-i18n-aria="toolGroup">
+            <button class="btn tool-btn" id="tool-select-btn" type="button" aria-pressed="true" data-i18n-aria="toolSelect">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 2.5v17.2l4.3-4.1 2.9 6.6 3-1.3-2.9-6.5h6z"/></svg>
+            </button>
+            <button class="btn tool-btn" id="tool-pan-btn" type="button" aria-pressed="false" data-i18n-aria="toolPan">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 11V4.5a1.5 1.5 0 0 1 3 0V10m0-.5V3.5a1.5 1.5 0 0 1 3 0V10m0-.5V5a1.5 1.5 0 0 1 3 0v8.5c0 4.4-2.6 8-7 8-3 0-4.6-1.6-6.2-4.2L2.6 13a1.5 1.5 0 0 1 2.5-1.6L8.5 15V7a1.5 1.5 0 0 1 3 0"/></svg>
+            </button>
+          </div>
+          <button class="btn" id="zoom-in-btn" type="button" data-i18n-aria="zoomIn">+</button>
+          <button class="btn" id="zoom-out-btn" type="button" data-i18n-aria="zoomOut">−</button>
+          <button class="btn zoom-fit" id="zoom-fit-btn" type="button" data-i18n="zoomFit"></button>
+        </div>
         <div class="message" id="message" role="status"></div>
       </div>
       <ul class="pallets" id="pallets" data-i18n-aria="pallets"></ul>

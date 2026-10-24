@@ -5,7 +5,9 @@
 // missing = dashed red outline, scrap = red hatching), and reports taps on parts. While sorting one pallet
 // at a time, the parts of the other pallets are greyed out. Look-alike parts get a red marker on the
 // feature that tells them apart. Zooms in smoothly when the current part would be too small to see or
-// tap on this screen, with an overview map in the corner. It knows nothing about picking rules.
+// tap on this screen, with an overview map in the corner. The operator can also zoom by hand (buttons,
+// mouse wheel, keys) and, in "move" mode (hand cursor), drag the view with the mouse or a finger; that
+// view is kept while the next part is in it. It knows nothing about picking rules.
 // Also draws single part pictures (the part card, the look-alike comparison).
 //
 // Three coordinate systems:
@@ -29,6 +31,27 @@ const SMALL_PX = [90, 40];
 const ZOOM_TARGET_PX = 200;
 const MAX_ZOOM = 3;
 const ZOOM_MS = 450;
+// Zooming by hand: each button press zooms 1.5×, up to 8× closer than the whole view.
+const STEP_ZOOM = 1.5;
+const MAX_MANUAL_ZOOM = 8;
+const STEP_MS = 250;
+const WHEEL_END_MS = 400;     // a wheel zoom counts as finished (one log row) after this long without wheel events
+const DRAG_PX = 8;            // a drag in move mode is logged as a pan only after it has moved this far
+
+// A view box [x, y, w, h] zoomed k times (k > 1 = closer) around the point `at` (view mm), which stays
+// at the same place on the screen. Never wider than the overview, never more than maxZoom times closer,
+// and never moved past the overview's edges.
+export function zoomViewBox(vb, k, at, overview, maxZoom = MAX_MANUAL_ZOOM) {
+  const w = Math.min(overview[2], Math.max(overview[2] / maxZoom, vb[2] / k));
+  const s = w / vb[2];
+  return clampViewBox([at.x - (at.x - vb[0]) * s, at.y - (at.y - vb[1]) * s, w, vb[3] * s], overview);
+}
+
+// Keep a view box inside the overview (centred on an axis where it is as big as the overview).
+export function clampViewBox([x, y, w, h], [ox, oy, ow, oh]) {
+  const fit = (v, size, o, osize) => size >= osize ? o + (osize - size) / 2 : Math.min(o + osize - size, Math.max(o, v));
+  return [fit(x, w, ox, ow), fit(y, h, oy, oh), w, h];
+}
 
 // sheet → view, for a station orientation { rotation: 0/90/180/270 counter-clockwise, mirror: true/false }.
 // The picture is turned first and then mirrored, so "mirror" always flips left↔right on the screen.
@@ -61,7 +84,13 @@ export class SheetView {
     this.zoomSmall = true;           // station setting: zoom in on small parts
     this.zoomSuspendedFor = null;    // the operator asked to see the whole view for this part
     this.minimap = null;             // optional overview map, shown while zoomed in
-    this.onZoomChange = null;        // fn(isZoomed)
+    this.onZoomChange = null;        // fn(isZoomed, { canZoomIn, canZoomOut })
+    this.manualBox = null;           // the view the operator zoomed to by hand (null: automatic)
+    this.onUserZoom = null;          // fn({ action: 'in' | 'out' | 'fit', via }) once per finished zoom, for the test log
+    this.wheel = null;               // the wheel zoom going on: { k, timer }
+    this.panMode = false;            // "move" mode: dragging moves the view, taps pick nothing
+    this.onPanMode = null;           // fn(on) when the mode changes
+    this.drag = null;                // the drag going on in move mode
     this.animation = 0;
     this.isDim = () => false;        // uid → true for parts of other pallets (greyed out)
     this.markers = new Map();        // uid → [{ x, y, r }] look-alike markers, in the part's own mm
@@ -71,8 +100,13 @@ export class SheetView {
     this.secondLine = (part) => part.pallet ?? '';
     svg.addEventListener('click', e => {
       const hit = e.target.closest('[data-hit]');
-      if (hit && this.tapHandler && this.tapsEnabled) this.tapHandler(hit.dataset.hit);
+      if (hit && this.tapHandler && this.tapsEnabled && !this.panMode) this.tapHandler(hit.dataset.hit);
     });
+    svg.addEventListener('wheel', e => this.onWheel(e), { passive: false });
+    svg.addEventListener('pointerdown', e => this.onDragStart(e));
+    svg.addEventListener('pointermove', e => this.onDragMove(e));
+    svg.addEventListener('pointerup', e => this.onDragEnd(e));
+    svg.addEventListener('pointercancel', e => this.onDragEnd(e));
     // On resize the pixels per mm change, so the zoom decision and all pixel-sized things are redone.
     new ResizeObserver(() => { if (this.overview) this.updateZoom(false); }).observe(svg);
   }
@@ -85,25 +119,110 @@ export class SheetView {
     if (this.overview) this.updateZoom(true);
   }
 
-  // Show the whole view for the current part (the operator tapped the overview map).
+  // Show the whole view for the current part (the operator tapped the overview map or "Fit").
   showOverview() {
+    this.manualBox = null;
     this.zoomSuspendedFor = this.currentUid;
     this.updateZoom(true);
+  }
+
+  // Zoom by hand. via: 'button' | 'key' (logged at once) or 'wheel' (logged when the wheel stops).
+  zoomIn(via = 'button') { this.zoomBy(STEP_ZOOM, null, via); }
+  zoomOut(via = 'button') { this.zoomBy(1 / STEP_ZOOM, null, via); }
+  fitView(via = 'button') {
+    if (!this.overview) return;
+    this.showOverview();
+    this.onUserZoom?.({ action: 'fit', via });
+  }
+
+  // Zoom k times around `at` (view mm; default the middle of what is shown). Zooming all the way out
+  // is the same as "Fit": the whole view, without auto-zoom for this part.
+  zoomBy(k, at, via) {
+    if (!this.overview) return;
+    const wheel = via === 'wheel';
+    // Buttons start from where the view is going (so quick presses add up), the wheel from what is shown.
+    const from = this.manualBox || (wheel ? this.viewBox : this.targetViewBox());
+    const box = zoomViewBox(from, k, at || { x: from[0] + from[2] / 2, y: from[1] + from[3] / 2 }, this.overview);
+    if (box[2] >= this.overview[2] - 1e-6) { this.manualBox = null; this.zoomSuspendedFor = this.currentUid; }
+    else this.manualBox = box;
+    this.updateZoom(!wheel, STEP_MS);
+    if (!wheel) { this.onUserZoom?.({ action: k > 1 ? 'in' : 'out', via }); return; }
+    clearTimeout(this.wheel?.timer);
+    const total = (this.wheel?.k ?? 1) * k;
+    this.wheel = { k: total, timer: setTimeout(() => { this.wheel = null; this.onUserZoom?.({ action: total > 1 ? 'in' : 'out', via }); }, WHEEL_END_MS) };
+  }
+
+  // Mouse wheel or a two-finger trackpad pinch (the browser reports it as a wheel with Ctrl): zoom
+  // around the pointer. Never scrolls or zooms the page itself.
+  onWheel(e) {
+    if (!this.overview || !this.viewBox) return;
+    e.preventDefault();
+    const dy = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 400 : 1); // lines/pages → px
+    const k = Math.exp(-dy * (e.ctrlKey ? 0.01 : 0.0015));
+    const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(this.svg.getScreenCTM().inverse());
+    this.zoomBy(k, { x: p.x, y: p.y }, 'wheel');
+  }
+
+  // Move mode (hand cursor) on or off. Off again for every new job, so a screen is never left in a
+  // mode where taps do nothing.
+  setPanMode(on) {
+    this.panMode = !!on;
+    this.drag = null;
+    this.svg.classList.toggle('is-pan', this.panMode);
+    this.svg.classList.remove('is-dragging');
+    this.onPanMode?.(this.panMode);
+  }
+
+  // Dragging in move mode: the sheet follows the pointer (mouse, finger or pen), within the limits.
+  onDragStart(e) {
+    if (!this.panMode || !this.viewBox || this.drag || e.button !== 0) return;
+    e.preventDefault();
+    this.svg.setPointerCapture(e.pointerId);
+    this.drag = { id: e.pointerId, x: e.clientX, y: e.clientY, from: this.viewBox, moved: false, frame: 0 };
+    this.svg.classList.add('is-dragging');
+  }
+
+  onDragMove(e) {
+    const d = this.drag;
+    if (!d || e.pointerId !== d.id) return;
+    const dx = e.clientX - d.x, dy = e.clientY - d.y;
+    if (!d.moved && Math.hypot(dx, dy) < DRAG_PX) return;
+    d.moved = true;
+    const rect = this.svg.getBoundingClientRect();
+    const scale = Math.min(rect.width / d.from[2], rect.height / d.from[3]); // screen px per mm
+    const box = clampViewBox([d.from[0] - dx / scale, d.from[1] - dy / scale, d.from[2], d.from[3]], this.overview);
+    if (box[2] >= this.overview[2] - 1e-6) return; // the whole view is shown: nothing to move
+    this.manualBox = box;
+    // Redraw at most once per screen frame.
+    if (!d.frame) d.frame = requestAnimationFrame(() => { d.frame = 0; this.updateZoom(false); });
+  }
+
+  onDragEnd(e) {
+    const d = this.drag;
+    if (!d || e.pointerId !== d.id) return;
+    this.drag = null;
+    this.svg.classList.remove('is-dragging');
+    cancelAnimationFrame(d.frame);
+    if (!d.moved || !this.manualBox) return;
+    this.updateZoom(false);
+    this.onUserZoom?.({ action: 'pan', via: e.pointerType || 'mouse' });
   }
 
   show(job) {
     this.job = job;
     this.zoomSuspendedFor = null;
+    this.setPanMode(false);
     this.render();
   }
 
   // No job open: an empty sheet area.
   clear() {
     cancelAnimationFrame(this.animation);
-    this.job = null; this.partEls = null; this.overview = null; this.viewBox = null;
+    this.job = null; this.partEls = null; this.overview = null; this.viewBox = null; this.manualBox = null;
     this.currentUid = this.suggestedUid = null;
     this.markers = new Map();
     this.svg.replaceChildren();
+    this.setPanMode(false);
     if (this.minimap) this.minimap.replaceChildren();
     if (this.onZoomChange) this.onZoomChange(false);
   }
@@ -123,6 +242,9 @@ export class SheetView {
   // currentUid: the part being worked on (yellow ring); suggestedUid: the suggested part (dashed ring if different)
   // isDim: uid → true for parts that are not on the pallet being sorted now (drawn grey)
   setState(status, currentUid, suggestedUid = currentUid, isDim = this.isDim) {
+    // A view zoomed by hand stays while the new current part is in it; otherwise the view glides
+    // back to the automatic one, so the yellow ring is never off screen.
+    if (this.manualBox && currentUid && currentUid !== this.currentUid && !this.isInView(currentUid, this.manualBox)) this.manualBox = null;
     this.status = status;
     this.currentUid = currentUid;
     this.suggestedUid = suggestedUid;
@@ -140,13 +262,12 @@ export class SheetView {
   targetViewBox() {
     const ov = this.overview;
     const uid = this.currentUid;
+    if (this.manualBox) return this.manualBox;
     if (this.fit === 'sheet' || !this.zoomSmall || !uid || uid === this.zoomSuspendedFor) return ov;
     const rect = this.svg.getBoundingClientRect();
     const scale = Math.min(rect.width / ov[2], rect.height / ov[3]);
     if (!(scale > 0)) return ov;
-    const p = this.job.parts.find(q => q.uid === uid);
-    const T = M.multiply(viewMatrix(this.orientation), p.matrix);
-    const b = M.bounds(M.boxCorners(p.geo.bbox).map(q => M.apply(T, q)));
+    const b = this.partBox(uid);
     const w = b.maxX - b.minX, h = b.maxY - b.minY;
     if (Math.max(w, h) * scale >= SMALL_PX[0] && Math.min(w, h) * scale >= SMALL_PX[1]) return ov;
     const k = Math.min(MAX_ZOOM, ZOOM_TARGET_PX / (Math.max(w, h) * scale));
@@ -157,12 +278,38 @@ export class SheetView {
     return [cx - vw / 2, cy - vh / 2, vw, vh];
   }
 
-  // Move the view to where it should be: smoothly (animate) or at once.
-  updateZoom(animate) {
+  // A part's box in view mm.
+  partBox(uid) {
+    const p = this.job.parts.find(q => q.uid === uid);
+    const T = M.multiply(viewMatrix(this.orientation), p.matrix);
+    return M.bounds(M.boxCorners(p.geo.bbox).map(q => M.apply(T, q)));
+  }
+
+  // Is the whole part on screen when the view box is vb?
+  isInView(uid, vb) {
+    if (!this.job) return false;
+    const b = this.partBox(uid), v = this.visibleBox(vb);
+    return b.minX >= v.x && b.maxX <= v.x + v.width && b.minY >= v.y && b.maxY <= v.y + v.height;
+  }
+
+  // What is really on screen for a view box: the screen area is usually wider (or taller) than the
+  // view box, so more is visible than the box itself.
+  visibleBox([x, y, w, h]) {
+    const rect = this.svg.getBoundingClientRect();
+    if (!(rect.width > 0 && rect.height > 0)) return { x, y, width: w, height: h };
+    if (rect.width / rect.height > w / h) { const w2 = h * rect.width / rect.height; x -= (w2 - w) / 2; w = w2; }
+    else { const h2 = w * rect.height / rect.width; y -= (h2 - h) / 2; h = h2; }
+    return { x, y, width: w, height: h };
+  }
+
+  // Move the view to where it should be: smoothly (animate, in ms) or at once.
+  updateZoom(animate, ms = ZOOM_MS) {
     const target = this.targetViewBox();
     const zoomed = target !== this.overview;
     this.drawMinimap(target, zoomed);
-    if (this.onZoomChange) this.onZoomChange(zoomed);
+    if (this.onZoomChange) {
+      this.onZoomChange(zoomed, { canZoomIn: target[2] > this.overview[2] / MAX_MANUAL_ZOOM + 1e-6, canZoomOut: zoomed });
+    }
     cancelAnimationFrame(this.animation);
     const from = this.viewBox;
     const same = from && from.every((v, i) => Math.abs(v - target[i]) < 0.5);
@@ -175,7 +322,7 @@ export class SheetView {
     this.layoutOverlay(); // rings and tap areas for the new part right away
     const t0 = performance.now();
     const step = now => {
-      const k = Math.min(1, (now - t0) / ZOOM_MS);
+      const k = Math.min(1, (now - t0) / ms);
       const e = k < 0.5 ? 2 * k * k : 1 - (-2 * k + 2) ** 2 / 2; // ease in-out
       this.setViewBox(from.map((v, i) => v + (target[i] - v) * e));
       if (k < 1) this.animation = requestAnimationFrame(step);
@@ -195,13 +342,7 @@ export class SheetView {
     if (!map) return;
     map.setAttribute('viewBox', this.overview.join(' '));
     if (!zoomed) { map.replaceChildren(); return; }
-    // The screen area is usually wider (or taller) than the view box, so more is visible than the box:
-    // widen the marked window to what is really on screen.
-    const rect = this.svg.getBoundingClientRect();
-    let [x, y, w, h] = target;
-    if (rect.width / rect.height > w / h) { const w2 = h * rect.width / rect.height; x -= (w2 - w) / 2; w = w2; }
-    else { const h2 = w * rect.height / rect.width; y -= (h2 - h) / 2; h = h2; }
-    const r = { x, y, width: w, height: h };
+    const r = this.visibleBox(target); // the marked window is what is really on screen
     map.replaceChildren(
       el('use', { href: '#sheet-layer' }),
       el('rect', { ...r, class: 'zoom-window-back' }),
@@ -236,6 +377,7 @@ export class SheetView {
     const used = M.bounds(boxes.flatMap(M.boxCorners).map(q => M.apply(V, q)));
     this.overview = [used.minX - PAD_MM, used.minY - PAD_MM, used.maxX - used.minX + 2 * PAD_MM, used.maxY - used.minY + 2 * PAD_MM];
     this.viewBox = null; // the next zoom update jumps straight to the right view
+    this.manualBox = null;
     svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
 
     // Red diagonal hatching for scrapped parts (in part mm, so it turns with the part).

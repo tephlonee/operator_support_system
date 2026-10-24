@@ -716,7 +716,17 @@ async function start() {
 
   view = new SheetView($('sheet'));
   view.setMinimap($('minimap'));
-  view.onZoomChange = zoomed => { $('minimap-btn').hidden = !zoomed; };
+  view.onZoomChange = (zoomed, can = {}) => {
+    $('minimap-btn').hidden = !zoomed;
+    $('zoom-controls').hidden = !view.job;
+    $('zoom-in-btn').disabled = !can.canZoomIn;
+    $('zoom-out-btn').disabled = $('zoom-fit-btn').disabled = !can.canZoomOut;
+  };
+  view.onUserZoom = ({ action, via }) => log.record('zoom', { uid: session?.current?.uid ?? '', via, detail: action });
+  view.onPanMode = on => {
+    $('tool-select-btn').setAttribute('aria-pressed', String(!on));
+    $('tool-pan-btn').setAttribute('aria-pressed', String(on));
+  };
   view.setZoomSmall(settings.zoomSmall);
   view.setOrientation({ rotation: settings.rotation, mirror: settings.mirror });
   view.onPartTap(onPartTap);
@@ -789,6 +799,25 @@ async function start() {
   });
   $('next-job-btn').addEventListener('click', () => closeJob());
   $('minimap-btn').addEventListener('click', () => { log.record('zoom_overview', { uid: session?.current?.uid ?? '' }); view.showOverview(); });
+  $('zoom-in-btn').addEventListener('click', () => view.zoomIn());
+  $('zoom-out-btn').addEventListener('click', () => view.zoomOut());
+  $('zoom-fit-btn').addEventListener('click', () => view.fitView());
+  const setTool = (pan, via) => {
+    if (!view.job || view.panMode === pan) return;
+    view.setPanMode(pan);
+    log.record('tool', { via, detail: pan ? 'move' : 'select' });
+  };
+  $('tool-select-btn').addEventListener('click', () => setTool(false, 'button'));
+  $('tool-pan-btn').addEventListener('click', () => setTool(true, 'button'));
+  // Keys for laptops and demos: + / − zoom, 0 shows the whole view, H = hand (move), V = arrow (select).
+  // Not while typing in a field.
+  document.addEventListener('keydown', e => {
+    if (e.ctrlKey || e.metaKey || e.altKey || e.target.closest?.('input, textarea, select')) return;
+    const key = e.key.toLowerCase();
+    if (key === 'h' || key === 'v') { setTool(key === 'h', 'key'); return; }
+    const action = { '+': 'zoomIn', '=': 'zoomIn', '-': 'zoomOut', '0': 'fitView' }[e.key];
+    if (action) { e.preventDefault(); view[action]('key'); }
+  });
   // The close-up's rings have a minimum size in pixels, so redraw them when the box changes size.
   new ResizeObserver(() => { if (session?.current && panelMode === 'work') renderCurrent(); }).observe($('next-drawing'));
   render();

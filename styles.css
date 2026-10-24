@@ -370,6 +370,22 @@ body { background: var(--bg); color: var(--fg); touch-action: manipulation; }
 .zoom-window-back { stroke: var(--fg); stroke-width: 6px; }
 .zoom-window { stroke: var(--next); stroke-width: 3px; }
 
+/* ---- zoom by hand: + / − / whole view, in a column right of the sheet ----
+   The sheet area keeps a free strip on the right for them, so they never cover a part. */
+.sheet-area:has(#zoom-controls:not([hidden])) { padding-right: 104px; }
+.zoom-controls { position: absolute; right: 16px; bottom: 12px; z-index: 1; display: grid; gap: 10px; }
+.zoom-controls .btn { width: 76px; min-height: 76px; padding: 0; font-size: 44px; font-weight: 700; }
+.zoom-controls .zoom-fit { font-size: 20px; }
+/* Select (arrow) / move (hand): the chosen one is dark, like a pressed toggle. */
+.tool-pair { display: grid; gap: 6px; margin-bottom: 14px; }
+.tool-btn svg { width: 34px; height: 34px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
+#tool-select-btn svg { fill: currentColor; }
+.tool-btn[aria-pressed="true"] { background: var(--fg); color: var(--panel); }
+/* The cursor says which mode the sheet is in: arrow (pointer on parts) to pick, hand to move.
+   In move mode the browser must not scroll or zoom the page on a touch screen either. */
+#sheet.is-pan, #sheet.is-pan .hit { cursor: grab; touch-action: none; }
+#sheet.is-pan.is-dragging, #sheet.is-pan.is-dragging .hit { cursor: grabbing; }
+
 /* ---- undo one specific part ---- */
 .btn-reopen { width: 100%; min-height: 104px; padding: 8px 16px; font-size: 24px; line-height: 1.25; border-width: 3px; }
 
@@ -435,6 +451,12 @@ body { background: var(--bg); color: var(--fg); touch-action: manipulation; }
   .setting-now { font-size: 17px; }
   .minimap-btn { top: 10px; left: 12px; width: 180px; font-size: 13px; }
   .minimap-btn svg { height: 110px; }
+  .sheet-area:has(#zoom-controls:not([hidden])) { padding-right: 80px; }
+  .zoom-controls { right: 12px; bottom: 8px; gap: 8px; }
+  .zoom-controls .btn { width: 60px; min-height: 60px; font-size: 36px; }
+  .zoom-controls .zoom-fit { font-size: 17px; }
+  .tool-pair { margin-bottom: 8px; }
+  .tool-btn svg { width: 28px; height: 28px; }
   .btn-reopen { min-height: 72px; font-size: 19px; }
   .session-box { padding: 8px 12px; font-size: 15px; }
   .setup-head h2 { font-size: 24px; }

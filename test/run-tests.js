@@ -9,12 +9,14 @@ import { testSettings } from './settings.test.js';
 import { testLog } from './log.test.js';
 import { testPlan } from './plan.test.js';
 import { testLookAlike } from './lookalike.test.js';
+import { testZoom } from './zoom.test.js';
 
 try {
   const parts = await testGeoParser();
   await testNestLoader();
   await testPicking();
   await testSettings();
+  testZoom();
   await testLog();
   await testPlan();
   await testLookAlike();
