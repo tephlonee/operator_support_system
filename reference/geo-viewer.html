@@ -1,0 +1,1057 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<title>GEO Part Viewer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a workshop viewer. 3D stage fills the left, a spec sheet (like a nesting-software part card) sits on the right; stacks on phones. Accent = machinist's layout blue. */
+:root {
+  --bg: #e9edef;
+  --panel: #f7f9fa;
+  --stage: #dfe5e8;
+  --fg: #182126;
+  --muted: #5a6870;
+  --line: #c7d0d5;
+  --accent: #2f5da8;
+  --accent-ink: #ffffff;
+  --steel: #a9b3b9;
+  --kerf: #4a4440;
+  --edge: #1f2a30;
+  --grid: #b9c3c8;
+  --font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #101417; --panel: #161c20; --stage: #0c1013; --fg: #e2e8eb; --muted: #8d9aa2;
+    --line: #2a343a; --accent: #7fa6e8; --accent-ink: #0d1520; --steel: #8f9aa1; --kerf: #3a3532;
+    --edge: #0a0d0f; --grid: #252e34; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #101417; --panel: #161c20; --stage: #0c1013; --fg: #e2e8eb; --muted: #8d9aa2;
+  --line: #2a343a; --accent: #7fa6e8; --accent-ink: #0d1520; --steel: #8f9aa1; --kerf: #3a3532;
+  --edge: #0a0d0f; --grid: #252e34; color-scheme: dark;
+}
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 14px; line-height: 1.5; }
+.app { height: 100%; display: grid; grid-template-columns: minmax(0, 1fr) 330px; }
+.stage { position: relative; background: var(--stage); min-width: 0; min-height: 0; overflow: hidden; }
+.stage canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+.toolbar { position: absolute; top: 12px; left: 16px; right: 16px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; pointer-events: none; }
+.toolbar > * { pointer-events: auto; }
+.seg { display: inline-flex; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.seg button, .btn {
+  font: 500 12px/1 var(--font-body); letter-spacing: .02em; color: var(--fg); background: transparent;
+  border: 0; padding: 8px 11px; cursor: pointer;
+}
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button:hover, .btn:hover { background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+.btn { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; }
+button:focus-visible, label.btn:focus-within, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.hint { position: absolute; left: 16px; bottom: 12px; font: 400 11px/1.4 var(--font-mono); color: var(--muted); pointer-events: none; }
+.drop { position: absolute; inset: 10px; border: 2px dashed var(--accent); border-radius: 10px; display: grid; place-items: center;
+  background: color-mix(in srgb, var(--stage) 80%, transparent); font: 600 22px var(--font-display); letter-spacing: .04em; color: var(--accent); }
+
+aside { background: var(--panel); border-left: 1px solid var(--line); overflow-y: auto; padding-inline: 20px; padding-block: 20px 28px; display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.eyebrow { font: 500 11px/1 var(--font-mono); text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
+h1 { font: 700 34px/1 var(--font-display); letter-spacing: .01em; margin: 6px 0 2px; text-wrap: balance; }
+.sub { color: var(--muted); font-size: 13px; }
+.tag { display: inline-flex; align-items: center; gap: 6px; font: 500 11px/1 var(--font-mono); padding: 5px 8px; border-radius: 4px;
+  background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); }
+dl { margin: 0; display: grid; grid-template-columns: auto 1fr; border-top: 1px solid var(--line); }
+dt, dd { margin: 0; padding: 7px 0; border-bottom: 1px solid var(--line); }
+dt { color: var(--muted); font-size: 12.5px; padding-right: 12px; }
+dd { text-align: right; font: 500 13px/1.4 var(--font-mono); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; min-width: 0; }
+dd small { color: var(--muted); font-weight: 400; }
+h2 { font: 600 16px/1 var(--font-display); letter-spacing: .06em; text-transform: uppercase; margin: 0 0 8px; }
+.toggles { display: flex; flex-direction: column; gap: 8px; }
+.toggles label { display: flex; align-items: center; gap: 9px; cursor: pointer; font-size: 13px; }
+.toggles input { accent-color: var(--accent); width: 15px; height: 15px; }
+.parts { display: flex; flex-wrap: wrap; gap: 6px; }
+.parts button { font: 500 12px/1 var(--font-mono); padding: 7px 9px; border-radius: 5px; border: 1px solid var(--line); background: transparent; color: var(--fg); cursor: pointer; }
+.parts button[aria-pressed="true"] { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); }
+.note { font-size: 12px; color: var(--muted); line-height: 1.55; }
+.err { font-size: 12.5px; color: #b3412e; }
+input[type=file] { position: absolute; width: 1px; height: 1px; opacity: 0; }
+
+@media (max-width: 760px) {
+  .app { grid-template-columns: 1fr; grid-template-rows: 62vh auto; height: auto; }
+  html, body { height: auto; }
+  .stage { height: 62vh; min-height: 340px; }
+  aside { border-left: 0; border-top: 1px solid var(--line); padding-inline: 16px; }
+}
+</style>
+
+<div class="app">
+  <section class="stage" id="stage" aria-label="3D view of the part">
+    <div class="toolbar">
+      <div class="seg" role="group" aria-label="Camera view">
+        <button id="v-iso" aria-pressed="true">Iso</button>
+        <button id="v-top" aria-pressed="false">Top</button>
+        <button id="v-front" aria-pressed="false">Front</button>
+        <button id="v-right" aria-pressed="false">Right</button>
+      </div>
+      <label class="btn" for="file">Open .GEO files<input id="file" type="file" accept=".geo,.GEO" multiple></label>
+    </div>
+    <div class="hint">Drag to rotate · right-drag or two fingers to pan · scroll or pinch to zoom · drop .GEO files here</div>
+    <div class="drop" id="drop" hidden>Drop .GEO files to load</div>
+  </section>
+
+  <aside>
+    <div>
+      <div class="eyebrow" id="p-file">—</div>
+      <h1 id="p-name">—</h1>
+      <div class="sub" id="p-ident">—</div>
+    </div>
+    <div><span class="tag" id="p-proc">LASER</span></div>
+    <dl id="specs"></dl>
+    <div>
+      <h2>Display</h2>
+      <div class="toggles">
+        <label><input type="checkbox" id="t-edges" checked> Outline edges</label>
+        <label><input type="checkbox" id="t-label" checked> ID text from file</label>
+        <label><input type="checkbox" id="t-grid" checked> 10 mm floor grid</label>
+        <label><input type="checkbox" id="t-x" > Exaggerate thickness ×4</label>
+      </div>
+    </div>
+    <div id="parts-wrap" hidden>
+      <h2>Loaded parts</h2>
+      <div class="parts" id="parts"></div>
+    </div>
+    <div class="err" id="err" hidden></div>
+    <p class="note">The .GEO file stores a flat 2D cut profile (outer contour and inner cutouts made of lines and arcs) plus the sheet thickness. This viewer rebuilds the solid by extruding that profile through the thickness. Weight assumes steel at 7.85 g/cm³. Bends, if any, are not stored in this file type.</p>
+  </aside>
+</div>
+
+<script type="text/plain" id="sample-geo">#~1
+1.03
+2
+30.09.2026
+0.000000000 0.000000000 0.000000000
+165.000000000 90.000000000 0.000000000
+13818.838756807
+1
+0.001000000
+0
+1
+##~~
+#~11
+Plåt 8mm
+Lagerpall
+
+
+*BELEGT*
+st37-80
+8.000000000
+
+
+
+0
+0
+0
+0
+1
+0
+0
+0
+0
+
+##~~
+#~END
+#~3
+Lagerpall
+LASER
+
+0.000000000 0.000000000 1.000000000
+1.000000000 0.000000000 0.000000000 0.000000000
+0.000000000 1.000000000 0.000000000 0.000000000
+0.000000000 0.000000000 1.000000000 0.000000000
+0.000000000 0.000000000 0.000000000 1.000000000
+0.000000000 0.000000000 0.000000000
+165.000000000 90.000000000 0.000000000
+82.888931324 45.000000000 0.000000000
+13818.838756807
+5
+0
+0
+0
+0
+##~~
+#~30
+ANSI_CODEPAGE@1252
+AUFTR@*BELEGT*
+BEZCH@Lagerpall
+DREHINKR@90
+IDENT@Plåt 8mm
+MAT@st37-80
+PART_NESTFITTYPE@2
+PART_VERSION@3
+PRIOFRGEO@5
+ROTALLOWED@0
+SOURCE_FILE_NAME@Z:\joab\Ritningar\1045572#01.dxf
+TEILANZAHL@1
+TEILANZAHLMAX@1
+TMUSTER@0
+WERKSTOFF@1.0038
+#~TTINFO_END
+#~31
+P
+1
+0.000000000 12.071067812 0.000000000
+|~
+P
+2
+0.000000000 77.928932188 0.000000000
+|~
+P
+3
+1.464466094 8.535533906 0.000000000
+|~
+P
+4
+1.464466094 81.464466094 0.000000000
+|~
+P
+5
+5.000000000 12.071067812 0.000000000
+|~
+P
+6
+5.000000000 77.928932188 0.000000000
+|~
+P
+7
+8.535533906 1.464466094 0.000000000
+|~
+P
+8
+8.535533906 88.535533906 0.000000000
+|~
+P
+9
+12.071067812 0.000000000 0.000000000
+|~
+P
+10
+12.071067812 5.000000000 0.000000000
+|~
+P
+11
+12.071067812 85.000000000 0.000000000
+|~
+P
+12
+12.071067812 90.000000000 0.000000000
+|~
+P
+13
+16.000000000 20.000000000 0.000000000
+|~
+P
+14
+16.000000000 27.500000000 0.000000000
+|~
+P
+15
+16.000000000 62.500000000 0.000000000
+|~
+P
+16
+16.000000000 70.000000000 0.000000000
+|~
+P
+17
+16.000000000 12.500000000 0.000000000
+|~
+P
+18
+16.000000000 77.500000000 0.000000000
+|~
+P
+19
+18.000000000 12.500000000 0.000000000
+|~
+P
+20
+18.000000000 20.000000000 0.000000000
+|~
+P
+21
+18.000000000 27.500000000 0.000000000
+|~
+P
+22
+18.000000000 62.500000000 0.000000000
+|~
+P
+23
+18.000000000 70.000000000 0.000000000
+|~
+P
+24
+18.000000000 77.500000000 0.000000000
+|~
+P
+25
+127.500000000 19.000000000 0.000000000
+|~
+P
+26
+127.500000000 21.000000000 0.000000000
+|~
+P
+27
+127.500000000 69.000000000 0.000000000
+|~
+P
+28
+127.500000000 71.000000000 0.000000000
+|~
+P
+29
+135.000000000 19.000000000 0.000000000
+|~
+P
+30
+135.000000000 21.000000000 0.000000000
+|~
+P
+31
+135.000000000 69.000000000 0.000000000
+|~
+P
+32
+135.000000000 71.000000000 0.000000000
+|~
+P
+33
+142.500000000 19.000000000 0.000000000
+|~
+P
+34
+142.500000000 21.000000000 0.000000000
+|~
+P
+35
+142.500000000 69.000000000 0.000000000
+|~
+P
+36
+142.500000000 71.000000000 0.000000000
+|~
+P
+37
+151.387979823 47.471138349 0.000000000
+|~
+P
+38
+152.928932188 0.000000000 0.000000000
+|~
+P
+39
+152.928932188 5.000000000 0.000000000
+|~
+P
+40
+152.928932188 85.000000000 0.000000000
+|~
+P
+41
+152.928932188 90.000000000 0.000000000
+|~
+P
+42
+156.464466094 88.535533906 0.000000000
+|~
+P
+43
+156.464466094 1.464466094 0.000000000
+|~
+P
+44
+160.000000000 12.071067812 0.000000000
+|~
+P
+45
+160.000000000 77.928932188 0.000000000
+|~
+P
+46
+163.535533906 8.535533906 0.000000000
+|~
+P
+47
+163.535533906 81.464466094 0.000000000
+|~
+P
+48
+165.000000000 12.071067812 0.000000000
+|~
+P
+49
+165.000000000 77.928932188 0.000000000
+|~
+##~~
+#~36
+ATT
+1
+7
+|~
+#~ATTRIBUTE_END
+#~32
+TXT
+3 1
+37
+10.000000000 1.000000000 0.000000000
+3.000000000 90.000000000
+18 1 1
+1045572
+1
+1
+|~
+##~~
+#~33
+
+1 24 0
+4
+0.000000000 0.000000000 1.000000000
+0.000000000 0.000000000 0.000000000
+165.000000000 90.000000000 0.000000000
+82.500000000 45.000000000 0.000000000
+14645.697103865
+0
+##~~
+#~331
+ARC
+1 0
+45 49 47
+1
+|~
+LIN
+1 0
+47 42
+|~
+ARC
+1 0
+40 42 41
+1
+|~
+LIN
+1 0
+41 12
+|~
+ARC
+1 0
+11 12 8
+1
+|~
+LIN
+1 0
+8 4
+|~
+ARC
+1 0
+6 4 2
+1
+|~
+LIN
+1 0
+2 1
+|~
+ARC
+1 0
+5 1 3
+1
+|~
+LIN
+1 0
+3 7
+|~
+ARC
+1 0
+10 7 9
+1
+|~
+LIN
+1 0
+9 38
+|~
+ARC
+1 0
+39 38 43
+1
+|~
+LIN
+1 0
+43 46
+|~
+ARC
+1 0
+44 46 48
+1
+|~
+LIN
+1 0
+48 49
+|~
+##~~
+#~KONT_END
+#~33
+
+2 24 1
+0
+0.000000000 0.000000000 -1.000000000
+8.500000000 12.500000000 0.000000000
+25.500000000 27.500000000 0.000000000
+17.000000000 20.000000000 0.000000000
+206.714586764
+1
+##~~
+#~331
+LIN
+1 0
+14 21
+|~
+ARC
+1 0
+20 21 19
+-1
+|~
+LIN
+1 0
+19 17
+|~
+ARC
+1 0
+13 17 14
+-1
+|~
+##~~
+#~KONT_END
+#~33
+
+3 24 1
+0
+0.000000000 0.000000000 -1.000000000
+8.500000000 62.500000000 0.000000000
+25.500000000 77.500000000 0.000000000
+17.000000000 70.000000000 0.000000000
+206.714586764
+1
+##~~
+#~331
+LIN
+1 0
+22 15
+|~
+ARC
+1 0
+16 15 18
+-1
+|~
+LIN
+1 0
+18 24
+|~
+ARC
+1 0
+23 24 22
+-1
+|~
+##~~
+#~KONT_END
+#~33
+
+4 24 1
+0
+0.000000000 0.000000000 -1.000000000
+127.500000000 11.500000000 0.000000000
+142.500000000 28.500000000 0.000000000
+135.000000000 20.000000000 0.000000000
+206.714586764
+1
+##~~
+#~331
+LIN
+1 0
+34 33
+|~
+ARC
+1 0
+29 33 25
+-1
+|~
+LIN
+1 0
+25 26
+|~
+ARC
+1 0
+30 26 34
+-1
+|~
+##~~
+#~KONT_END
+#~33
+
+5 24 1
+0
+0.000000000 0.000000000 -1.000000000
+127.500000000 61.500000000 0.000000000
+142.500000000 78.500000000 0.000000000
+135.000000000 70.000000000 0.000000000
+206.714586764
+1
+##~~
+#~331
+LIN
+1 0
+36 35
+|~
+ARC
+1 0
+31 35 27
+-1
+|~
+LIN
+1 0
+27 28
+|~
+ARC
+1 0
+32 28 36
+-1
+|~
+##~~
+#~KONT_END
+#~END
+#~EOF
+</script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+(() => {
+  // ---------- GEO parser (TRUMPF-style .GEO) ----------
+  function parseGEO(text, fileName) {
+    const L = text.replace(/\r/g, '').split('\n');
+    const T = i => (L[i] ?? '').trim();
+    const pts = {}, contours = [], attrs = {}, texts = [];
+    let info = {}, head = {}, proc = '';
+    let i = 0;
+    while (i < L.length) {
+      const s = T(i);
+      if (s === '#~1') {
+        head.area = parseFloat(T(i + 6));
+        i++; continue;
+      }
+      if (s === '#~11') {
+        info = { ident: T(i + 1), name: T(i + 2), order: T(i + 5), material: T(i + 6), thickness: parseFloat(T(i + 7)) };
+        i++; continue;
+      }
+      if (s === '#~3') { proc = T(i + 2); i++; continue; }
+      if (s === '#~30') {
+        i++;
+        while (i < L.length && !T(i).startsWith('#~')) {
+          const k = L[i].indexOf('@');
+          if (k > 0) attrs[L[i].slice(0, k).trim()] = L[i].slice(k + 1).trim();
+          i++;
+        }
+        continue;
+      }
+      if (s === '#~31') {
+        i++;
+        while (i < L.length && T(i) !== '##~~') {
+          if (T(i) === 'P') {
+            const id = parseInt(T(i + 1), 10);
+            const c = T(i + 2).split(/\s+/).map(Number);
+            pts[id] = { x: c[0], y: c[1] };
+            i += 3;
+          } else i++;
+        }
+        continue;
+      }
+      if (s === 'TXT') {
+        const ptId = parseInt(T(i + 2), 10);
+        const hs = T(i + 4).split(/\s+/).map(Number);
+        texts.push({ pt: ptId, height: hs[0], angle: hs[1], text: T(i + 6) });
+        i++; continue;
+      }
+      if (s === '#~33') {
+        let j = i + 1;
+        while (j < L.length && T(j) === '') j++;
+        const hdr = T(j).split(/\s+/).map(Number);
+        while (j < L.length && T(j) !== '#~331') j++;
+        j++;
+        const els = [];
+        while (j < L.length && T(j) !== '##~~' && !T(j).startsWith('#~')) {
+          const t = T(j);
+          if (t === 'LIN' || t === 'ARC' || t === 'CIR') {
+            const body = []; j++;
+            while (j < L.length && T(j) !== '|~') { body.push(T(j)); j++; }
+            els.push({ type: t, body });
+          }
+          j++;
+        }
+        contours.push({ flag: hdr[2], els });
+        i = j; continue;
+      }
+      i++;
+    }
+    if (!Object.keys(pts).length || !contours.length) throw new Error('No points or contours found. Is this a TRUMPF-style .GEO file?');
+    const thickness = isFinite(info.thickness) && info.thickness > 0 ? info.thickness : 1;
+    return { fileName, info: { ...info, thickness }, attrs, head, proc, texts, pts, contours: contours.map(c => buildContour(c, pts)) };
+  }
+
+  // Turn a contour's element chain into a polyline, exact length and exact signed area.
+  function buildContour(c, pts) {
+    const poly = []; let length = 0, area2 = 0, segArea = 0;
+    const P = id => { const p = pts[id]; if (!p) throw new Error('Missing point ' + id); return p; };
+    const push = p => { const last = poly[poly.length - 1]; if (!last || Math.hypot(last.x - p.x, last.y - p.y) > 1e-9) poly.push({ x: p.x, y: p.y }); };
+    const chords = [];
+    for (const el of c.els) {
+      if (el.type === 'LIN') {
+        const [a, b] = el.body[1].split(/\s+/).map(Number);
+        const A = P(a), B = P(b);
+        push(A); push(B); chords.push([A, B]);
+        length += Math.hypot(B.x - A.x, B.y - A.y);
+      } else if (el.type === 'ARC' || el.type === 'CIR') {
+        const ids = el.body[1].split(/\s+/).map(Number);
+        let C, S, E, dir, r;
+        if (el.type === 'ARC') {
+          C = P(ids[0]); S = P(ids[1]); E = P(ids[2]); dir = parseInt(el.body[2], 10) || 1;
+          r = Math.hypot(S.x - C.x, S.y - C.y);
+        } else {
+          C = P(ids[0]); r = parseFloat(el.body[2]); dir = parseInt(el.body[3], 10) || 1;
+          S = E = { x: C.x + r, y: C.y };
+        }
+        const a0 = Math.atan2(S.y - C.y, S.x - C.x);
+        let a1 = Math.atan2(E.y - C.y, E.x - C.x);
+        let sweep = a1 - a0;
+        if (dir > 0) { while (sweep <= 1e-12) sweep += 2 * Math.PI; }
+        else { while (sweep >= -1e-12) sweep -= 2 * Math.PI; }
+        const n = Math.max(6, Math.ceil(Math.abs(sweep) / (Math.PI / 64)));
+        push(S);
+        for (let k = 1; k <= n; k++) {
+          const a = a0 + sweep * k / n;
+          push(k === n ? E : { x: C.x + r * Math.cos(a), y: C.y + r * Math.sin(a) });
+        }
+        chords.push([S, E]);
+        length += r * Math.abs(sweep);
+        segArea += 0.5 * r * r * (sweep - Math.sin(sweep));
+      }
+    }
+    const first = poly[0], last = poly[poly.length - 1];
+    if (poly.length > 1 && Math.hypot(first.x - last.x, first.y - last.y) < 1e-6) poly.pop();
+    for (const [A, B] of chords) area2 += A.x * B.y - B.x * A.y;
+    const area = area2 / 2 + segArea;
+    return { flag: c.flag, poly, length, area };
+  }
+
+  function pointInPoly(p, poly) {
+    let inside = false;
+    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+      const a = poly[i], b = poly[j];
+      if ((a.y > p.y) !== (b.y > p.y) && p.x < (b.x - a.x) * (p.y - a.y) / (b.y - a.y) + a.x) inside = !inside;
+    }
+    return inside;
+  }
+
+  // ---------- Three.js scene ----------
+  const stage = document.getElementById('stage');
+  const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  stage.prepend(renderer.domElement);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(35, 1, 0.5, 20000);
+  camera.up.set(0, 0, 1);
+  const controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.12;
+
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x666f75, 0.85));
+  const key = new THREE.DirectionalLight(0xffffff, 0.75);
+  key.castShadow = true;
+  key.shadow.mapSize.set(2048, 2048);
+  key.shadow.bias = -0.0005;
+  scene.add(key, key.target);
+  const fill = new THREE.DirectionalLight(0xffffff, 0.25);
+  fill.position.set(-1, 1.5, 0.6);
+  scene.add(fill);
+
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const faceMat = new THREE.MeshStandardMaterial({ metalness: 0.35, roughness: 0.5 });
+  const sideMat = new THREE.MeshStandardMaterial({ metalness: 0.2, roughness: 0.8 });
+  const edgeMat = new THREE.LineBasicMaterial({ transparent: true, opacity: 0.85 });
+  const shadowMat = new THREE.ShadowMaterial({ opacity: 0.18 });
+
+  let partGroup = null, grid = null, ground = null, labelMesh = null, edges = null, solid = null;
+  let current = null, bboxSize = new THREE.Vector3(1, 1, 1);
+  const parts = [];
+
+  function applyTheme() {
+    scene.background = new THREE.Color(css('--stage'));
+    faceMat.color.set(css('--steel'));
+    sideMat.color.set(css('--kerf'));
+    edgeMat.color.set(css('--edge'));
+    if (grid) { grid.material.color.set(css('--grid')); }
+    if (labelMesh && current) { buildLabel(current); }
+  }
+
+  function clearPart() {
+    if (!partGroup) return;
+    partGroup.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material && o.material.map) { o.material.map.dispose(); o.material.dispose(); } });
+    scene.remove(partGroup);
+    if (grid) { scene.remove(grid); grid.geometry.dispose(); grid = null; }
+    if (ground) { scene.remove(ground); ground.geometry.dispose(); ground = null; }
+    partGroup = null; labelMesh = null;
+  }
+
+  function buildLabel(part) {
+    if (labelMesh) { partGroup.remove(labelMesh); labelMesh.geometry.dispose(); labelMesh.material.map.dispose(); labelMesh.material.dispose(); labelMesh = null; }
+    const tx = part.texts[0];
+    if (!tx || !part.pts[tx.pt]) return;
+    const p = part.pts[tx.pt];
+    const h = tx.height > 0 && tx.height < 50 ? tx.height : 3;
+    const cv = document.createElement('canvas');
+    const ctx = cv.getContext('2d');
+    const fontPx = 96;
+    ctx.font = `500 ${fontPx}px "IBM Plex Mono", monospace`;
+    const w = Math.ceil(ctx.measureText(tx.text).width) + 16;
+    cv.width = w; cv.height = Math.round(fontPx * 1.2);
+    ctx.font = `500 ${fontPx}px "IBM Plex Mono", monospace`;
+    ctx.fillStyle = css('--accent');
+    ctx.textBaseline = 'middle';
+    ctx.fillText(tx.text, 8, cv.height / 2);
+    const tex = new THREE.CanvasTexture(cv);
+    tex.anisotropy = 4;
+    const planeH = h * 1.2, planeW = planeH * cv.width / cv.height;
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(planeW, planeH), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false }));
+    m.position.set(p.x, p.y, part.info.thickness + 0.05);
+    m.rotation.z = (tx.angle || 0) * Math.PI / 180;
+    m.renderOrder = 2;
+    m.visible = document.getElementById('t-label').checked;
+    labelMesh = m;
+    partGroup.add(m);
+  }
+
+  function showPart(part) {
+    clearPart();
+    current = part;
+    const t = part.info.thickness;
+    const outers = part.contours.filter(c => c.flag === 0);
+    const inners = part.contours.filter(c => c.flag !== 0);
+    let outerList = outers.length ? outers : [part.contours.reduce((a, b) => Math.abs(b.area) > Math.abs(a.area) ? b : a)];
+    if (!outers.length) inners.splice(0, inners.length, ...part.contours.filter(c => c !== outerList[0]));
+
+    const shapes = outerList.map(o => {
+      const sh = new THREE.Shape(o.poly.map(p => new THREE.Vector2(p.x, p.y)));
+      sh._src = o;
+      return sh;
+    });
+    for (const h of inners) {
+      const host = shapes.find(s => pointInPoly(h.poly[0], s._src.poly)) || shapes[0];
+      host.holes.push(new THREE.Path(h.poly.map(p => new THREE.Vector2(p.x, p.y))));
+    }
+
+    const geo = new THREE.ExtrudeGeometry(shapes, { depth: t, bevelEnabled: false, curveSegments: 1 });
+    geo.computeVertexNormals();
+    solid = new THREE.Mesh(geo, [faceMat, sideMat]);
+    solid.castShadow = true;
+    edges = new THREE.LineSegments(new THREE.EdgesGeometry(geo, 20), edgeMat);
+    edges.visible = document.getElementById('t-edges').checked;
+
+    partGroup = new THREE.Group();
+    partGroup.add(solid, edges);
+    scene.add(partGroup);
+    buildLabel(part);
+
+    geo.computeBoundingBox();
+    const bb = geo.boundingBox;
+    bboxSize = bb.getSize(new THREE.Vector3());
+    const ctr = bb.getCenter(new THREE.Vector3());
+    // center the part over the origin, sitting on the floor
+    partGroup.position.set(-ctr.x, -ctr.y, 0);
+    applyExaggeration();
+
+    const span = Math.max(bboxSize.x, bboxSize.y);
+    const gsize = Math.ceil(span * 1.6 / 10) * 10;
+    grid = new THREE.GridHelper(gsize, gsize / 10, css('--grid'), css('--grid'));
+    grid.rotation.x = Math.PI / 2;
+    grid.position.z = -0.02;
+    grid.visible = document.getElementById('t-grid').checked;
+    scene.add(grid);
+    ground = new THREE.Mesh(new THREE.PlaneGeometry(gsize * 3, gsize * 3), shadowMat);
+    ground.position.z = -0.05;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    key.position.set(span * 0.6, -span * 0.9, span * 1.6);
+    const sc = key.shadow.camera;
+    sc.left = sc.bottom = -span; sc.right = sc.top = span; sc.near = 1; sc.far = span * 5;
+    sc.updateProjectionMatrix();
+
+    applyTheme();
+    renderSpecs(part);
+    setView('iso', false);
+  }
+
+  function applyExaggeration() {
+    if (!partGroup) return;
+    partGroup.scale.z = document.getElementById('t-x').checked ? 4 : 1;
+  }
+
+  // ---------- camera views ----------
+  const VIEWS = { iso: [0.85, -1.25, 1.0], top: [0, -0.0001, 1], front: [0, -1, 0.12], right: [1, 0, 0.12] };
+  let anim = null;
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function setView(name, animate = true) {
+    document.querySelectorAll('.seg button').forEach(b => b.setAttribute('aria-pressed', String(b.id === 'v-' + name)));
+    const d = new THREE.Vector3(...VIEWS[name]).normalize();
+    const radius = Math.max(bboxSize.x, bboxSize.y, bboxSize.z * 4) * 0.5;
+    const dist = radius / Math.sin(THREE.MathUtils.degToRad(camera.fov / 2)) * (camera.aspect < 1 ? 1.45 / camera.aspect : 1.15);
+    const target = new THREE.Vector3(0, 0, bboxSize.z / 2);
+    const to = target.clone().add(d.multiplyScalar(dist));
+    if (!animate || reduce) { camera.position.copy(to); controls.target.copy(target); controls.update(); return; }
+    anim = { from: camera.position.clone(), fromT: controls.target.clone(), to, toT: target, t0: performance.now(), dur: 450 };
+  }
+  ['iso', 'top', 'front', 'right'].forEach(v => document.getElementById('v-' + v).addEventListener('click', () => setView(v)));
+  controls.addEventListener('start', () => { anim = null; });
+
+  // ---------- spec sheet ----------
+  const fmt = (n, d = 1) => n.toLocaleString('sv-SE', { minimumFractionDigits: d, maximumFractionDigits: d });
+  function renderSpecs(part) {
+    const { info, attrs } = part;
+    const outer = part.contours.filter(c => c.flag === 0);
+    const inner = part.contours.filter(c => c.flag !== 0);
+    const net = Math.abs(part.contours.reduce((s, c) => s + c.area, 0));
+    const cut = part.contours.reduce((s, c) => s + c.length, 0);
+    const kg = net * info.thickness * 7.85e-6;
+    const partNo = (part.texts[0] && part.texts[0].text) || part.fileName.replace(/\.geo$/i, '');
+    const src = attrs.SOURCE_FILE_NAME ? attrs.SOURCE_FILE_NAME.split(/[\\/]/).pop() : '—';
+    const mat = [info.material || attrs.MAT, attrs.WERKSTOFF].filter(Boolean);
+    document.getElementById('p-file').textContent = part.fileName;
+    document.getElementById('p-name').textContent = attrs.BEZCH || info.name || partNo;
+    document.getElementById('p-ident').textContent = `Part ${partNo} · ${info.ident || ''}`.replace(/ · $/, '');
+    document.getElementById('p-proc').textContent = (part.proc || 'CUT') + ' · ' + fmt(info.thickness, 1) + ' mm plate';
+    const rows = [
+      ['Material', mat.length ? mat.join(' <small>/</small> ') + (attrs.WERKSTOFF === '1.0038' ? ' <small>(S235JR)</small>' : '') : '—'],
+      ['Thickness', fmt(info.thickness, 1) + ' mm'],
+      ['Outer size', `${fmt(bboxSize.x, 1)} × ${fmt(bboxSize.y, 1)} mm`],
+      ['Net area', `${fmt(net / 100, 2)} cm²`],
+      ['Est. weight', `${fmt(kg, 3)} kg`],
+      ['Cut length', `${fmt(cut, 1)} mm`],
+      ['Contours', `${outer.length || 1} outer + ${inner.length} inner`],
+      ['Pierces', String(part.contours.length)],
+      ['Quantity', attrs.TEILANZAHL ? attrs.TEILANZAHL + (attrs.TEILANZAHLMAX ? ` <small>of max ${attrs.TEILANZAHLMAX}</small>` : '') : '—'],
+      ['Rotation in nest', attrs.ROTALLOWED === '0' ? 'Not allowed' : (attrs.ROTALLOWED ? 'Allowed' : '—')],
+      ['Source drawing', src],
+    ];
+    const dl = document.getElementById('specs');
+    dl.innerHTML = rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
+  }
+
+  function renderPartList() {
+    const wrap = document.getElementById('parts-wrap');
+    wrap.hidden = parts.length < 2;
+    const box = document.getElementById('parts');
+    box.innerHTML = '';
+    parts.forEach((p, idx) => {
+      const b = document.createElement('button');
+      b.textContent = p.fileName.replace(/\.geo$/i, '');
+      b.setAttribute('aria-pressed', String(p === current));
+      b.addEventListener('click', () => { showPart(parts[idx]); renderPartList(); });
+      box.appendChild(b);
+    });
+  }
+
+  // ---------- loading files ----------
+  const errBox = document.getElementById('err');
+  function readFile(f) {
+    return new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = () => res(r.result);
+      r.onerror = () => rej(r.error);
+      r.readAsText(f, 'windows-1252');
+    });
+  }
+  async function loadFiles(list) {
+    const errs = [];
+    let lastOk = null;
+    for (const f of list) {
+      try {
+        const p = parseGEO(await readFile(f), f.name);
+        const existing = parts.findIndex(x => x.fileName === f.name);
+        if (existing >= 0) parts[existing] = p; else parts.push(p);
+        lastOk = p;
+      } catch (e) { errs.push(`${f.name}: ${e.message}`); }
+    }
+    errBox.hidden = !errs.length;
+    errBox.textContent = errs.join(' ');
+    if (lastOk) showPart(lastOk);
+    renderPartList();
+  }
+  document.getElementById('file').addEventListener('change', e => { loadFiles([...e.target.files]); e.target.value = ''; });
+  const drop = document.getElementById('drop');
+  let dragDepth = 0;
+  stage.addEventListener('dragenter', e => { e.preventDefault(); dragDepth++; drop.hidden = false; });
+  stage.addEventListener('dragover', e => e.preventDefault());
+  stage.addEventListener('dragleave', () => { if (--dragDepth <= 0) { dragDepth = 0; drop.hidden = true; } });
+  stage.addEventListener('drop', e => { e.preventDefault(); dragDepth = 0; drop.hidden = true; loadFiles([...e.dataTransfer.files]); });
+
+  // ---------- toggles ----------
+  document.getElementById('t-edges').addEventListener('change', e => { if (edges) edges.visible = e.target.checked; });
+  document.getElementById('t-label').addEventListener('change', e => { if (labelMesh) labelMesh.visible = e.target.checked; });
+  document.getElementById('t-grid').addEventListener('change', e => { if (grid) grid.visible = e.target.checked; });
+  document.getElementById('t-x').addEventListener('change', applyExaggeration);
+
+  // ---------- theme + resize + loop ----------
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
+  new MutationObserver(applyTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  function resize() {
+    const w = stage.clientWidth, h = stage.clientHeight;
+    if (!w || !h) return;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  new ResizeObserver(resize).observe(stage);
+  resize();
+
+  function loop(now) {
+    if (anim) {
+      let k = Math.min(1, (now - anim.t0) / anim.dur);
+      k = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+      camera.position.lerpVectors(anim.from, anim.to, k);
+      controls.target.lerpVectors(anim.fromT, anim.toT, k);
+      if (k >= 1) anim = null;
+    }
+    controls.update();
+    renderer.render(scene, camera);
+    requestAnimationFrame(loop);
+  }
+
+  // ---------- boot with the attached part ----------
+  try {
+    const sample = parseGEO(document.getElementById('sample-geo').textContent, '1045572.GEO');
+    parts.push(sample);
+    showPart(sample);
+    renderPartList();
+  } catch (e) { errBox.hidden = false; errBox.textContent = e.message; }
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (current) buildLabel(current); });
+  requestAnimationFrame(loop);
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,6 @@
+{
+  "jobs": [
+    { "file": "J14.LST", "title": "J14", "note": "Real Brålanda job (TruTops Boost .LST)" },
+    { "file": "example-sheet.json", "title": "EX-S001", "note": "Invented example sheet with look-alike parts" }
+  ]
+}

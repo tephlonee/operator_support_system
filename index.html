@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Picking Support</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app">
+  <div class="example-banner" id="example-banner" hidden>
+    <strong id="banner-title"></strong> <span id="example-note"></span>
+  </div>
+
+  <header class="topbar">
+    <div class="app-title" data-i18n="appTitle"></div>
+    <div class="sheet-info" id="sheet-info"></div>
+    <!-- When the job list was last updated from Z:\, or what is wrong (server or Z:\ not reachable). -->
+    <div class="health" id="health" role="status" hidden></div>
+    <!-- Overall progress of the sheet while sorting. -->
+    <div class="overall" id="overall" hidden>
+      <span id="overall-text"></span>
+      <span class="overall-bar"><span id="overall-fill"></span></span>
+    </div>
+    <button class="btn" id="jobs-btn" type="button" data-i18n="jobsBtn" hidden></button>
+    <button class="btn" id="test-btn" type="button" data-i18n="test" aria-pressed="false" hidden></button>
+    <button class="btn" id="station-btn" type="button" data-i18n="station" aria-pressed="false" hidden></button>
+    <button class="btn" id="lang-btn" type="button"></button>
+  </header>
+
+  <main class="main">
+    <!-- Left: where things are. The sheet, and the pallets with their progress. -->
+    <section class="work">
+      <div class="sheet-area">
+        <svg id="sheet" role="img" data-i18n-aria="sheetAria"></svg>
+        <!-- Shown while zoomed in on a small part: where the zoomed view is on the sheet. Tap for the whole view. -->
+        <button class="minimap-btn" id="minimap-btn" type="button" hidden>
+          <svg id="minimap" aria-hidden="true" preserveAspectRatio="xMidYMid meet"></svg>
+          <span data-i18n="zoomedHint"></span>
+        </button>
+        <div class="message" id="message" role="status"></div>
+      </div>
+      <ul class="pallets" id="pallets" data-i18n-aria="pallets"></ul>
+    </section>
+
+    <aside class="panel" id="panel">
+      <!-- Setup at the start of a job (choose job, number of pallets, assignment, hang the cards).
+           Built by src/setup-view.js. The panel is made wide while this is shown. -->
+      <div class="panel-section setup" id="setup-panel"></div>
+
+      <!-- Right: what to do now. One part, where it goes, and the main action. -->
+      <div class="panel-section" id="work-panel" hidden>
+        <!-- After "Pallet full": hang the card for the new pallet. -->
+        <div class="new-card" id="new-card" hidden>
+          <div class="new-card-face" id="new-card-face"></div>
+          <div class="new-card-text">
+            <strong id="new-card-title"></strong>
+            <span id="new-card-help"></span>
+          </div>
+          <button class="btn btn-done" id="new-card-btn" type="button" data-i18n="newCardReady"></button>
+        </div>
+        <div class="next-card" id="next-card">
+          <div class="selected-strip" id="selected-strip" hidden>
+            <span id="selected-text"></span>
+            <button class="btn btn-back" id="back-btn" type="button" data-i18n="backToSuggested"></button>
+          </div>
+          <div class="eyebrow"><span id="card-title"></span><span id="next-count"></span></div>
+          <svg id="next-drawing" aria-hidden="true"></svg>
+          <div class="next-hint" id="next-hint" data-i18n="markHint"></div>
+          <div class="next-partno" id="next-partno"></div>
+          <div class="next-name" id="next-name"></div>
+          <div class="part-status" id="part-status" hidden></div>
+          <!-- This part has a look-alike on another pallet: what tells them apart. -->
+          <div class="la-note" id="la-note" hidden>
+            <svg id="la-note-pic" aria-hidden="true"></svg>
+            <span id="la-note-text"></span>
+          </div>
+          <!-- When the job is done: the summary. -->
+          <div class="summary" id="summary" hidden>
+            <div class="summary-line" id="summary-line"></div>
+            <div class="summary-issues" id="summary-issues"></div>
+            <ul class="summary-pallets" id="summary-pallets"></ul>
+            <!-- The same program again on the next sheet: a new run, same pallets. -->
+            <button class="btn" id="next-sheet-btn" type="button" data-i18n="nextSheet" hidden></button>
+            <button class="btn btn-done" id="next-job-btn" type="button" data-i18n="nextJob"></button>
+          </div>
+        </div>
+        <div class="destination" id="destination">
+          <div class="dest-label" id="dest-label"></div>
+          <div class="dest-order" id="dest-order"></div>
+        </div>
+        <!-- For a part that is already picked/missing/scrap: put just this part back, however long ago it was done.
+             For picked and scrapped parts it takes the place of Confirm, which can't be used for them anyway. -->
+        <button class="btn btn-reopen" id="reopen-btn" type="button" hidden></button>
+        <button class="btn btn-confirm" id="confirm-btn" type="button" data-i18n="confirm"></button>
+        <!-- "Picked 4": several pieces of the pallet being sorted, taken in one go (one Undo takes them back). -->
+        <div class="batch" id="batch" hidden>
+          <span class="batch-label" data-i18n="pickedSeveral"></span>
+          <div class="batch-btns" id="batch-btns"></div>
+        </div>
+        <!-- Honest kit status: what to press when the part can't simply be picked. -->
+        <div class="exceptions">
+          <button class="btn btn-exc" id="missing-btn" type="button" data-i18n="btnMissing"></button>
+          <button class="btn btn-exc" id="scrap-btn" type="button" data-i18n="btnScrap"></button>
+          <button class="btn btn-exc" id="other-btn" type="button" data-i18n="btnOther"></button>
+        </div>
+        <!-- Always on screen: Undo for the last tap. Next to it: a pallet is full before its pieces are all on it. -->
+        <div class="undo-row">
+          <button class="btn btn-undo" id="undo-btn" type="button" data-i18n="undo"></button>
+          <button class="btn btn-full" id="full-btn" type="button" data-i18n="palletFull"></button>
+        </div>
+        <div class="feedback" id="feedback" role="status" aria-live="polite"></div>
+      </div>
+
+      <!-- Station settings: replaces the panel above while open; the whole sheet stays visible on the left. -->
+      <div class="panel-section settings" id="settings-panel" hidden>
+        <h2 data-i18n="settingsTitle"></h2>
+
+        <h3 data-i18n="stationIdHead"></h3>
+        <p class="help" data-i18n="stationIdHelp"></p>
+        <label class="field"><span data-i18n="stationIdLabel"></span><input id="station-id" type="text" maxlength="20" autocomplete="off" spellcheck="false"></label>
+        <p class="help error" id="station-id-note" role="status"></p>
+
+        <h3 data-i18n="settingsViewHead"></h3>
+        <p class="help" data-i18n="settingsViewHelp"></p>
+        <div class="btn-row">
+          <button class="btn" id="turn-left-btn" type="button">⟲ <span data-i18n="turnLeft"></span></button>
+          <button class="btn" id="turn-right-btn" type="button"><span data-i18n="turnRight"></span> ⟳</button>
+        </div>
+        <button class="btn btn-toggle" id="mirror-btn" type="button" aria-pressed="false" data-i18n="mirror"></button>
+        <p class="help" data-i18n="mirrorHelp"></p>
+        <div class="setting-now" id="view-now" role="status"></div>
+        <button class="btn btn-toggle" id="zoom-btn" type="button" aria-pressed="true" data-i18n="zoomSmall"></button>
+        <p class="help" data-i18n="zoomSmallHelp"></p>
+
+        <h3 data-i18n="settingsOrderHead"></h3>
+        <div class="choices" role="radiogroup" data-i18n-aria="settingsOrderHead">
+          <button class="btn btn-choice" type="button" role="radio" data-order="pallet">
+            <strong data-i18n="orderPallet"></strong><span data-i18n="orderPalletSub"></span>
+          </button>
+          <button class="btn btn-choice" type="button" role="radio" data-order="nearest">
+            <strong data-i18n="orderNearest"></strong><span data-i18n="orderNearestSub"></span>
+          </button>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn" id="reset-btn" type="button" data-i18n="reset"></button>
+          <button class="btn btn-done" id="done-btn" type="button" data-i18n="done"></button>
+        </div>
+        <p class="help" id="saved-note" role="status"></p>
+      </div>
+
+      <!-- Test session: for the usability study (participant data, log export). Used by the test moderator. -->
+      <div class="panel-section settings" id="test-panel" hidden>
+        <h2 data-i18n="testTitle"></h2>
+        <p class="help" data-i18n="testHelp"></p>
+        <div class="session-box" id="session-box"></div>
+        <button class="btn btn-export" id="export-btn" type="button" data-i18n="exportCsv"></button>
+        <a class="btn" id="server-log-btn" data-i18n="exportServerCsv" download hidden></a>
+
+        <h3 data-i18n="newSessionHead"></h3>
+        <label class="field"><span data-i18n="participant"></span><input id="tp-participant" type="text" autocomplete="off"></label>
+        <label class="field"><span data-i18n="condition"></span><input id="tp-condition" type="text" list="condition-list" autocomplete="off"></label>
+        <datalist id="condition-list">
+          <option value="with auto-zoom"></option>
+          <option value="without auto-zoom"></option>
+        </datalist>
+        <label class="field"><span data-i18n="note"></span><input id="tp-note" type="text" autocomplete="off"></label>
+        <button class="btn" id="new-session-btn" type="button" data-i18n="startSession"></button>
+        <button class="btn btn-done" id="test-done-btn" type="button" data-i18n="done"></button>
+        <p class="help error" id="log-note" role="status"></p>
+      </div>
+    </aside>
+  </main>
+</div>
+
+<script>
+  // Browsers block the app's other files when the page is opened straight from disk.
+  if (location.protocol === 'file:') {
+    document.getElementById('message').textContent =
+      'Start the server first: run "npm start" in the project folder (or "python tools/serve.py" for the demo without the pipeline), then open the address it prints.';
+  }
+</script>
+<script type="module" src="src/ui.js"></script>
+</body>
+</html>

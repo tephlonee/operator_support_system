@@ -1,0 +1,7 @@
+{
+  "zRoot": "demo-z",
+  "dataDir": ".pipeline-data",
+  "port": 8080,
+  "pollSeconds": 5,
+  "geoWaitMinutes": 0.5
+}

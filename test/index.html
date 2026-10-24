@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mock-up Tests</title>
+<style>
+  :root { --bg: #f4f6f7; --fg: #182126; --muted: #5a6870; --line: #c7d0d5; --pass: #1f7a3a; --fail: #b3261e; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg: #101417; --fg: #e2e8eb; --muted: #8d9aa2; --line: #2a343a; --pass: #5cc77d; --fail: #f2766b; }
+  }
+  :root[data-theme="dark"] { --bg: #101417; --fg: #e2e8eb; --muted: #8d9aa2; --line: #2a343a; --pass: #5cc77d; --fail: #f2766b; }
+  body { background: var(--bg); color: var(--fg); font: 15px/1.5 system-ui, "Segoe UI", sans-serif; margin: 0; padding: 24px 16px; }
+  main { max-width: 1000px; margin: 0 auto; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  p.note { color: var(--muted); margin: 0 0 16px; }
+  #summary { font-size: 20px; font-weight: 700; margin: 0 0 16px; }
+  .pass > td:first-child, #summary.pass { color: var(--pass); }
+  .fail > td:first-child, #summary.fail { color: var(--fail); }
+  table { border-collapse: collapse; width: 100%; }
+  td { border-top: 1px solid var(--line); padding: 8px 12px 8px 0; vertical-align: top; }
+  td:first-child { font-weight: 700; white-space: nowrap; }
+  td:last-child { color: var(--muted); font-family: ui-monospace, Consolas, monospace; font-size: 13px; overflow-wrap: anywhere; }
+  h2 { font-size: 18px; margin: 32px 0 4px; }
+  #gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+  figure { margin: 0; border: 1px solid var(--line); border-radius: 6px; padding: 12px; }
+  figure svg { display: block; width: 100%; height: 160px; }
+  .part { fill: #9aa5ab; stroke: var(--fg); stroke-width: 1; vector-effect: non-scaling-stroke; }
+  .anchor { fill: var(--fail); }
+  figcaption { font-size: 13px; color: var(--muted); margin-top: 8px; }
+  figcaption b { color: var(--fg); font-size: 15px; }
+  .tag { font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 3px; color: #fff; }
+  .tag.real { background: #1f7a3a; }
+  .tag.ex { background: #8a5a00; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Mock-up tests</h1>
+  <p class="note">Checks the .GEO parser (src/geo-parser.js) against the real parts 1045572 and 1045574, the invented example parts, the job loader (src/nest-loader.js), the picking rules (src/picking.js) and the station settings (src/settings.js).</p>
+  <p id="summary">Running…</p>
+  <table><tbody id="results"></tbody></table>
+  <h2>Parts</h2>
+  <p class="note">Every part as the parser reads it. The red dot is where the part number is marked.</p>
+  <div id="gallery"></div>
+  <noscript>JavaScript is needed to run the tests.</noscript>
+</main>
+<script>
+  // ES modules do not load from file:// pages, so explain how to open this page instead.
+  if (location.protocol === 'file:') {
+    document.getElementById('summary').textContent =
+      'Open this page through the local server: run "python -m http.server 8000" in the project folder, then go to http://localhost:8000/test/';
+  }
+</script>
+<script type="module" src="run-tests.js"></script>
+</body>
+</html>

@@ -1,0 +1,3675 @@
+BD
+SET_METRIC
+C
+BEGIN_FERTIGUNG_AUFTRAG_TMP
+C
+ZA,MM,5
+MM,AT,1,  10,1,1,,'Jobname'                           ,,'',T
+MM,AT,1,  20,1,1,,'FertAuftrBez'                      ,,'',T
+MM,AT,1,  30,1,1,,'FertStatus'                        ,,'',T
+MM,AT,1,  40,1,1,,'Programmname'                      ,,'',T
+MM,AT,1,  50,1,1,,'SollAnzahl'                        ,,'',Z
+C
+ZA,DA,1
+DA,'J14','J14_1','0','J14_1',1
+C
+ENDE_FERTIGUNG_AUFTRAG_TMP
+C
+BEGIN_PARTORDER_IN_PRODORDER
+C
+ZA,MM,5
+MM,AT,1,  10,1,1,,'LfdNummerTeil'                     ,,'',Z
+MM,AT,1,  20,1,1,,'FertAuftrBez'                      ,,'',T
+MM,AT,1,  30,1,1,,'TeileIdentNr'                      ,,'',T
+MM,AT,1,  40,1,1,,'Auftragsname'                      ,,'',T
+MM,AT,1,  50,1,1,,'AGANr'                             ,,'',T
+C
+ZA,DA,33
+DA,1,'J14_1','1045572','OR17','0020'
+DA,2,'J14_1','1045575','OR14','0020'
+DA,3,'J14_1','1045575','OR14','0020'
+DA,4,'J14_1','1045575','OR14','0020'
+DA,5,'J14_1','1045574','OR13','0020'
+DA,6,'J14_1','1045575','OR14','0020'
+DA,7,'J14_1','1045572','OR17','0020'
+DA,8,'J14_1','1045572','OR17','0020'
+DA,9,'J14_1','1045572','OR17','0020'
+DA,10,'J14_1','1045572','OR17','0020'
+DA,11,'J14_1','1045574','OR13','0020'
+DA,12,'J14_1','1045572','OR17','0020'
+DA,13,'J14_1','1045574','OR13','0020'
+DA,14,'J14_1','1045574','OR13','0020'
+DA,15,'J14_1','1045574','OR13','0020'
+DA,16,'J14_1','1045575','OR14','0020'
+DA,17,'J14_1','1045575','OR14','0020'
+DA,18,'J14_1','1045574','OR13','0020'
+DA,19,'J14_1','1045574','OR13','0020'
+DA,20,'J14_1','1045572','OR17','0020'
+DA,21,'J14_1','1045574','OR13','0020'
+DA,22,'J14_1','1045572','OR17','0020'
+DA,23,'J14_1','1045572','OR17','0020'
+DA,24,'J14_1','1045572','OR17','0020'
+DA,25,'J14_1','1045572','OR17','0020'
+DA,26,'J14_1','1045575','OR14','0020'
+DA,27,'J14_1','1045575','OR14','0020'
+DA,28,'J14_1','1045572','OR17','0020'
+DA,29,'J14_1','1045574','OR13','0020'
+DA,30,'J14_1','1045575','OR14','0020'
+DA,31,'J14_1','1045574','OR13','0020'
+DA,32,'J14_1','1045574','OR13','0020'
+DA,33,'J14_1','1045575','OR14','0020'
+C
+ENDE_PARTORDER_IN_PRODORDER
+C
+ED
+C
+BD
+SET_METRIC
+C
+BEGIN_EINRICHTEPLAN_INFO
+C
+ZA,MM,35
+MM,AT,1,  10,1,1,,'Maschine'                          ,,'',T
+MM,AT,1,  20,1,1,,'Typ'                               ,,'',Z
+MM,AT,1,  30,1,1,,'Steuerung'                         ,,'',T
+MM,AT,1,  40,1,1,,'Variante'                          ,,'',Z
+MM,AT,1,  50,1,1,,'Firma'                             ,,'',T
+MM,AT,1,  60,1,1,,'Programmnummer'                    ,,'',T
+MM,AT,1,  70,1,1,,'Bearbeiter'                        ,,'',T
+MM,AT,1,  80,1,1,,'Datum'                             ,,'',T
+MM,AT,1,  90,1,1,,'Auftragsname'                      ,,'',T
+MM,AT,1, 100,1,1,,'Anzahl der Programmdurchlaeufe'    ,,'',Z
+MM,AT,1, 110,1,1,,'Tafelname'                         ,,'',T
+MM,AT,1, 120,1,1,,'Speicherbedarf'                    ,,'',Z
+MM,AT,1, 130,1,1,,'Material-ID'                       ,,'',T
+MM,AT,1, 140,1,1,,'Tafelgewicht'                      ,,'kg',Z
+MM,AT,1, 150,1,1,,'Maschinenzeit'                     ,,'min',Z
+MM,AT,1, 160,1,1,,'Bemerkung'                         ,,'',T
+MM,AT,1, 170,1,1,,'Flag Automatisiert'                ,,'Bool',Z
+MM,AT,1, 180,1,1,,'Flag ToPsxxx-Programm'             ,,'Bool',Z
+MM,AT,1, 190,1,1,,'Einrichteplanfilename'             ,,'',T
+MM,AT,1, 200,1,1,,'Lagergutbezeichnung'               ,,'',T
+MM,AT,1, 210,1,1,,'Palettierungsflag'                 ,,'Bool',Z
+MM,AT,1, 220,1,1,,'Palettierungmodus'                 ,,'',Z
+MM,AT,1, 230,1,1,,'Palette putzen'                    ,,'Bool',Z
+MM,AT,1, 240,1,1,,'Sauger putzen'                     ,,'Bool',Z
+MM,AT,1, 250,1,1,,'SystemPalletType'                  ,,'',T
+MM,AT,1, 260,1,1,,'Bearbeitungszeit PierceLine'       ,,'min',Z
+MM,AT,1, 270,1,1,,'Schneidl�nge'                      ,,'mm',Z
+MM,AT,1, 280,1,1,,'viewer name machine'               ,,'',T
+MM,AT,1, 350,1,1,,'ProgrammingSystemSignature'        ,,'',T
+MM,AT,1, 360,1,1,,'PlatformType'                      ,,'',T
+MM,AT,1, 370,1,1,,'PowerClass'                        ,,'',T
+MM,AT,1, 380,1,1,,'SoftwareVersion'                   ,,'',T
+MM,AT,1, 390,1,1,,'WorkingRangeX'                     ,,'mm',Z
+MM,AT,1, 400,1,1,,'WorkingRangeY'                     ,,'mm',Z
+MM,AT,1, 410,1,1,,'EquipmentNumber'                   ,,'',T
+C
+ZA,DA,1
+DA,'L76',51,'Sin 840D',1,'Trumpf','J14_1','User','02.10.2026','',1,'J14_1.LST',
+* 15500,'St37-80',125.60,8.14,'',0,1,'','ST0M0800----2000x1000',0,1,1,1,'',
+* 8.14,47053.13,'TruLaser 3030 (L95)','Cut V21.04.55 B00 2.3.0.0','PLL01',
+* '3000','2.3.0_B0',3000,1500,'A2221_0'
+C
+ENDE_EINRICHTEPLAN_INFO
+C
+BEGIN_ANALYTICS_DATA
+C
+ZA,MM,2
+MM,AT,1,  10,1,1,,'AnalyticsKey'                      ,,'',T
+MM,AT,1,  20,1,1,,'AnalyticsValue'                    ,,'',T
+C
+ZA,DA,4
+DA,'analyticsDataProvider','TruTops Boost Cut'
+DA,'FabJobGuid','2987af4a-753c-40a6-b60f-fedf1f23d9f8'
+DA,'BoostCutJobSessionGuid','af8dc3f5-d840-48e0-ae52-338de49ee6b9'
+DA,'NcProgramGuid','2012479d-987b-4d79-b4f5-446ccc919301'
+C
+ENDE_ANALYTICS_DATA
+C
+BEGIN_PROGRAM_PROPERTIES
+C
+ZA,MM,6
+MM,AT,1,  20,1,1,,'ProgramType'                       ,,'',Z
+MM,AT,1,  80,1,1,,'FluidSprayMode'                    ,,'',Z
+MM,AT,1, 120,1,1,,'MarkingLaserTechnologyName'        ,,'',T
+MM,AT,1, 130,1,1,,'LabelEncodingTypes'                ,,'',Z
+MM,AT,1, 140,1,1,,'CodeSignature'                     ,,'',T
+MM,AT,1, 160,1,1,,'LabelBeforeCutActive'              ,,'Bool',Z
+C
+ZA,DA,1
+DA,3,0,'ST080MD5-N2S0-30-2',0,'CodeSignature_NONE',0
+C
+ENDE_PROGRAM_PROPERTIES
+C
+BEGIN_SHEET_TECH
+C
+ZA,MM,16
+MM,AT,1,  10,1,1,,'Tabellenidentifikator'             ,,'',T
+MM,AT,1,  20,1,1,,'Blechmass X'                       ,,'mm',Z
+MM,AT,1,  30,1,1,,'Blechmass Y'                       ,,'mm',Z
+MM,AT,1,  40,1,1,,'Blechmass Z'                       ,,'mm',Z
+MM,AT,1, 200,1,1,,'TRUMPF-Kennung'                    ,,'',Z
+MM,AT,1, 220,1,1,,'Blechmass X real'                  ,,'mm',Z
+MM,AT,1, 230,1,1,,'Blechmass Y real'                  ,,'mm',Z
+MM,AT,1, 240,1,1,,'Materialkennung'                   ,,'',T
+MM,AT,1, 260,1,1,,'Werkstoffdichte'                   ,,'kg/dm3',Z
+MM,AT,1, 280,1,1,,'Dynamikstufe'                      ,,'',Z
+MM,AT,1, 290,1,1,,'Werkstoffkennung'                  ,,'',T
+MM,AT,1, 340,1,1,,'Thickness Tolerance Plus'          ,,'mm',Z
+MM,AT,1, 350,1,1,,'Thickness Tolerance Minus'         ,,'mm',Z
+MM,AT,1, 370,1,1,,'AdvancedEvaporateSwitch'           ,,'',Z
+MM,AT,1, 380,1,1,,'AdvancedEvaporateCircleRadius'     ,,'mm',Z
+MM,AT,1, 390,1,1,,'Surface Optical Reflection Property',,'',Z
+C
+ZA,DA,1
+DA,'SHT-1',2000.00,1000.00,8.00,1,2000.00,1000.00,'St37-80',7.850,0.0,'1.0038',
+* 0.90,0.90,0,4.00,2
+C
+ENDE_SHEET_TECH
+C
+BEGIN_MACHINE_LOAD_DATA
+C
+ZA,MM,10
+MM,AT,1,  10,1,1,,'Load Name'                         ,,'',T
+MM,AT,1,  50,1,1,,'Loading Type'                      ,,'',Z
+MM,AT,1,  60,1,1,,'Calibration Active'                ,,'Bool',Z
+MM,AT,1, 100,1,1,,'Pallet Changer Type'               ,,'',Z
+MM,AT,1, 110,1,1,,'Sheet Stop'                        ,,'',Z
+MM,AT,1, 120,1,1,,'Measure Sheet Position'            ,,'',Z
+MM,AT,1, 130,1,1,,'Measuring Range X'                 ,,'mm',Z
+MM,AT,1, 140,1,1,,'Measuring Range Y'                 ,,'mm',Z
+MM,AT,1, 150,1,1,,'Measuring Corner'                  ,,'',Z
+MM,AT,1, 260,1,1,,'LoadingTime'                       ,,'s',Z
+C
+ZA,DA,1
+DA,'SHL-1',1,1,1,1,1,50.00,50.00,1,8.00
+C
+ENDE_MACHINE_LOAD_DATA
+C
+BEGIN_LTT_STAMM
+C
+ZA,MM,412
+MM,AT,1,  10,1,1,,'Tabellenidentifikator'             ,,'',T
+MM,AT,1,  20,1,1,,'Bearbeiter'                        ,,'',T
+MM,AT,1,  30,1,1,,'Erstellungsdatum'                  ,,'',T
+MM,AT,1,  40,1,1,,'letzte Aenderung'                  ,,'',T
+MM,AT,1,  50,1,1,,'Bemerkung'                         ,,'',T
+MM,AT,1,  60,1,1,,'Einblendstatus'                    ,,'',Z
+MM,AT,1,  70,1,1,,'Erstellungs-Einheit'               ,,'',Z
+MM,AT,1,  80,1,1,,'Maschinentyp'                      ,,'',T
+MM,AT,1,  90,1,1,,'Lasernennleistung'                 ,,'W',Z
+MM,AT,1, 100,1,1,,'Material'                          ,,'',T
+MM,AT,1, 110,1,1,,'Materialdicke'                     ,,'mm',Z
+MM,AT,1, 120,1,1,,'Linsenbrennweite'                  ,,'in',Z
+MM,AT,1, 130,1,1,,'Duesentyp Duesendurchmesser'       ,,'',T
+MM,AT,1, 140,1,1,,'Schneidkopfnummer'                 ,,'',Z
+MM,AT,1, 150,1,1,,'Gasspuelen Schneiden-Einst'        ,,'s',Z
+MM,AT,1, 160,1,1,,'Gasspuelen Einst-Schneiden'        ,,'s',Z
+MM,AT,1, 170,1,1,,'SCHN Einstellmass'                 ,,'mm',Z
+MM,AT,1, 180,1,1,,'SCHN red. Beschleunigung'          ,,'m/s2',Z
+MM,AT,1, 190,1,1,,'SCHN Beschleunigung'               ,,'m/s2',Z
+MM,AT,1, 200,1,1,,'SCHN Eckenkuehlzeit'               ,,'s',Z
+MM,AT,1, 210,1,1,,'SCHN V-Red AnschnittDickblech'     ,,'%',Z
+MM,AT,1, 220,1,1,,'SCHN Gasart Schneiden'             ,,'',Z
+MM,AT,1, 230,1,1,,'SCHN Gasart red. Schneiden'        ,,'',Z
+MM,AT,1, 240,1,1,,'SCHN-GR Schnittspalt'              ,,'mm',Z
+MM,AT,1, 250,1,1,,'SCHN-GR-N Laserleistung'           ,,'W',Z
+MM,AT,1, 260,1,1,,'SCHN-GR-N Tastfrequenz'            ,,'Hz',Z
+MM,AT,1, 270,1,1,,'SCHN-GR-N Geschwindigkeit'         ,,'m/min',Z
+MM,AT,1, 280,1,1,,'SCHN-GR-N Duesenabstand'           ,,'mm',Z
+MM,AT,1, 290,1,1,,'SCHN-GR-N Gasdruck'                ,,'bar',Z
+MM,AT,1, 300,1,1,,'SCHN-GR-R Laserleistung'           ,,'W',Z
+MM,AT,1, 310,1,1,,'SCHN-GR-R Tastfrequenz'            ,,'Hz',Z
+MM,AT,1, 320,1,1,,'SCHN-GR-R Geschwindigkeit'         ,,'m/min',Z
+MM,AT,1, 330,1,1,,'SCHN-GR-R Duesenabstand'           ,,'mm',Z
+MM,AT,1, 340,1,1,,'SCHN-GR-R Gasdruck'                ,,'bar',Z
+MM,AT,1, 350,1,1,,'SCHN-MI Schnittspalt'              ,,'mm',Z
+MM,AT,1, 360,1,1,,'SCHN-MI-N Laserleistung'           ,,'W',Z
+MM,AT,1, 370,1,1,,'SCHN-MI-N Tastfrequenz'            ,,'Hz',Z
+MM,AT,1, 380,1,1,,'SCHN-MI-N Geschwindigkeit'         ,,'m/min',Z
+MM,AT,1, 390,1,1,,'SCHN-MI-N Duesenabstand'           ,,'mm',Z
+MM,AT,1, 400,1,1,,'SCHN-MI-N Gasdruck'                ,,'bar',Z
+MM,AT,1, 410,1,1,,'SCHN-MI-R Laserleistung'           ,,'W',Z
+MM,AT,1, 420,1,1,,'SCHN-MI-R Tastfrequenz'            ,,'Hz',Z
+MM,AT,1, 430,1,1,,'SCHN-MI-R Geschwindigkeit'         ,,'m/min',Z
+MM,AT,1, 440,1,1,,'SCHN-MI-R Duesenabstand'           ,,'mm',Z
+MM,AT,1, 450,1,1,,'SCHN-MI-R Gasdruck'                ,,'bar',Z
+MM,AT,1, 460,1,1,,'SCHN-KL Schnittspalt'              ,,'mm',Z
+MM,AT,1, 470,1,1,,'SCHN-KL-N Laserleistung'           ,,'W',Z
+MM,AT,1, 480,1,1,,'SCHN-KL-N Tastfrequenz'            ,,'Hz',Z
+MM,AT,1, 490,1,1,,'SCHN-KL-N Geschwindigkeit'         ,,'m/min',Z
+MM,AT,1, 500,1,1,,'SCHN-KL-N Duesenabstand'           ,,'mm',Z
+MM,AT,1, 510,1,1,,'SCHN-KL-N Gasdruck'                ,,'bar',Z
+MM,AT,1, 520,1,1,,'SCHN-KL-R Laserleistung'           ,,'W',Z
+MM,AT,1, 530,1,1,,'SCHN-KL-R Tastfrequenz'            ,,'Hz',Z
+MM,AT,1, 540,1,1,,'SCHN-KL-R Geschwindigkeit'         ,,'m/min',Z
+MM,AT,1, 550,1,1,,'SCHN-KL-R Duesenabstand'           ,,'mm',Z
+MM,AT,1, 560,1,1,,'SCHN-KL-R Gasdruck'                ,,'bar',Z
+MM,AT,1, 570,1,1,,'EINS Einstellmass'                 ,,'mm',Z
+MM,AT,1, 580,1,1,,'EINS-N Zeit'                       ,,'s',Z
+MM,AT,1, 590,1,1,,'EINS-N Rampenzyklusnummer'         ,,'',Z
+MM,AT,1, 600,1,1,,'EINS-N Duesenabstand'              ,,'mm',Z
+MM,AT,1, 610,1,1,,'EINS-N Ausblaszeit'                ,,'s',Z
+MM,AT,1, 620,1,1,,'EINS-N Gasart'                     ,,'',Z
+MM,AT,1, 630,1,1,,'EINS-N Gasdruck'                   ,,'bar',Z
+MM,AT,1, 640,1,1,,'EINS-N Oelspruehen'                ,,'',Z
+MM,AT,1, 650,1,1,,'EINS-R Zeit'                       ,,'s',Z
+MM,AT,1, 660,1,1,,'EINS-R Rampenzyklusnummer'         ,,'',Z
+MM,AT,1, 670,1,1,,'EINS-R Duesenabstand'              ,,'mm',Z
+MM,AT,1, 680,1,1,,'EINS-R Ausblaszeit'                ,,'s',Z
+MM,AT,1, 690,1,1,,'EINS-R Gasart'                     ,,'',Z
+MM,AT,1, 700,1,1,,'EINS-R Gasdruck'                   ,,'bar',Z
+MM,AT,1, 710,1,1,,'EINS-R Oelspruehen'                ,,'',Z
+MM,AT,1, 720,1,1,,'ABDA Einstellmass'                 ,,'mm',Z
+MM,AT,1, 730,1,1,,'ABDA Zeit'                         ,,'s',Z
+MM,AT,1, 740,1,1,,'ABDA Duesenabstand'                ,,'mm',Z
+MM,AT,1, 750,1,1,,'ABDA Laserleistung'                ,,'W',Z
+MM,AT,1, 760,1,1,,'ABDA Tastfrequenz'                 ,,'Hz',Z
+MM,AT,1, 770,1,1,,'ABDA Geschwindigkeit'              ,,'m/min',Z
+MM,AT,1, 780,1,1,,'ABDA Gasart'                       ,,'',Z
+MM,AT,1, 790,1,1,,'ABDA Gasdruck'                     ,,'bar',Z
+MM,AT,1, 800,1,1,,'KENN Einstellmass'                 ,,'mm',Z
+MM,AT,1, 810,1,1,,'KENN Duesenabstand'                ,,'mm',Z
+MM,AT,1, 820,1,1,,'KENN Laserleistung'                ,,'W',Z
+MM,AT,1, 830,1,1,,'KENN Tastfrequenz'                 ,,'Hz',Z
+MM,AT,1, 840,1,1,,'KENN Geschwindigkeit'              ,,'m/min',Z
+MM,AT,1, 850,1,1,,'KENN Gasart'                       ,,'',Z
+MM,AT,1, 860,1,1,,'KENN Gasdruck'                     ,,'bar',Z
+MM,AT,1, 870,1,1,,'KOER-G Einstellmass'               ,,'mm',Z
+MM,AT,1, 880,1,1,,'KOER-G Duesenabstand'              ,,'mm',Z
+MM,AT,1, 890,1,1,,'KOER-G Laserleistung'              ,,'W',Z
+MM,AT,1, 900,1,1,,'KOER-G Tastfrequenz'               ,,'Hz',Z
+MM,AT,1, 910,1,1,,'KOER-G Geschwindigkeit'            ,,'m/min',Z
+MM,AT,1, 920,1,1,,'KOER-G Gasart'                     ,,'',Z
+MM,AT,1, 930,1,1,,'KOER-G Gasdruck'                   ,,'bar',Z
+MM,AT,1, 940,1,1,,'KOER-P Einstechzeit'               ,,'s',Z
+MM,AT,1, 950,1,1,,'KOER-P Rampenzyklusnummer'         ,,'',Z
+MM,AT,1, 960,1,1,,'KOER-P Duesenabstand'              ,,'mm',Z
+MM,AT,1, 970,1,1,,'KOER-P Gasart'                     ,,'',Z
+MM,AT,1, 980,1,1,,'KOER-P Gasdruck'                   ,,'bar',Z
+MM,AT,1, 990,1,1,,'PUNK Einstellmass'                 ,,'mm',Z
+MM,AT,1,1000,1,1,,'PUNK-S Zeit'                       ,,'s',Z
+MM,AT,1,1010,1,1,,'PUNK-S Rampenzyklusnummer'         ,,'',Z
+MM,AT,1,1020,1,1,,'PUNK-S Duesenabstand'              ,,'mm',Z
+MM,AT,1,1030,1,1,,'PUNK-S Gasart'                     ,,'',Z
+MM,AT,1,1040,1,1,,'PUNK-S Gasdruck'                   ,,'bar',Z
+MM,AT,1,1050,1,1,,'PUNK-F Zeit'                       ,,'s',Z
+MM,AT,1,1060,1,1,,'PUNK-F Rampenzyklusnummer'         ,,'',Z
+MM,AT,1,1070,1,1,,'PUNK-F Duesenabstand'              ,,'mm',Z
+MM,AT,1,1080,1,1,,'PUNK-F Gasart'                     ,,'',Z
+MM,AT,1,1090,1,1,,'PUNK-F Gasdruck'                   ,,'bar',Z
+MM,AT,1,1100,1,1,,'TRUMPF-Kennung'                    ,,'',Z
+MM,AT,1,1110,1,1,,'Vorschub Anf. aus Stanzloch'       ,,'%',Z
+MM,AT,1,1120,1,1,,'SCHN-GR Einstellmass'              ,,'mm',Z
+MM,AT,1,1130,1,1,,'SCHN-MI Einstellmass'              ,,'mm',Z
+MM,AT,1,1140,1,1,,'SCHN-KL Einstellmass'              ,,'mm',Z
+MM,AT,1,1150,1,1,,'EINS-N Zeit SprintLas'             ,,'s',Z
+MM,AT,1,1160,1,1,,'SCHN hohe Beschleunigung'          ,,'m/s2',Z
+MM,AT,1,1730,1,1,,'PlasmaLine Aktiv'                  ,,'',Z
+MM,AT,1,1740,1,1,,'PlasmaLine-Schwellenwert 1'        ,,'%',Z
+MM,AT,1,1750,1,1,,'PlasmaLine-Schwellenwert 2'        ,,'%',Z
+MM,AT,1,1760,1,1,,'LLS - LFS Modus'                   ,,'',Z
+MM,AT,1,1770,1,1,,'LLS obere Grenze in %'             ,,'%',Z
+MM,AT,1,1780,1,1,,'Leistung bei oberer Grenze in %'   ,,'%',Z
+MM,AT,1,1790,1,1,,'LLS untere Grenze in %'            ,,'%',Z
+MM,AT,1,1800,1,1,,'Leistung bei unterer Grenze in %'  ,,'%',Z
+MM,AT,1,1810,1,1,,'LFS obere Grenze in %'             ,,'%',Z
+MM,AT,1,1820,1,1,,'Frequenz bei oberer Grenze in %'   ,,'%',Z
+MM,AT,1,1830,1,1,,'LFS untere Grenze in %'            ,,'%',Z
+MM,AT,1,1840,1,1,,'Frequenz bei unterer Grenze in %'  ,,'%',Z
+MM,AT,1,1850,1,1,,'Sensorik Einstechen normal'        ,,'',Z
+MM,AT,1,1860,1,1,,'Sensorik Einstechen sanft'         ,,'',Z
+MM,AT,1,1870,1,1,,'SCHN-GR Strahldurchmesser'         ,,'mm',Z
+MM,AT,1,1880,1,1,,'SCHN-MI Strahldurchmesser'         ,,'mm',Z
+MM,AT,1,1890,1,1,,'SCHN-KL Strahldurchmesser'         ,,'mm',Z
+MM,AT,1,1900,1,1,,'EINS Strahldurchmesser'            ,,'mm',Z
+MM,AT,1,1910,1,1,,'ABDA Strahldurchmesser'            ,,'mm',Z
+MM,AT,1,1920,1,1,,'KENN Strahldurchmesser'            ,,'mm',Z
+MM,AT,1,1930,1,1,,'KOER Strahldurchmesser'            ,,'mm',Z
+MM,AT,1,1940,1,1,,'PUNK Strahldurchmesser'            ,,'mm',Z
+MM,AT,1,1950,1,1,,'LLS Geschw. bei oberer Grenze'     ,,'m/min',Z
+MM,AT,1,1960,1,1,,'Leistung bei oberer Grenze'        ,,'W',Z
+MM,AT,1,1970,1,1,,'LLS Geschw. bei unterer Grenze'    ,,'m/min',Z
+MM,AT,1,1980,1,1,,'Leistung bei unterer Grenze'       ,,'W',Z
+MM,AT,1,1990,1,1,,'LFS Geschw. bei oberer Grenze'     ,,'m/min',Z
+MM,AT,1,2000,1,1,,'Frequenz bei oberer Grenze'        ,,'Hz',Z
+MM,AT,1,2010,1,1,,'LFS Geschw. bei unterer Grenze'    ,,'m/min',Z
+MM,AT,1,2020,1,1,,'Frequenz bei unterer Grenze'       ,,'Hz',Z
+MM,AT,1,2030,1,1,,'EINS sanft Einstellmass'           ,,'mm',Z
+MM,AT,1,2040,1,1,,'PlasmaLine Aktiv Mittlere Kontur'  ,,'',Z
+MM,AT,1,2050,1,1,,'PlasmaLine Aktiv Kleine Kontur'    ,,'',Z
+MM,AT,1,2060,1,1,,'Beschleunigung Sonderbearb.'       ,,'m/s2',Z
+MM,AT,1,2070,1,1,,'PierceLine Strahldurchmesser'      ,,'mm',Z
+MM,AT,1,2080,1,1,,'PierceLine-N Einstellmass'         ,,'mm',Z
+MM,AT,1,2090,1,1,,'PierceLine-N Zeit'                 ,,'s',Z
+MM,AT,1,2100,1,1,,'PierceLine-N Rampenzyklusnummer'   ,,'',Z
+MM,AT,1,2110,1,1,,'PierceLine-N Duesenabstand'        ,,'mm',Z
+MM,AT,1,2120,1,1,,'PierceLine-N Ausblaszeit'          ,,'s',Z
+MM,AT,1,2130,1,1,,'PierceLine-N Gasart'               ,,'',Z
+MM,AT,1,2140,1,1,,'PierceLine-N Gasdruck'             ,,'bar',Z
+MM,AT,1,2150,1,1,,'PierceLine-N Oelspruehen'          ,,'',Z
+MM,AT,1,2160,1,1,,'PierceLine-N Sensortyp'            ,,'',Z
+MM,AT,1,2170,1,1,,'PierceLine-N Querblasen'           ,,'Bool',Z
+MM,AT,1,2180,1,1,,'PierceLine-R Einstellmass'         ,,'mm',Z
+MM,AT,1,2190,1,1,,'PierceLine-R Zeit'                 ,,'s',Z
+MM,AT,1,2200,1,1,,'PierceLine-R Rampenzyklusnummer'   ,,'',Z
+MM,AT,1,2210,1,1,,'PierceLine-R Duesenabstand'        ,,'mm',Z
+MM,AT,1,2220,1,1,,'PierceLine-R Ausblaszeit'          ,,'s',Z
+MM,AT,1,2230,1,1,,'PierceLine-R Gasart'               ,,'',Z
+MM,AT,1,2240,1,1,,'PierceLine-R Gasdruck'             ,,'bar',Z
+MM,AT,1,2250,1,1,,'PierceLine-R Oelspruehen'          ,,'',Z
+MM,AT,1,2260,1,1,,'PierceLine-R Sensortyp'            ,,'',Z
+MM,AT,1,2270,1,1,,'PierceLine-R Querblasen'           ,,'Bool',Z
+MM,AT,1,2280,1,1,,'SCHN hohe Beschleun. Kinematik 2'  ,,'m/s2',Z
+MM,AT,1,2290,1,1,,'Material-Standard'                 ,,'',Z
+MM,AT,1,2300,1,1,,'Ausgangstabelle'                   ,,'',T
+MM,AT,1,2310,1,1,,'Offset Einstellmass'               ,,'mm',Z
+MM,AT,1,2320,1,1,,'SCHN hohe Beschleun. 2. X-Achse'   ,,'m/s2',Z
+MM,AT,1,2330,1,1,,'Laserheadtype'                     ,,'',Z
+MM,AT,1,2340,1,1,,'Schneidkopf Generation'            ,,'',Z
+MM,AT,1,2350,1,1,,'Schneidkopf Identifikation'        ,,'',Z
+MM,AT,1,2360,1,1,,'untere Grenzgeschw. AWS. Kennz.'   ,,'m/min',Z
+MM,AT,1,2370,1,1,,'Leistung bei unterer Grenze Kennz.',,'W',Z
+MM,AT,1,2380,1,1,,'untere Grenzgeschw. AWS. Abda.'    ,,'m/min',Z
+MM,AT,1,2390,1,1,,'Leistung bei unterer Grenze Abda.' ,,'W',Z
+MM,AT,1,2400,1,1,,'Frequenz bei unterer Grenze Kennz.',,'Hz',Z
+MM,AT,1,2410,1,1,,'Frequenz bei unterer Grenze Abda.' ,,'Hz',Z
+MM,AT,1,2420,1,1,,'SCHN normale Beschleun. 2. Y-Achse',,'m/s2',Z
+MM,AT,1,2430,1,1,,'SCHN normale Beschleun. 2. X-Achse',,'m/s2',Z
+MM,AT,1,2440,1,1,,'Linsenbrennweite metr. SchnKopftyp 7',,'mm',Z
+MM,AT,1,2450,1,1,,'Geschw. AWS Mittl. Stuetzpkt Leist.Steu.',,'m/min',Z
+MM,AT,1,2460,1,1,,'Leistg AWS Mittl. Stuetzpkt Leist.Steu.',,'W',Z
+MM,AT,1,2470,1,1,,'Geschw. AWS Mittl. Stuetzpkt Freq.Steu.',,'m/min',Z
+MM,AT,1,2480,1,1,,'Freq. AWS Mittl. Stuetzpkt Freq.Steu.',,'Hz',Z
+MM,AT,1,2490,1,1,,'Aktivierung AWS Mittlere Kontur'   ,,'',Z
+MM,AT,1,2500,1,1,,'PulsePower Regulation'             ,,'W',Z
+MM,AT,1,2510,1,1,,'Approachmode Large Contour'        ,,'',Z
+MM,AT,1,2520,1,1,,'Approachmode Medium Contour'       ,,'',Z
+MM,AT,1,2530,1,1,,'Approachmode Small Contour'        ,,'',Z
+MM,AT,1,2540,1,1,,'PierceLine-N Einstellmass vollsyn.',,'mm',Z
+MM,AT,1,2550,1,1,,'PierceLine-N Zeit vollsyn.'        ,,'s',Z
+MM,AT,1,2560,1,1,,'PierceLine-N Gasdruck vollsyn.'    ,,'bar',Z
+MM,AT,1,2570,1,1,,'PierceLine-R Einstellmass vollsyn.',,'mm',Z
+MM,AT,1,2580,1,1,,'PierceLine-R Zeit vollsyn.'        ,,'s',Z
+MM,AT,1,2590,1,1,,'PierceLine-R Gasdruck vollsyn.'    ,,'bar',Z
+MM,AT,1,2600,1,1,,'Base Name'                         ,,'',T
+MM,AT,1,2610,1,1,,'Dimension Machine Min.'            ,,'mm',Z
+MM,AT,1,2620,1,1,,'Dimension Machine Max.'            ,,'mm',Z
+MM,AT,1,2630,1,1,,'ISO-Material Name'                 ,,'',T
+MM,AT,1,2640,1,1,,'Laser Type'                        ,,'',T
+MM,AT,1,2650,1,1,,'Filter FoilType'                   ,,'',Z
+MM,AT,1,2660,1,1,,'Filter Suitable For Coating'       ,,'',Z
+MM,AT,1,2670,1,1,,'Filter Processing Technology 1'    ,,'',Z
+MM,AT,1,2680,1,1,,'Filter Processing Technology 2'    ,,'',Z
+MM,AT,1,2700,1,1,,'Cut Change Mode Large'             ,,'',Z
+MM,AT,1,2710,1,1,,'Cut Change Mode Medium'            ,,'',Z
+MM,AT,1,2720,1,1,,'Cut Change Mode Small'             ,,'',Z
+MM,AT,1,2730,1,1,,'Cut Change Path Length Large'      ,,'mm',Z
+MM,AT,1,2740,1,1,,'Cut Change Path Length Medium'     ,,'mm',Z
+MM,AT,1,2750,1,1,,'Cut Change Path Length Small'      ,,'mm',Z
+MM,AT,1,2760,1,1,,'Cut Change Start Setting Value Large',,'mm',Z
+MM,AT,1,2770,1,1,,'Cut Change Start Setting Value Medium',,'mm',Z
+MM,AT,1,2780,1,1,,'Cut Change Start Setting Value Small',,'mm',Z
+MM,AT,1,2790,1,1,,'EINST_NOR_QUERBLASEN'              ,,'Bool',Z
+MM,AT,1,2800,1,1,,'EINST_SAN_QUERBLASEN'              ,,'Bool',Z
+MM,AT,1,2810,1,1,,'SALES_STATUS'                      ,,'',Z
+MM,AT,1,2820,1,1,,'SCH_KL_RED_FOKUSLAGE'              ,,'mm',Z
+MM,AT,1,2830,1,1,,'SCH_MI_RED_FOKUSLAGE'              ,,'mm',Z
+MM,AT,1,2840,1,1,,'SCH_GR_RED_FOKUSLAGE'              ,,'mm',Z
+MM,AT,1,2850,1,1,,'SCHN-GR-R Fokuslage LI'            ,,'mm',Z
+MM,AT,1,2860,1,1,,'SCHN-GR-R Geschwindigkeit LI'      ,,'m/min',Z
+MM,AT,1,2870,1,1,,'SCHN-GR-R Duesenabstand LI'        ,,'mm',Z
+MM,AT,1,2880,1,1,,'SCHN-GR-R Gasdruck LI'             ,,'bar',Z
+MM,AT,1,2890,1,1,,'SCHN-MI-R Fokuslage LI'            ,,'mm',Z
+MM,AT,1,2900,1,1,,'SCHN-MI-R Geschwindigkeit LI'      ,,'m/min',Z
+MM,AT,1,2910,1,1,,'SCHN-MI-R Duesenabstand LI'        ,,'mm',Z
+MM,AT,1,2920,1,1,,'SCHN-MI-R Gasdruck LI'             ,,'bar',Z
+MM,AT,1,2930,1,1,,'SCHN-KL-R Fokuslage LI'            ,,'mm',Z
+MM,AT,1,2940,1,1,,'SCHN-KL-R Geschwindigkeit LI'      ,,'m/min',Z
+MM,AT,1,2950,1,1,,'SCHN-KL-R Duesenabstand LI'        ,,'mm',Z
+MM,AT,1,2960,1,1,,'SCHN-KL-R Gasdruck LI'             ,,'bar',Z
+MM,AT,1,2970,1,1,,'SCHN-GR Fokus DM'                  ,,'um',Z
+MM,AT,1,2980,1,1,,'SCHN-MI Fokus DM'                  ,,'um',Z
+MM,AT,1,2990,1,1,,'SCHN-KL Fokus DM'                  ,,'um',Z
+MM,AT,1,3000,1,1,,'PierceLine-N Fokus DM'             ,,'um',Z
+MM,AT,1,3010,1,1,,'PierceLine-R Fokus DM'             ,,'um',Z
+MM,AT,1,3020,1,1,,'ABDA Fokus DM'                     ,,'um',Z
+MM,AT,1,3030,1,1,,'KENNZ Fokus DM'                    ,,'um',Z
+MM,AT,1,3040,1,1,,'KOER Fokus DM'                     ,,'um',Z
+MM,AT,1,3050,1,1,,'PUNK Fokus DM'                     ,,'um',Z
+MM,AT,1,3060,1,1,,'EINS-R Querblasdruck'              ,,'bar',Z
+MM,AT,1,3070,1,1,,'EINS-N Querblasdruck'              ,,'bar',Z
+MM,AT,1,3080,1,1,,'PierceLine-R Querblasdruck'        ,,'bar',Z
+MM,AT,1,3090,1,1,,'PierceLine-N Querblasdruck'        ,,'bar',Z
+MM,AT,1,3100,1,1,,'FiberOpticCableDiameter'           ,,'um',Z
+MM,AT,1,3130,1,1,,'SCHN-KL-N Pulse Power'             ,,'W',Z
+MM,AT,1,3140,1,1,,'SCHN-MI-N Pulse Power'             ,,'W',Z
+MM,AT,1,3150,1,1,,'SCHN-GR-N Pulse Power'             ,,'W',Z
+MM,AT,1,3160,1,1,,'KENNZ Pulse Power'                 ,,'W',Z
+MM,AT,1,3230,1,1,,'MaterialCharacteristicCurve'       ,,'',Z
+MM,AT,1,3360,1,1,,'Variant'                           ,,'',Z
+MM,AT,1,3370,1,1,,'Fokusdurchmesser f. Einstechen normal o. PCS',,'um',Z
+MM,AT,1,3380,1,1,,'Fokusdurchmesser f. Einstechen sanft o. PCS',,'um',Z
+MM,AT,1,3610,1,1,,'SCH_GR_NOR_GESCHW_MIN'             ,,'m/min',Z
+MM,AT,1,3620,1,1,,'TargetTechnology'                  ,,'',Z
+MM,AT,1,3630,1,1,,'CuttingHeadQuantity'               ,,'',Z
+MM,AT,1,3640,1,1,,'EINST_SAN_STRAHL_DM_PCS'           ,,'mm',Z
+MM,AT,1,3650,1,1,,'FocusShiftShortestBeamPath'        ,,'mm',Z
+MM,AT,1,3660,1,1,,'FocusShiftLongestBeamPath'         ,,'mm',Z
+MM,AT,1,3670,1,1,,'Internal Code'                     ,,'',Z
+MM,AT,1,3680,1,1,,'EINST_SAN_STRAHL_DM'               ,,'mm',Z
+MM,AT,1,3690,1,1,,'FiberOpticCableCladdingDiameter'   ,,'um',Z
+MM,AT,1,3700,1,1,,'EINST_SAN_MODUS_PCS'               ,,'',Z
+MM,AT,1,3710,1,1,,'PierceLine-R Einstellmass Stufe 2' ,,'mm',Z
+MM,AT,1,3720,1,1,,'PierceLine-R Fokus DM Stufe 2'     ,,'um',Z
+MM,AT,1,3730,1,1,,'EINST_SAN_STRAHL_DM_PCS Stufe 2'   ,,'mm',Z
+MM,AT,1,3740,1,1,,'PierceLine-R Zeit Stufe 2'         ,,'s',Z
+MM,AT,1,3750,1,1,,'PierceLine-R Rampenzyklusnummer Stufe 2',,'',Z
+MM,AT,1,3760,1,1,,'PierceLine-R Duesenabstand Stufe 2',,'mm',Z
+MM,AT,1,3770,1,1,,'PierceLine-R Ausblaszeit Stufe 2'  ,,'s',Z
+MM,AT,1,3780,1,1,,'PierceLine-R Gasart Stufe 2'       ,,'',Z
+MM,AT,1,3790,1,1,,'PierceLine-R Gasdruck Stufe 2'     ,,'bar',Z
+MM,AT,1,3800,1,1,,'PierceLine-R Oelspruehen Stufe 2'  ,,'',Z
+MM,AT,1,3810,1,1,,'PierceLine-R Sensortyp Stufe 2'    ,,'',Z
+MM,AT,1,3820,1,1,,'PierceLine-R Querblasen Stufe 2'   ,,'',Z
+MM,AT,1,3830,1,1,,'PierceLine-R Querblasdruck Stufe 2',,'bar',Z
+MM,AT,1,3840,1,1,,'PierceLine-R Einstellmass Stufe 3' ,,'mm',Z
+MM,AT,1,3850,1,1,,'PierceLine-R Fokus DM Stufe 3'     ,,'um',Z
+MM,AT,1,3860,1,1,,'EINST_SAN_STRAHL_DM_PCS Stufe 3'   ,,'mm',Z
+MM,AT,1,3870,1,1,,'PierceLine-R Zeit Stufe 3'         ,,'s',Z
+MM,AT,1,3880,1,1,,'PierceLine-R Rampenzyklusnummer Stufe 3',,'',Z
+MM,AT,1,3890,1,1,,'PierceLine-R Duesenabstand Stufe 3',,'mm',Z
+MM,AT,1,3900,1,1,,'PierceLine-R Ausblaszeit Stufe 3'  ,,'s',Z
+MM,AT,1,3910,1,1,,'PierceLine-R Gasart Stufe 3'       ,,'',Z
+MM,AT,1,3920,1,1,,'PierceLine-R Gasdruck Stufe 3'     ,,'bar',Z
+MM,AT,1,3930,1,1,,'PierceLine-R Oelspruehen Stufe 3'  ,,'',Z
+MM,AT,1,3940,1,1,,'PierceLine-R Sensortyp Stufe 3'    ,,'',Z
+MM,AT,1,3950,1,1,,'PierceLine-R Querblasen Stufe 3'   ,,'',Z
+MM,AT,1,3960,1,1,,'PierceLine-R Querblasdruck Stufe 3',,'bar',Z
+MM,AT,1,3980,1,1,,'PierceLine-R Querblasen Stufe 1'   ,,'',Z
+MM,AT,1,3990,1,1,,'EINST_NOR_MODUS_PCS'               ,,'',Z
+MM,AT,1,4000,1,1,,'AUFWEIT_ALL Leistung'              ,,'W',Z
+MM,AT,1,4010,1,1,,'AUFWEIT_ALL Tastfrequenz'          ,,'Hz',Z
+MM,AT,1,4020,1,1,,'AUFWEIT_ALL Pulse Power'           ,,'W',Z
+MM,AT,1,4030,1,1,,'AUFWEIT_ALL Geschwindigkeit'       ,,'m/min',Z
+MM,AT,1,4040,1,1,,'AUFWEIT_ALL Duesenabstand'         ,,'mm',Z
+MM,AT,1,4050,1,1,,'AUFWEIT_ALL Gasdruck'              ,,'bar',Z
+MM,AT,1,4060,1,1,,'AUFWEIT_ALL Gasart'                ,,'',Z
+MM,AT,1,4070,1,1,,'AUFWEIT_1 Einstellmass'            ,,'mm',Z
+MM,AT,1,4080,1,1,,'AUFWEIT_1 Strahldurchmesser'       ,,'mm',Z
+MM,AT,1,4090,1,1,,'AUFWEIT_1 Fokus DM'                ,,'um',Z
+MM,AT,1,4100,1,1,,'AUFWEIT_1 Radius'                  ,,'mm',Z
+MM,AT,1,4110,1,1,,'AUFWEIT_2 Einstellmass'            ,,'mm',Z
+MM,AT,1,4120,1,1,,'AUFWEIT_2 Strahldurchmesser'       ,,'mm',Z
+MM,AT,1,4130,1,1,,'AUFWEIT_2 Fokus DM'                ,,'um',Z
+MM,AT,1,4140,1,1,,'AUFWEIT_2 Radius'                  ,,'mm',Z
+MM,AT,1,4150,1,1,,'LT2_DMC_LSTG'                      ,,'W',Z
+MM,AT,1,4160,1,1,,'LT2_DMC_TASTFR'                    ,,'Hz',Z
+MM,AT,1,4170,1,1,,'LT2_DMC_PULSEPOWER'                ,,'W',Z
+MM,AT,1,4180,1,1,,'LT2_DMC_GESCHW'                    ,,'m/min',Z
+MM,AT,1,4190,1,1,,'LT2_DMC_DUESENABST'                ,,'mm',Z
+MM,AT,1,4200,1,1,,'LT2_DMC_GASDRUCK'                  ,,'bar',Z
+MM,AT,1,4210,1,1,,'LT2_DMC_GASART'                    ,,'',Z
+MM,AT,1,4220,1,1,,'LT2_DMC_FOKUSLAGE'                 ,,'mm',Z
+MM,AT,1,4230,1,1,,'LT2_DMC_STRAHL_DM'                 ,,'mm',Z
+MM,AT,1,4240,1,1,,'LT2_DMC_FOKUS_DM'                  ,,'um',Z
+MM,AT,1,4280,1,1,,'KOE_PulsePower'                    ,,'W',Z
+MM,AT,1,4290,1,1,,'ABD_PulsePower'                    ,,'W',Z
+MM,AT,1,4320,1,1,,'LT2_SharpCornerReducedSpeedLarge'  ,,'%',Z
+MM,AT,1,4330,1,1,,'LT2_SharpCornerReducedSpeedMedium' ,,'%',Z
+MM,AT,1,4340,1,1,,'LT2_SharpCornerReducedSpeedSmall'  ,,'%',Z
+MM,AT,1,4350,1,1,,'LT2_SharpCornerPathLenghtReducedSpeedLarge',,'mm',Z
+MM,AT,1,4360,1,1,,'LT2_SharpCornerPathLenghtReducedSpeedMedium',,'mm',Z
+MM,AT,1,4370,1,1,,'LT2_SharpCornerPathLenghtReducedSpeedSmall',,'mm',Z
+MM,AT,1,4380,1,1,,'LT2_SharpCornerFocusOffsetLarge'   ,,'mm',Z
+MM,AT,1,4390,1,1,,'LT2_SharpCornerFocusOffsetMedium'  ,,'mm',Z
+MM,AT,1,4400,1,1,,'LT2_SharpCornerFocusOffsetSmall'   ,,'mm',Z
+MM,AT,1,4410,1,1,,'LT2_SharpCornerPathLengthAccelerationLarge',,'mm',Z
+MM,AT,1,4420,1,1,,'LT2_SharpCornerPathLengthAccelerationMedium',,'mm',Z
+MM,AT,1,4430,1,1,,'LT2_SharpCornerPathLengthAccelerationSmall',,'mm',Z
+MM,AT,1,4440,1,1,,'Required software functions'       ,,'',Z
+MM,AT,1,4490,1,1,,'LT2_NumericalAperture'             ,,'',Z
+MM,AT,1,4500,1,1,,'LLS Geschw. bei unterer Grenze (3)',,'m/min',Z
+MM,AT,1,4510,1,1,,'Leistung bei unterer Grenze (3)'   ,,'W',Z
+MM,AT,1,4520,1,1,,'LFS Geschw. bei unterer Grenze (3)',,'m/min',Z
+MM,AT,1,4530,1,1,,'Frequenz bei unterer Grenze (3)'   ,,'Hz',Z
+MM,AT,1,4540,1,1,,'Materialnummer (Duese)'            ,,'',T
+MM,AT,1,4550,1,1,,'ControlLine: Schwellenwert'        ,,'%',Z
+MM,AT,1,4560,1,1,,'ControlLine Aktiv Gro�e Kontur'    ,,'Bool',Z
+MM,AT,1,4570,1,1,,'ControlLine Aktiv Mittlere Kontur' ,,'Bool',Z
+MM,AT,1,4580,1,1,,'ControlLine Aktiv Kleine Kontur'   ,,'Bool',Z
+MM,AT,1,4590,1,1,,'PierceLine Strahldurchmesser (schnell)',,'mm',Z
+MM,AT,1,4600,1,1,,'PierceLine-N Einstellmass (schnell)',,'mm',Z
+MM,AT,1,4610,1,1,,'PierceLine-N Zeit (schnell)'       ,,'s',Z
+MM,AT,1,4620,1,1,,'PierceLine-N Rampenzyklusnummer (schnell)',,'',Z
+MM,AT,1,4630,1,1,,'PierceLine-N Duesenabstand (schnell)',,'mm',Z
+MM,AT,1,4640,1,1,,'PierceLine-N Ausblaszeit (schnell)',,'s',Z
+MM,AT,1,4650,1,1,,'PierceLine-N Gasart (schnell)'     ,,'',Z
+MM,AT,1,4660,1,1,,'PierceLine-N Gasdruck (schnell)'   ,,'bar',Z
+MM,AT,1,4670,1,1,,'PierceLine-N Oelspruehen (schnell)',,'',Z
+MM,AT,1,4680,1,1,,'PierceLine-N Sensortyp (schnell)'  ,,'',Z
+MM,AT,1,4690,1,1,,'PierceLine-N Querblasen (schnell)' ,,'Bool',Z
+MM,AT,1,4700,1,1,,'PierceLine-N Fokus DM (schnell)'   ,,'um',Z
+MM,AT,1,4710,1,1,,'PierceLine-N Querblasdruck (schnell)',,'bar',Z
+MM,AT,1,4720,1,1,,'EINST_NOR_MODUS_PCS_SCHNELL'       ,,'',Z
+MM,AT,1,4730,1,1,,'Abdampfen mit aktivem Querblasen'  ,,'Bool',Z
+MM,AT,1,4740,1,1,,'Gasdruck f�r Querblasen bei Abdampfen',,'bar',Z
+MM,AT,1,4750,1,1,,'Encryption mode'                   ,,'',Z
+MM,AT,1,4760,1,1,,'PierceLine-R Erwartete Zeit'       ,,'s',Z
+MM,AT,1,4770,1,1,,'PierceLine-R Erwartete Zeit Stufe 2',,'s',Z
+MM,AT,1,4780,1,1,,'PierceLine-R Erwartete Zeit Stufe 3',,'s',Z
+MM,AT,1,4790,1,1,,'PierceLine-N Erwartete Zeit'       ,,'s',Z
+MM,AT,1,4800,1,1,,'PierceLine-N Erwartete Zeit schnell',,'s',Z
+MM,AT,1,4810,1,1,,'NanoJoint Leistung'                ,,'W',Z
+MM,AT,1,4820,1,1,,'NanoJoint Geschwindigkeit'         ,,'m/min',Z
+MM,AT,1,4830,1,1,,'NanoJoint Gasdruck'                ,,'bar',Z
+MM,AT,1,4840,1,1,,'NanoJoint Abrampen (Laenge 1)'     ,,'mm',Z
+MM,AT,1,4850,1,1,,'NanoJoint Sockel (Laenge 2)'       ,,'mm',Z
+MM,AT,1,4860,1,1,,'NanoJoint Auframpen (Laenge 3)'    ,,'mm',Z
+MM,AT,1,4870,1,1,,'LT2_EINST_NOR_MODUS'               ,,'',Z
+MM,AT,1,4880,1,1,,'SCH_GR VariMode'                   ,,'',Z
+MM,AT,1,4881,1,1,,'SCH_MI VariMode'                   ,,'',Z
+MM,AT,1,4882,1,1,,'SCH_KL VariMode'                   ,,'',Z
+MM,AT,1,4883,1,1,,'EINST_NOR VariMode'                ,,'',Z
+MM,AT,1,4884,1,1,,'EINST_SAN VariMode'                ,,'',Z
+MM,AT,1,4885,1,1,,'EINST_NOR VariMode PCS'            ,,'',Z
+MM,AT,1,4886,1,1,,'EINST_NOR VariMode PCS Schnell'    ,,'',Z
+MM,AT,1,4887,1,1,,'EINST_SAN VariMode PCS'            ,,'',Z
+MM,AT,1,4888,1,1,,'EINST_SAN VariMode PCS_2'          ,,'',Z
+MM,AT,1,4889,1,1,,'EINST_SAN VariMode PCS_3'          ,,'',Z
+MM,AT,1,4890,1,1,,'AUFWEIT_1 VariMode'                ,,'',Z
+MM,AT,1,4891,1,1,,'AUFWEIT_2 VariMode'                ,,'',Z
+MM,AT,1,4892,1,1,,'ABDA VariMode'                     ,,'',Z
+MM,AT,1,4893,1,1,,'KENN VariMode'                     ,,'',Z
+MM,AT,1,4894,1,1,,'DMC VariMode'                      ,,'',Z
+MM,AT,1,4895,1,1,,'KOER VariMode'                     ,,'',Z
+MM,AT,1,4896,1,1,,'PUNK VariMode'                     ,,'',Z
+MM,AT,1,4900,1,1,,'LT2_SCH_GR_RING_LASER_POWER'       ,,'W',Z
+MM,AT,1,4910,1,1,,'LT2_SCH_MI_RING_LASER_POWER'       ,,'W',Z
+MM,AT,1,4920,1,1,,'LT2_SCH_KL_RING_LASER_POWER'       ,,'W',Z
+MM,AT,1,4940,1,1,,'LT2_ALL_SETTING_VALUE_COLD'        ,,'',Z
+MM,AT,1,4950,1,1,,'LT2_KEN_QUERBLASEN'                ,,'',Z
+MM,AT,1,4960,1,1,,'LT2_DMC_QUERBLASEN'                ,,'',Z
+MM,AT,1,4970,1,1,,'LT2_KEN_QUERBLASDRUCK'             ,,'bar',Z
+MM,AT,1,4980,1,1,,'LT2_DMC_QUERBLASDRUCK'             ,,'bar',Z
+MM,AT,1,4990,1,1,,'LT2_ALL_GASART_ANSCHLUSS3'         ,,'',Z
+MM,AT,1,5000,1,1,,'LT2_PERCENTAGE_SECONDARY_GAS'      ,,'%',Z
+MM,AT,1,5010,1,1,,'LT2_KOE_PUN_QUERBLASEN'            ,,'',Z
+MM,AT,1,5020,1,1,,'LT2_KOE_PUN_QUERBLASDRUCK'         ,,'bar',Z
+MM,AT,1,5030,1,1,,'LT2_EINST_SAN_PULSEPOWER_PCS'      ,,'W',Z
+MM,AT,1,5040,1,1,,'LT2_EINST_SAN_PULSEPOWER_PCS_2'    ,,'W',Z
+MM,AT,1,5050,1,1,,'LT2_EINST_SAN_PULSEPOWER_PCS_3'    ,,'W',Z
+MM,AT,1,5060,1,1,,'LT2_ContourEndRampDownDistance'    ,,'mm',Z
+MM,AT,1,5070,1,1,,'LT2_ContourEndRampDownVelocityEnd' ,,'m/min',Z
+C
+ZA,DA,1
+DA,'ST080MD5-N2S0-30-2','krausch','23.09.24','',
+* 'St37 8.0mm 12000W 200mm N2 HD TC44 Standard',1,0,'TC44',12000,'St37-80',
+* 8.00,7.90,'EAA27',1,6.00,5.00,-6.00,7.000,14.000,0.00,0.0,2,2,0.16,12000,
+* 31000,8.900,4.00,24.0,12000,31000,7.120,4.00,24.0,0.16,12000,31000,7.120,
+* 4.00,24.0,12000,31000,5.696,4.00,24.0,0.16,12000,31000,7.120,4.00,24.0,
+* 12000,31000,5.696,4.00,24.0,-1.00,-1.00,-1,-1.00,-1.00,-1,-1.0,-1,-1.00,-1,
+* -1.00,-1.00,-1,-1.0,-1,0.00,0.10,20.00,240,31000,15.000,2,2.0,-7.00,15.00,
+* 250,650,15.000,2,0.3,-1.50,6.00,170,500,3.000,2,3.0,0.10,12,12.00,2,5.0,
+* -1.00,-1.00,-1,-1.00,2,-1.0,-1.00,-1,-1.00,2,-1.0,0,0.0,-6.00,-6.00,-6.00,
+* 0.50,20.000,0,-1.0,-1.0,1,100.0,100.0,0.0,100.0,100.0,100.0,0.0,100.0,0,0,
+* 0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,7.000,12000,0.100,1000,2.000,1000,
+* 0.100,200,-1.00,1,1,20.000,0.00,-5.80,0.10,62,4.00,0.00,2,24.0,0,3,0,-6.00,
+* 0.10,62,4.00,0.00,2,24.0,0,3,0,-99.000,0,'ST080MD5-N2S0-30-2',0.00,4.000,21,
+* 7,708,2.000,60,2.000,240,300,31000,-99.000,4.000,200,-1.000,-1,-1.000,-1,0,
+* 3000,0,0,0,-1.00,-1.00,-1.0,-1.00,-1.00,-1.0,'ST080MD5-N2S0-30-2',0,99999,
+* '1.0038','R4',0,0,2,0,0,0,0,0.00,0.00,0.00,9999.00,9999.00,9999.00,0,0,0,
+* -5.80,-5.80,-5.80,-5.80,7.120,0.00,24.0,-5.80,7.120,0.00,24.0,-5.80,5.696,
+* 0.00,24.0,210,210,210,210,210,210,210,210,210,3.0,3.0,3.5,3.5,100,12000,
+* 12000,12000,480,0,1,210,210,0.000,1,1,0.00,0.00,0.00,2,0.00,400,1,-99.00,
+* 210,0.00,-1.00,0,-1.00,-1.00,-1,-1.0,-1,-1,0,-1.0,-99.00,210,0.00,-1.00,0,
+* -1.00,-1.00,-1,-1.0,-1,-1,0,-1.0,0,1,8000,31000,8000,0.600,4.00,10.0,2,
+* -8.10,0,210,0.60,-13.20,0,210,0.00,200,650,500,4.500,18.000,16.000,2,-5.000,
+* 0,210,3000,8000,0.0,0.0,0.0,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0,
+* 100,0.800,4000,0.400,31000,'1324867',100,0,0,0,0.00,-6.00,0.20,62,4.00,0.00,
+* 2,24.0,0,3,0,210,3.5,6,0,3.5,0,-1.00,-1.00,-1.00,-1.00,-1.00,9000,8.90,
+* 24.00,1.20,0.67,0.67,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,1.0,
+* 0.0,0,0.0,0,0.0,12000,12000,12000,4.00,0.300
+C
+ENDE_LTT_STAMM
+C
+BEGIN_LTT_CALLS
+C
+ZA,MM,1
+MM,AT,1,  10,1,1,,'Tabellenidentifikator'             ,,'',T
+C
+ZA,DA,1
+DA,'ST080MD5-N2S0-30-2'
+C
+ENDE_LTT_CALLS
+C
+BEGIN_PARTS_IN_PROGRAM
+C
+ZA,MM,23
+MM,AT,1,  10,1,1,,'Hauptprogrammname'                 ,,'',T
+MM,AT,1,  20,1,1,,'reserviert'                        ,,'',T
+MM,AT,1,  30,1,1,,'Teil-Identnummer'                  ,,'',T
+MM,AT,1,  40,1,1,,'reserviert'                        ,,'',Z
+MM,AT,1,  50,1,1,,'Geometriefilename'                 ,,'',T
+MM,AT,1,  60,1,1,,'Anzahl'                            ,,'',Z
+MM,AT,1,  70,1,1,,'Geometriefilename (einf.Darstl)'   ,,'',T
+MM,AT,1,  80,1,1,,'Bearbeitungszeit'                  ,,'min',Z
+MM,AT,1,  90,1,1,,'Flaeche'                           ,,'mm2',Z
+MM,AT,1, 100,1,1,,'ToPs-Zeichnungskunde'              ,,'',T
+MM,AT,1, 110,1,1,,'ToPs-Teile-Nummerierung'           ,,'',T
+MM,AT,1, 120,1,1,,'ToPs-Zeichnungsname'               ,,'',T
+MM,AT,1, 130,1,1,,'Abmessung X'                       ,,'mm',Z
+MM,AT,1, 140,1,1,,'Abmessung Y'                       ,,'mm',Z
+MM,AT,1, 170,1,1,,'Verbuchungsteil'                   ,,'Bool',Z
+MM,AT,1, 180,1,1,,'Offset X (Urspr. zu Schwerpkt.)'   ,,'mm',Z
+MM,AT,1, 190,1,1,,'Offset Y (Urspr. zu Schwerpkt.)'   ,,'mm',Z
+MM,AT,1, 200,1,1,,'Bearbeitungszeit PierceLine'       ,,'min',Z
+MM,AT,1, 210,1,1,,'Schneidl�nge'                      ,,'mm',Z
+MM,AT,1, 240,1,1,,'Part Type Index'                   ,,'',Z
+MM,AT,1, 250,1,1,,'AmountMirroredParts'               ,,'',Z
+MM,AT,1, 260,1,1,,'Part Angle In File'                ,,'deg',Z
+MM,AT,1, 500,1,1,,'TRUMPF-Kennung'                    ,,'',Z
+C
+ZA,DA,3
+DA,'J14_1','0','1045572',0,'1045572.geo',12,'1045572',0.1787,13818.84,'','2',
+* 'Lagerpall',165.000,90.000,1,82.889,45.000,0.1787,856.49,2,0,0.00,1
+DA,'J14_1','0','1045575',0,'1045575.geo',10,'1045575',0.2119,31590.80,'','3',
+* 'Lagerpall',350.000,135.000,1,197.024,83.663,0.2119,1244.94,3,0,0.00,1
+DA,'J14_1','0','1045574',0,'1045574.geo',11,'1045574',0.3194,62502.80,'','1',
+* 'Lagerpall',833.000,135.000,1,427.854,93.226,0.3194,2211.44,1,0,0.00,1
+C
+ENDE_PARTS_IN_PROGRAM
+C
+BEGIN_PARTS_IN_PROGRAM_POS
+C
+ZA,MM,20
+MM,AT,1,  10,1,1,,'laufende Nummer gefertigtes Teil'  ,,'',Z
+MM,AT,1,  20,1,1,,'Hauptprogrammname'                 ,,'',T
+MM,AT,1,  30,1,1,,'Teil-Identnummer'                  ,,'',T
+MM,AT,1,  60,1,1,,'Position X-Koordinate'             ,,'mm',Z
+MM,AT,1,  70,1,1,,'Position Y-Koordinate'             ,,'mm',Z
+MM,AT,1,  80,1,1,,'Abmessung in X'                    ,,'mm',Z
+MM,AT,1,  90,1,1,,'Abmessung in Y'                    ,,'mm',Z
+MM,AT,1, 100,1,1,,'Winkellage'                        ,,'deg',Z
+MM,AT,1, 150,1,1,,'X-Koordinate Schwerpunkt'          ,,'mm',Z
+MM,AT,1, 160,1,1,,'Y-Koordinate Schwerpunkt'          ,,'mm',Z
+MM,AT,1, 190,1,1,,'Entnahmenummer'                    ,,'',Z
+MM,AT,1, 200,1,1,,'Referenzteil'                      ,,'',Z
+MM,AT,1, 210,1,1,,'Name der PartUnloadData-Tabelle'   ,,'',T
+MM,AT,1, 220,1,1,,'Name der PartPalettData-Tabelle'   ,,'',T
+MM,AT,1, 240,1,1,,'Klassifizierung'                   ,,'',Z
+MM,AT,1, 250,1,1,,'reserviert'                        ,,'',T
+MM,AT,1, 320,1,1,,'Part Type Index'                   ,,'',Z
+MM,AT,1, 330,1,1,,'Mirrored At Y'                     ,,'Bool',Z
+MM,AT,1, 360,1,1,,'LabelGroupID'                      ,,'',Z
+MM,AT,1, 500,1,1,,'TRUMPF-Kennung'                    ,,'',Z
+C
+ZA,DA,33
+DA,1,'J14_1','1045572',5.00,5.00,165.00,90.00,0.00,87.89,50.00,0,0,'','',1,'2',
+* 2,0,-1,1
+DA,2,'J14_1','1045575',5.00,83.06,350.00,135.00,0.00,202.02,166.73,0,0,'','',1,
+* '3',3,0,-1,1
+DA,3,'J14_1','1045575',339.32,5.00,350.00,135.00,0.00,536.34,88.66,0,0,'','',1,
+* '3',3,0,-1,1
+DA,4,'J14_1','1045575',703.64,5.00,350.00,135.00,0.00,900.66,88.66,0,0,'','',1,
+* '3',3,0,-1,1
+DA,5,'J14_1','1045574',644.96,83.32,833.00,135.00,0.00,1072.81,176.55,0,0,'',
+* '',1,'1',1,0,-1,1
+DA,6,'J14_1','1045575',1222.28,5.00,350.00,135.00,0.00,1419.30,88.66,0,0,'','',
+* 1,'3',3,0,-1,1
+DA,7,'J14_1','1045572',1586.48,5.00,165.00,90.00,0.00,1669.37,50.00,0,0,'','',
+* 1,'2',2,0,-1,1
+DA,8,'J14_1','1045572',1646.60,109.32,165.00,90.00,0.00,1729.49,154.32,0,0,'',
+* '',1,'2',2,0,-1,1
+DA,9,'J14_1','1045572',1765.80,5.00,165.00,90.00,0.00,1848.69,50.00,0,0,'','',
+* 1,'2',2,0,-1,1
+DA,10,'J14_1','1045572',1786.15,415.28,165.00,90.00,0.00,1869.04,460.28,0,0,'',
+* '',1,'2',2,0,-1,1
+DA,11,'J14_1','1045574',1069.28,161.64,833.00,135.00,0.00,1497.13,254.87,0,0,
+* '','',1,'1',1,0,-1,1
+DA,12,'J14_1','1045572',1699.07,310.96,165.00,90.00,0.00,1781.96,355.96,0,0,'',
+* '',1,'2',2,0,-1,1
+DA,13,'J14_1','1045574',853.64,318.28,833.00,135.00,0.00,1281.49,411.51,0,0,'',
+* '',1,'1',1,0,-1,1
+DA,14,'J14_1','1045574',429.32,239.96,833.00,135.00,0.00,857.17,333.19,0,0,'',
+* '',1,'1',1,0,-1,1
+DA,15,'J14_1','1045574',5.00,161.64,833.00,135.00,0.00,432.85,254.87,0,0,'','',
+* 1,'1',1,0,-1,1
+DA,16,'J14_1','1045575',5.00,310.96,350.00,135.00,0.00,202.02,394.62,0,0,'','',
+* 1,'3',3,0,-1,1
+DA,17,'J14_1','1045575',5.00,538.60,350.00,135.00,0.00,202.02,622.26,0,0,'','',
+* 1,'3',3,0,-1,1
+DA,18,'J14_1','1045574',5.00,389.28,833.00,135.00,0.00,432.85,482.51,0,0,'','',
+* 1,'1',1,0,-1,1
+DA,19,'J14_1','1045574',429.32,467.60,833.00,135.00,0.00,857.17,560.83,0,0,'',
+* '',1,'1',1,0,-1,1
+DA,20,'J14_1','1045572',1427.51,467.60,165.00,90.00,0.00,1510.40,512.60,0,0,'',
+* '',1,'2',2,0,-1,1
+DA,21,'J14_1','1045574',853.64,545.92,833.00,135.00,0.00,1281.49,639.15,0,0,'',
+* '',1,'1',1,0,-1,1
+DA,22,'J14_1','1045572',1606.83,467.60,165.00,90.00,0.00,1689.72,512.60,0,0,'',
+* '',1,'2',2,0,-1,1
+DA,23,'J14_1','1045572',1640.84,695.24,165.00,90.00,0.00,1723.73,740.24,0,0,'',
+* '',1,'2',2,0,-1,1
+DA,24,'J14_1','1045572',1700.96,571.92,165.00,90.00,0.00,1783.85,616.92,0,0,'',
+* '',1,'2',2,0,-1,1
+DA,25,'J14_1','1045572',1730.04,799.56,165.00,90.00,0.00,1812.93,844.56,0,0,'',
+* '',1,'2',2,0,-1,1
+DA,26,'J14_1','1045575',1395.72,844.56,350.00,135.00,0.00,1592.74,928.22,0,0,
+* '','',1,'3',3,0,-1,1
+DA,27,'J14_1','1045575',1276.64,695.24,350.00,135.00,0.00,1473.66,778.90,0,0,
+* '','',1,'3',3,0,-1,1
+DA,28,'J14_1','1045572',1216.52,844.56,165.00,90.00,0.00,1299.41,889.56,0,0,'',
+* '',1,'2',2,0,-1,1
+DA,29,'J14_1','1045574',429.32,695.24,833.00,135.00,0.00,857.17,788.47,0,0,'',
+* '',1,'1',1,0,-1,1
+DA,30,'J14_1','1045575',852.32,844.56,350.00,135.00,0.00,1049.34,928.22,0,0,'',
+* '',1,'3',3,0,-1,1
+DA,31,'J14_1','1045574',5.00,616.92,833.00,135.00,0.00,432.85,710.15,0,0,'','',
+* 1,'1',1,0,-1,1
+DA,32,'J14_1','1045574',5.00,844.56,833.00,135.00,0.00,432.85,937.79,0,0,'','',
+* 1,'1',1,0,-1,1
+DA,33,'J14_1','1045575',5.00,766.24,350.00,135.00,0.00,202.02,849.90,0,0,'','',
+* 1,'3',3,0,-1,1
+C
+ENDE_PARTS_IN_PROGRAM_POS
+C
+BEGIN_MICROJOINT
+C
+ZA,MM,17
+MM,AT,1,  10,1,1,,'Tabellenidentifikator'             ,,'',T
+MM,AT,1, 100,1,1,,'programmierte Microjoints aktiv'   ,,'Bool',Z
+MM,AT,1, 110,1,1,,'automatische Microjoints aktiv'    ,,'Bool',Z
+MM,AT,1, 120,1,1,,'Microjointbreite kleine Kontur'    ,,'mm',Z
+MM,AT,1, 130,1,1,,'Microjointbreite mittlere Kontur'  ,,'mm',Z
+MM,AT,1, 140,1,1,,'Microjointbreite grosse Kontur'    ,,'mm',Z
+MM,AT,1, 150,1,1,,'Konturausdehn. min X auto. MJ'     ,,'mm',Z
+MM,AT,1, 160,1,1,,'Konturausdehn. max X autom. MJ'    ,,'mm',Z
+MM,AT,1, 170,1,1,,'Konturausdehn. min Y autom. MJ'    ,,'mm',Z
+MM,AT,1, 180,1,1,,'Konturausdehn. max Y autom. MJ'    ,,'mm',Z
+MM,AT,1, 190,1,1,,'Einstechart nach Microjoint'       ,,'',Z
+MM,AT,1, 270,1,1,,'AutomaticNanojointActive'          ,,'Bool',Z
+MM,AT,1, 280,1,1,,'NanoJointProgramActive'            ,,'Bool',Z
+MM,AT,1, 290,1,1,,'NanoJointStabilityLargeContour'    ,,'',Z
+MM,AT,1, 300,1,1,,'NanoJointStabilityMediumContour'   ,,'',Z
+MM,AT,1, 310,1,1,,'NanoJointStabilitySmallContour'    ,,'',Z
+MM,AT,1, 500,1,1,,'TRUMPF-Kennung'                    ,,'',Z
+C
+ZA,DA,1
+DA,'MIJO-1',0,0,0.50,0.50,0.50,-1.00,-1.00,-1.00,-1.00,11,0,0,0,0,0,1
+C
+ENDE_MICROJOINT
+C
+BEGIN_LEAD_IN
+C
+ZA,MM,28
+MM,AT,1,  10,1,1,,'Tabellenname'                      ,,'',T
+MM,AT,1,  20,1,1,,'Strategie kleine Kontur'           ,,'',Z
+MM,AT,1,  30,1,1,,'Strategie mittlere Kontur'         ,,'',Z
+MM,AT,1,  40,1,1,,'Strategie grosse Kontur'           ,,'',Z
+MM,AT,1,  50,1,1,,'Einstechart kleine Kontur'         ,,'',Z
+MM,AT,1,  60,1,1,,'Einstechart mittlere Kontur'       ,,'',Z
+MM,AT,1,  70,1,1,,'Einstechart grosse Kontur'         ,,'',Z
+MM,AT,1,  80,1,1,,'Anfahrmethode kleine Kontur'       ,,'',Z
+MM,AT,1,  90,1,1,,'Anfahrmethode mittlere Kontur'     ,,'',Z
+MM,AT,1, 100,1,1,,'Anfahrmethode grosse Kontur'       ,,'',Z
+MM,AT,1, 110,1,1,,'Anfahrschneidart kleine Kontur'    ,,'',Z
+MM,AT,1, 120,1,1,,'Anfahrschneidart mittlere Kontur'  ,,'',Z
+MM,AT,1, 130,1,1,,'Anfahrschneidart grosse Kontur'    ,,'',Z
+MM,AT,1, 140,1,1,,'Abdampfart kleine Kontur'          ,,'',Z
+MM,AT,1, 150,1,1,,'Abdampfart mittlere Kontur'        ,,'',Z
+MM,AT,1, 160,1,1,,'Abdampfart grosse Kontur'          ,,'',Z
+MM,AT,1, 170,1,1,,'Geradenlaenge kleine Kontur'       ,,'mm',Z
+MM,AT,1, 180,1,1,,'Geradenlaenge mittlere Kontur'     ,,'mm',Z
+MM,AT,1, 190,1,1,,'Geradenlaenge grosse Kontur'       ,,'mm',Z
+MM,AT,1, 200,1,1,,'Bogenradius kleine Kontur'         ,,'mm',Z
+MM,AT,1, 210,1,1,,'Bogenradius mittlere Kontur'       ,,'mm',Z
+MM,AT,1, 220,1,1,,'Bogenradius grosse Kontur'         ,,'mm',Z
+MM,AT,1, 230,1,1,,'Bogenwinkel kleine Kontur'         ,,'deg',Z
+MM,AT,1, 240,1,1,,'Bogenwinkel mittlere Kontur'       ,,'deg',Z
+MM,AT,1, 250,1,1,,'Bogenwinkel grosse Kontur'         ,,'deg',Z
+MM,AT,1, 260,1,1,,'Vorschnittlaenge kleine Kontur'    ,,'mm',Z
+MM,AT,1, 270,1,1,,'Vorschnittlaenge mittlere Kontur'  ,,'mm',Z
+MM,AT,1, 280,1,1,,'Vorschnittlaenge grosse Kontur'    ,,'mm',Z
+C
+ZA,DA,1
+DA,'LI-1',2,2,2,10,10,10,9,9,9,310,210,110,0,0,0,1.00,1.00,2.00,0.00,0.00,0.30,
+* 90.00,90.00,90.00,0.00,0.00,0.00
+C
+ENDE_LEAD_IN
+C
+BEGIN_TOPS_DATA
+C
+ZA,MM,10
+MM,AT,1,  10,1,1,,'LfdNr'                             ,,'',Z
+MM,AT,1,  20,1,1,,'Typ'                               ,,'',T
+MM,AT,1,  30,1,1,,'Datensatzname'                     ,,'',Z
+MM,AT,1,  40,1,1,,'Datensatznr'                       ,,'',Z
+MM,AT,1,  50,1,1,,'Beschreibung'                      ,,'',T
+MM,AT,1,  60,1,1,,'Datentyp'                          ,,'',T
+MM,AT,1,  70,1,1,,'physik. Einheit'                   ,,'',T
+MM,AT,1,  80,1,1,,'Wert'                              ,,'',T
+MM,AT,1,  90,1,1,,'Referenzstueckliste'               ,,'',T
+MM,AT,1, 100,1,1,,'Referenzdatensatz'                 ,,'',Z
+C
+ZA,DA,68
+DA,1,'INTERNAL_DATA',120,1,'','T','','8.00','',0
+DA,2,'INTERNAL_DATA',320,1,'','T','','X','',0
+DA,3,'INTERNAL_DATA',690,1,'','T','','','',0
+DA,4,'INTERNAL_DATA',200,1,'','T','','ST080MD5-N2S0-30-2','',0
+DA,5,'INTERNAL_DATA',210,1,'','T','','NORMAL','',0
+DA,6,'INTERNAL_DATA',220,1,'','T','','ENGRAVE','',0
+DA,7,'INTERNAL_DATA',230,1,'','T','','LARGE','',0
+DA,8,'INTERNAL_DATA',200,2,'','T','','ST080MD5-N2S0-30-2','',0
+DA,9,'INTERNAL_DATA',210,2,'','T','','NORMAL','',0
+DA,10,'INTERNAL_DATA',220,2,'','T','','REDUCED','',0
+DA,11,'INTERNAL_DATA',230,2,'','T','','LARGE','',0
+DA,12,'INTERNAL_DATA',200,3,'','T','','ST080MD5-N2S0-30-2','',0
+DA,13,'INTERNAL_DATA',210,3,'','T','','NORMAL','',0
+DA,14,'INTERNAL_DATA',220,3,'','T','','NORMAL','',0
+DA,15,'INTERNAL_DATA',230,3,'','T','','LARGE','',0
+DA,16,'INTERNAL_DATA',103,1,'','T','','00 : 08 : 08 [h:min:s]','',0
+DA,17,'INTERNAL_DATA',102,1,'','T','','','',0
+DA,18,'INTERNAL_DATA',101,1,'','T','','00 : 08 : 08 [h:min:s]','',0
+DA,19,'INTERNAL_DATA',860,1,'','Z','','Trumpf.TruTops.Zelos V4.0.5','',0
+DA,20,'INTERNAL_DATA',280,1,'','Z','mm','47053.13','',0
+DA,21,'INTERNAL_DATA',650,1,'','T','','TruLaser 3030 (L95)','',0
+DA,22,'INTERNAL_DATA',290,1,'','T','','TAFEL.taf','',0
+DA,23,'INTERNAL_DATA',550,1,'','T','','without','',0
+DA,24,'INTERNAL_DATA',600,1,'','T','','BMP','',0
+DA,25,'INTERNAL_DATA',610,1,'','T','','BMP','',0
+DA,26,'INTERNAL_DATA',660,1,'','T','','eng','',0
+DA,27,'INTERNAL_DATA',420,1,'','T','','1045572','',0
+DA,28,'INTERNAL_DATA',430,1,'','T','','Lagerpall','',0
+DA,29,'INTERNAL_DATA',720,2,'','T','','','PARTS_IN_PROGRAM',240
+DA,30,'INTERNAL_DATA',350,2,'','T','','1P','PARTS_IN_PROGRAM',240
+DA,31,'INTERNAL_DATA',571,2,'','T','','0.18 min','PARTS_IN_PROGRAM',240
+DA,32,'INTERNAL_DATA',570,2,'','T','','00 : 00 : 10 [h:min:s]',
+* 'PARTS_IN_PROGRAM',240
+DA,33,'INTERNAL_DATA',620,2,'','Z','','13818.84','PARTS_IN_PROGRAM',240
+DA,34,'INTERNAL_DATA',340,2,'','Z','','5','PARTS_IN_PROGRAM',240
+DA,35,'INTERNAL_DATA',370,2,'','T','','0.17','PARTS_IN_PROGRAM',240
+DA,36,'INTERNAL_DATA',330,2,'','Z','mm','856.49','PARTS_IN_PROGRAM',240
+DA,37,'INTERNAL_DATA',360,2,'','T','','SP1','PARTS_IN_PROGRAM',240
+DA,38,'INTERNAL_DATA',420,1,'','T','','1045575','',0
+DA,39,'INTERNAL_DATA',430,1,'','T','','Lagerpall','',0
+DA,40,'INTERNAL_DATA',720,3,'','T','','','PARTS_IN_PROGRAM',240
+DA,41,'INTERNAL_DATA',350,3,'','T','','1P','PARTS_IN_PROGRAM',240
+DA,42,'INTERNAL_DATA',571,3,'','T','','0.21 min','PARTS_IN_PROGRAM',240
+DA,43,'INTERNAL_DATA',570,3,'','T','','00 : 00 : 12 [h:min:s]',
+* 'PARTS_IN_PROGRAM',240
+DA,44,'INTERNAL_DATA',620,3,'','Z','','31590.80','PARTS_IN_PROGRAM',240
+DA,45,'INTERNAL_DATA',340,3,'','Z','','4','PARTS_IN_PROGRAM',240
+DA,46,'INTERNAL_DATA',370,3,'','T','','0.13','PARTS_IN_PROGRAM',240
+DA,47,'INTERNAL_DATA',330,3,'','Z','mm','1244.94','PARTS_IN_PROGRAM',240
+DA,48,'INTERNAL_DATA',360,3,'','T','','SP2','PARTS_IN_PROGRAM',240
+DA,49,'INTERNAL_DATA',420,1,'','T','','1045574','',0
+DA,50,'INTERNAL_DATA',430,1,'','T','','Lagerpall','',0
+DA,51,'INTERNAL_DATA',720,1,'','T','','','PARTS_IN_PROGRAM',240
+DA,52,'INTERNAL_DATA',350,1,'','T','','1P','PARTS_IN_PROGRAM',240
+DA,53,'INTERNAL_DATA',571,1,'','T','','0.32 min','PARTS_IN_PROGRAM',240
+DA,54,'INTERNAL_DATA',570,1,'','T','','00 : 00 : 19 [h:min:s]',
+* 'PARTS_IN_PROGRAM',240
+DA,55,'INTERNAL_DATA',620,1,'','Z','','62502.80','PARTS_IN_PROGRAM',240
+DA,56,'INTERNAL_DATA',340,1,'','Z','','4','PARTS_IN_PROGRAM',240
+DA,57,'INTERNAL_DATA',370,1,'','T','','0.13','PARTS_IN_PROGRAM',240
+DA,58,'INTERNAL_DATA',330,1,'','Z','mm','2211.44','PARTS_IN_PROGRAM',240
+DA,59,'INTERNAL_DATA',360,1,'','T','','SP3','PARTS_IN_PROGRAM',240
+DA,60,'INTERNAL_DATA',311,1,'','T','','SLAT DISTANCE:','',0
+DA,61,'INTERNAL_DATA',310,1,'','T','','67 mm','',0
+DA,62,'INTERNAL_DATA',312,1,'','T','','Standardmaschine, jeder Zweite gesetzt',
+* '',0
+DA,63,'INTERNAL_DATA',313,1,'','T','','38 mm','',0
+DA,64,'INTERNAL_DATA',440,1,'','Z','','41.54','',0
+DA,65,'INTERNAL_DATA',640,1,'','Z','mm','1951.15','',0
+DA,66,'INTERNAL_DATA',641,1,'','Z','mm','979.56','',0
+DA,67,'INTERNAL_DATA',450,1,'','T','',
+* 'Contours programmed with path correction!','',0
+DA,68,'INTERNAL_DATA',590,1,'','T','','not set','',0
+C
+ENDE_TOPS_DATA
+C
+BEGIN_PROGRAMM
+C
+ZA,MM,7
+MM,AT,1,  10,1,1,,'Programmnummer'                    ,,'',T
+MM,AT,1,  20,1,1,,'Programmtyp'                       ,,'',T
+MM,AT,1,  30,1,1,,'Bemerkung'                         ,,'',T
+MM,AT,1,  40,1,1,,'Bearbeitungszeit'                  ,,'min',Z
+MM,AT,1,  50,1,1,,'Dateityp'                          ,,'',T
+MM,AT,1,  60,1,1,,'IncreasingRecordNumberFlag'        ,,'Bool',Z
+MM,AT,1,  70,1,1,,'PartTypeIndex'                     ,,'',Z
+C
+ZA,DA,7
+DA,'SP1','UP','J1_1',0.18,'LST',1,0
+START_TEXT
+N10 MSG("SUB-PROGRAM NO.,SP1")
+N20G91
+N30;(PART NUMBER:2)
+N40TC_POS_LEVEL(40.0)
+N50;(CONTOUR NUMBER:1)
+N60TC_POS_LEVEL(30.0)
+N70TC_LASER_ON(11,"ST080MD5-N2S0-30-2",0,500);KENNZ_SprintLine
+N80X-1.250Y0.666
+N90X10.000
+N100TC_LASER_OFF(3);KENNZ_SprintLine_ENDE
+N110Y-0.666
+N120TC_LASER_ON(11,"ST080MD5-N2S0-30-2",0,500);KENNZ_SprintLine
+N130Y1.332
+N140TC_LASER_OFF(3);KENNZ_SprintLine_ENDE
+N150X-1.250Y3.415
+N160TC_LASER_ON(11,"ST080MD5-N2S0-30-2",0,500);KENNZ_SprintLine
+N170X-7.500Y3.998
+N180X7.500
+N190X1.250Y-0.667
+N200Y-2.665
+N210X-1.250Y-0.666
+N220X-7.500
+N230X-1.250Y0.666
+N240Y2.665
+N250X1.250Y0.667
+N260TC_LASER_OFF(3);KENNZ_SprintLine_ENDE
+N270X8.750Y4.747
+N280TC_LASER_ON(11,"ST080MD5-N2S0-30-2",0,500);KENNZ_SprintLine
+N290X-10.000
+N300X5.000Y-2.665
+N310X1.250
+N320Y3.331
+N330TC_LASER_OFF(3);KENNZ_SprintLine_ENDE
+N340X2.500Y2.748
+N350TC_LASER_ON(11,"ST080MD5-N2S0-30-2",0,500);KENNZ_SprintLine
+N360X1.250Y0.666
+N370Y1.999
+N380X-1.250Y0.666
+N390X-3.750
+N400X-1.250Y-0.666
+N410Y-2.665
+N420X-3.750
+N430Y3.331
+N440TC_LASER_OFF(3);KENNZ_SprintLine_ENDE
+N450X8.750Y2.749
+N460TC_LASER_ON(11,"ST080MD5-N2S0-30-2",0,500);KENNZ_SprintLine
+N470X1.250Y0.666
+N480Y1.999
+N490X-1.250Y0.666
+N500X-3.750
+N510X-1.250Y-0.666
+N520Y-2.665
+N530X-3.750
+N540Y3.331
+N550TC_LASER_OFF(3);KENNZ_SprintLine_ENDE
+N560Y2.748
+N570TC_LASER_ON(11,"ST080MD5-N2S0-30-2",0,500);KENNZ_SprintLine
+N580Y3.331
+N590X2.500
+N600X5.000Y-2.665
+N610X2.500
+N620TC_LASER_OFF(3);KENNZ_SprintLine_ENDE
+N630X-8.750Y5.414
+N640TC_LASER_ON(11,"ST080MD5-N2S0-30-2",0,500);KENNZ_SprintLine
+N650X-1.250Y0.666
+N660Y1.999
+N670X1.250Y0.666
+N680X2.500
+N690X1.250Y-0.666
+N700Y-1.333
+N710X2.500Y-1.332
+N720X2.500
+N730Y3.331
+N740TC_POS_LEVEL(40.0)
+N750TC_LASER_OFF(3);KENNZ_SprintLine_ENDE
+N760;(CONTOUR NUMBER:2)
+N770X-138.072Y3.332
+N780TC_LASER_ON(9,"ST080MD5-N2S0-30-2",10,110);SprintLine
+N790TC_LASERCORR_ON(T_LEFT)
+N800X3.993Y-0.239
+N810TC_LASER_ON(11,"ST080MD5-N2S0-30-2",0,100);LTT2
+N820X0.998Y-0.060
+N830G03X0.318Y0.299I0.018J0.299
+N840G03X-7.500Y7.500I-7.500
+N850G01X-2.000
+N860G03Y-15.000J-7.500
+N870G01X2.000
+N880G03X7.500Y7.500J7.500
+N890TC_LASER_OFF(3);SprintLine_ENDE
+N900;(CONTOUR NUMBER:3)
+N910G01X109.500Y-3.191
+N920TC_LASER_ON(9,"ST080MD5-N2S0-30-2",10,110);SprintLine
+N930TC_LASERCORR_ON(T_LEFT)
+N940X-0.240Y-3.992
+N950TC_LASER_ON(11,"ST080MD5-N2S0-30-2",0,100);LTT2
+N960X-0.059Y-0.999
+N970G03X0.299Y-0.318I0.299J-0.018
+N980G03X7.500Y7.500J7.500
+N990G01Y2.000
+N1000G03X-15.000I-7.500
+N1010G01Y-2.000
+N1020G03X7.500Y-7.500I7.500
+N1030TC_LASER_OFF(3);SprintLine_ENDE
+N1040;(CONTOUR NUMBER:4)
+N1050G01X-2.191Y-41.500
+N1060TC_LASER_ON(9,"ST080MD5-N2S0-30-2",10,110);SprintLine
+N1070TC_LASERCORR_ON(T_LEFT)
+N1080X-3.993Y0.240
+N1090TC_LASER_ON(11,"ST080MD5-N2S0-30-2",0,100);LTT2
+N1100X-0.998Y0.060
+N1110G03X-0.318Y-0.300I-0.018J-0.299
+N1120G01Y-1.000
+N1130G03X15.000I7.500
+N1140G01Y2.000
+N1150G03X-15.000I-7.500
+N1160G01Y-1.000
+N1170TC_LASER_OFF(3);SprintLine_ENDE
+N1180;(CONTOUR NUMBER:5)
+N1190X-110.500Y-2.191
+N1200TC_LASER_ON(9,"ST080MD5-N2S0-30-2",10,110);SprintLine
+N1210TC_LASERCORR_ON(T_LEFT)
+N1220X-0.240Y-3.992
+N1230TC_LASER_ON(11,"ST080MD5-N2S0-30-2",0,100);LTT2
+N1240X-0.059Y-0.999
+N1250G03X0.299Y-0.318I0.299J-0.018
+N1260G01X1.000
+N1270G03Y15.000J7.500
+N1280G01X-2.000
+N1290G03Y-15.000J-7.500
+N1300G01X1.000
+N1310TC_LASER_OFF(3);SprintLine_ENDE
+N1320;(CONTOUR NUMBER:6)
+N1330X-15.748Y-11.247
+N1340TC_LASER_ON(9,"ST080MD5-N2S0-30-2",10,110);SprintLine
+N1350TC_LASERCORR_ON(T_LEFT)
+N1360X2.829Y2.828
+N1370TC_LASER_ON(11,"ST080MD5-N2S0-30-2",0,100);LTT2
+N1380X0.707Y0.707
+N1390G03Y0.425I-0.212J0.212
+N1400G01X-3.324Y3.323
+N1410G02X-1.464Y3.536I3.536J3.536
+N1420G01Y65.857
+N1430G02X1.464Y3.536I5.000
+N1440G01X7.072Y7.071
+N1450G02X3.535Y1.464I3.536J-3.536
+N1460G01X140.858
+N1470G02X3.535Y-1.464J-5.000
+N1480G01X7.072Y-7.071
+N1490G02X1.464Y-3.536I-3.536J-3.536
+N1500G01Y-65.857
+N1510G02X-1.464Y-3.536I-5.000
+N1520G01X-7.072Y-7.071
+N1530G02X-3.535Y-1.465I-3.536J3.536
+N1540G01X-140.858
+N1550G02X-3.535Y1.465J5.000
+N1560G01X-3.748Y3.748
+N1570TC_LASER_OFF(3);SprintLine_ENDE
+N1580G01
+N1590G90
+N1600M17
+N1610M02
+STOP_TEXT
+DA,'SP2','UP','J1_1',0.21,'LST',1,0
+START_TEXT
+N10 MSG("SUB-PROGRAM NO.,SP2")
+N20G91
+N30;(PART NUMBER:3)
+N40TC_POS_LEVEL(40.0)
+N50;(CONTOUR NUMBER:1)
+N60TC_POS_LEVEL(30.0)
+N70TC_LASER_ON(11,"ST080MD5-N2S0-30-2",0,500);KENNZ_SprintLine
+N80X-0.666Y-1.250
+N90Y10.000
+N100TC_LASER_OFF(3);KENNZ_SprintLine_ENDE
+N110X0.666
+N120TC_LASER_ON(11,"ST080MD5-N2S0-30-2",0,500);KENNZ_SprintLine
+N130X-1.333
+N140TC_LASER_OFF(3);KENNZ_SprintLine_ENDE
+N150X-3.414Y-1.250
+N160TC_LASER_ON(11,"ST080MD5-N2S0-30-2",0,500);KENNZ_SprintLine
+N170X-3.998Y-7.500
+N180Y7.500
+N190X0.667Y1.250
+N200X2.665
+N210X0.666Y-1.250
+N220Y-7.500
+N230X-0.666Y-1.250
+N240X-2.665
+N250X-0.667Y1.250
+N260TC_LASER_OFF(3);KENNZ_SprintLine_ENDE
+N270X-4.747Y8.750
+N280TC_LASER_ON(11,"ST080MD5-N2S0-30-2",0,500);KENNZ_SprintLine
+N290Y-10.000
+N300X2.665Y5.000
+N310Y1.250
+N320X-3.331
+N330TC_LASER_OFF(3);KENNZ_SprintLine_ENDE
+N340X-2.748Y2.500
+N350TC_LASER_ON(11,"ST080MD5-N2S0-30-2",0,500);KENNZ_SprintLine
+N360X-0.666Y1.250
+N370X-1.999
+N380X-0.666Y-1.250
+N390Y-3.750
+N400X0.666Y-1.250
+N410X2.665
+N420Y-3.750
+N430X-3.331
+N440TC_LASER_OFF(3);KENNZ_SprintLine_ENDE
+N450X-2.749Y8.750
+N460TC_LASER_ON(11,"ST080MD5-N2S0-30-2",0,500);KENNZ_SprintLine
+N470X-0.666Y1.250
+N480X-1.999
+N490X-0.666Y-1.250
+N500Y-3.750
+N510X0.666Y-1.250
+N520X2.665
+N530Y-3.750
+N540X-3.331
+N550TC_LASER_OFF(3);KENNZ_SprintLine_ENDE
+N560X-2.748
+N570TC_LASER_ON(11,"ST080MD5-N2S0-30-2",0,500);KENNZ_SprintLine
+N580X-3.331
+N590Y2.500
+N600X2.665Y5.000
+N610Y2.500
+N620TC_LASER_OFF(3);KENNZ_SprintLine_ENDE
+N630X-5.414Y-1.250
+N640TC_LASER_ON(11,"ST080MD5-N2S0-30-2",0,500);KENNZ_SprintLine
+N650X-0.666Y1.250
+N660X-1.999
+N670X-0.666Y-1.250
+N680Y-3.750
+N690X0.666Y-1.250
+N700X2.665
+N710Y-3.750
+N720X-3.331
+N730TC_POS_LEVEL(40.0)
+N740TC_LASER_OFF(3);KENNZ_SprintLine_ENDE
+N750;(CONTOUR NUMBER:2)
+N760X-7.719Y-99.043
+N770TC_LASER_ON(9,"ST080MD5-N2S0-30-2",10,110);SprintLine
+N780TC_LASERCORR_ON(T_LEFT)
+N790X-3.997Y0.156
+N800TC_LASER_ON(11,"ST080MD5-N2S0-30-2",0,100);LTT2
+N810X-1.000Y0.039
+N820G03X-0.311Y-0.300I-0.012J-0.300
+N830G03I8.000
+N840TC_LASER_OFF(3);SprintLine_ENDE
+N850;(CONTOUR NUMBER:3)
+N860G01X-44.692Y0.105
+N870TC_LASER_ON(9,"ST080MD5-N2S0-30-2",10,110);SprintLine
+N880TC_LASERCORR_ON(T_LEFT)
+N890X-3.997Y0.156
+N900TC_LASER_ON(11,"ST080MD5-N2S0-30-2",0,100);LTT2
+N910X-1.000Y0.039
+N920G03X-0.311Y-0.300I-0.012J-0.300
+N930G03I8.000
+N940TC_LASER_OFF(3);SprintLine_ENDE
+N950;(CONTOUR NUMBER:4)
+N960G01X-43.978Y-1.829
+N970TC_LASER_ON(9,"ST080MD5-N2S0-30-2",10,110);SprintLine
+N980TC_LASERCORR_ON(T_LEFT)
+N990X-2.937Y-2.716
+N1000TC_LASER_ON(11,"ST080MD5-N2S0-30-2",0,100);LTT2
+N1010X-0.734Y-0.679
+N1020G03X-0.008Y-0.433I0.204J-0.220
+N1030G03I5.657J5.657
+N1040TC_LASER_OFF(3);SprintLine_ENDE
+N1050;(CONTOUR NUMBER:5)
+N1060G01X-13.091Y-11.090
+N1070TC_LASER_ON(9,"ST080MD5-N2S0-30-2",10,110);SprintLine
+N1080TC_LASERCORR_ON(T_LEFT)
+N1090X2.828Y2.828
+N1100TC_LASER_ON(11,"ST080MD5-N2S0-30-2",0,100);LTT2
+N1110X0.708Y0.707
+N1120G03Y0.424I-0.212J0.212
+N1130G01X-3.031Y3.031
+N1140G02X-1.757Y4.242I4.243J4.243
+N1150G01Y48.515
+N1160G03X-10.000Y10.000I-10.000
+N1170G01X-160.000
+N1180G02X-10.000Y10.000J10.000
+N1190G01Y44.000
+N1200G02X10.000Y10.000I10.000
+N1210G01X330.000
+N1220G02X10.000Y-10.000J-10.000
+N1230G01Y-44.000
+N1240G02X-10.000Y-10.000I-10.000
+N1250G01X-10.000
+N1260G03X-10.000Y-10.000J-10.000
+N1270G01Y-48.515
+N1280G02X-1.758Y-4.242I-6.000
+N1290G01X-6.485Y-6.485
+N1300G02X-4.243Y-1.758I-4.243J4.243
+N1310G01X-115.029
+N1320G02X-4.243Y1.758J6.000
+N1330G01X-3.454Y3.454
+N1340TC_LASER_OFF(3);SprintLine_ENDE
+N1350G01
+N1360G90
+N1370M17
+N1380M02
+STOP_TEXT
+DA,'SP3','UP','J1_1',0.32,'LST',1,0
+START_TEXT
+N10 MSG("SUB-PROGRAM NO.,SP3")
+N20G91
+N30;(PART NUMBER:1)
+N40TC_POS_LEVEL(40.0)
+N50;(CONTOUR NUMBER:1)
+N60TC_POS_LEVEL(30.0)
+N70TC_LASER_ON(11,"ST080MD5-N2S0-30-2",0,500);KENNZ_SprintLine
+N80X0.666Y1.250
+N90Y-10.000
+N100TC_LASER_OFF(3);KENNZ_SprintLine_ENDE
+N110X-0.666
+N120TC_LASER_ON(11,"ST080MD5-N2S0-30-2",0,500);KENNZ_SprintLine
+N130X1.332
+N140TC_LASER_OFF(3);KENNZ_SprintLine_ENDE
+N150X3.415Y1.250
+N160TC_LASER_ON(11,"ST080MD5-N2S0-30-2",0,500);KENNZ_SprintLine
+N170X3.998Y7.500
+N180Y-7.500
+N190X-0.667Y-1.250
+N200X-2.665
+N210X-0.666Y1.250
+N220Y7.500
+N230X0.666Y1.250
+N240X2.665
+N250X0.667Y-1.250
+N260TC_LASER_OFF(3);KENNZ_SprintLine_ENDE
+N270X4.747Y-8.750
+N280TC_LASER_ON(11,"ST080MD5-N2S0-30-2",0,500);KENNZ_SprintLine
+N290Y10.000
+N300X-2.665Y-5.000
+N310Y-1.250
+N320X3.331
+N330TC_LASER_OFF(3);KENNZ_SprintLine_ENDE
+N340X2.748Y-2.500
+N350TC_LASER_ON(11,"ST080MD5-N2S0-30-2",0,500);KENNZ_SprintLine
+N360X0.666Y-1.250
+N370X1.999
+N380X0.666Y1.250
+N390Y3.750
+N400X-0.666Y1.250
+N410X-2.665
+N420Y3.750
+N430X3.331
+N440TC_LASER_OFF(3);KENNZ_SprintLine_ENDE
+N450X2.749Y-8.750
+N460TC_LASER_ON(11,"ST080MD5-N2S0-30-2",0,500);KENNZ_SprintLine
+N470X0.666Y-1.250
+N480X1.999
+N490X0.666Y1.250
+N500Y3.750
+N510X-0.666Y1.250
+N520X-2.665
+N530Y3.750
+N540X3.331
+N550TC_LASER_OFF(3);KENNZ_SprintLine_ENDE
+N560X2.748
+N570TC_LASER_ON(11,"ST080MD5-N2S0-30-2",0,500);KENNZ_SprintLine
+N580X3.331
+N590Y-2.500
+N600X-2.665Y-5.000
+N610Y-2.500
+N620TC_LASER_OFF(3);KENNZ_SprintLine_ENDE
+N630X8.079
+N640TC_LASER_ON(11,"ST080MD5-N2S0-30-2",0,500);KENNZ_SprintLine
+N650Y10.000
+N660X-2.665Y-5.000
+N670Y-1.250
+N680X3.331
+N690TC_POS_LEVEL(40.0)
+N700TC_LASER_OFF(3);KENNZ_SprintLine_ENDE
+N710;(CONTOUR NUMBER:2)
+N720X-288.442Y-103.766
+N730TC_LASER_ON(9,"ST080MD5-N2S0-30-2",10,110);SprintLine
+N740TC_LASERCORR_ON(T_LEFT)
+N750X-3.997Y0.156
+N760TC_LASER_ON(11,"ST080MD5-N2S0-30-2",0,100);LTT2
+N770X-0.999Y0.039
+N780G03X-0.312Y-0.300I-0.012J-0.300
+N790G03I8.000
+N800TC_LASER_OFF(3);SprintLine_ENDE
+N810;(CONTOUR NUMBER:3)
+N820G01X-44.692Y0.105
+N830TC_LASER_ON(9,"ST080MD5-N2S0-30-2",10,110);SprintLine
+N840TC_LASERCORR_ON(T_LEFT)
+N850X-3.997Y0.156
+N860TC_LASER_ON(11,"ST080MD5-N2S0-30-2",0,100);LTT2
+N870X-0.999Y0.039
+N880G03X-0.312Y-0.300I-0.012J-0.300
+N890G03I8.000
+N900TC_LASER_OFF(3);SprintLine_ENDE
+N910;(CONTOUR NUMBER:4)
+N920G01X-43.978Y-1.829
+N930TC_LASER_ON(9,"ST080MD5-N2S0-30-2",10,110);SprintLine
+N940TC_LASERCORR_ON(T_LEFT)
+N950X-2.936Y-2.716
+N960TC_LASER_ON(11,"ST080MD5-N2S0-30-2",0,100);LTT2
+N970X-0.734Y-0.679
+N980G03X-0.009Y-0.433I0.204J-0.220
+N990G03I5.657J5.657
+N1000TC_LASER_OFF(3);SprintLine_ENDE
+N1010;(CONTOUR NUMBER:5)
+N1020G01X-13.090Y-11.091
+N1030TC_LASER_ON(9,"ST080MD5-N2S0-30-2",10,110);SprintLine
+N1040TC_LASERCORR_ON(T_LEFT)
+N1050X2.828Y2.829
+N1060TC_LASER_ON(11,"ST080MD5-N2S0-30-2",0,100);LTT2
+N1070X0.707Y0.707
+N1080G03Y0.424I-0.212J0.212
+N1090G01X-3.030Y3.031
+N1100G02X-1.758Y4.242I4.243J4.243
+N1110G01Y48.515
+N1120G03X-10.000Y10.000I-10.000
+N1130G01X-403.000
+N1140G02X-10.000Y10.000J10.000
+N1150G01Y44.000
+N1160G02X10.000Y10.000I10.000
+N1170G01X813.000
+N1180G02X10.000Y-10.000J-10.000
+N1190G01Y-44.000
+N1200G02X-10.000Y-10.000I-10.000
+N1210G01X-250.000
+N1220G03X-10.000Y-10.000J-10.000
+N1230G01Y-48.515
+N1240G02X-1.757Y-4.242I-6.000
+N1250G01X-6.485Y-6.486
+N1260G02X-4.243Y-1.757I-4.243J4.243
+N1270G01X-115.030
+N1280G02X-4.242Y1.757J6.000
+N1290G01X-3.455Y3.455
+N1300TC_LASER_OFF(3);SprintLine_ENDE
+N1310G01
+N1320G90
+N1330M17
+N1340M02
+STOP_TEXT
+DA,'J14_1','HP','J1_1',8.14,'LST',1,0
+START_TEXT
+N10 MSG("MAIN PROGRAM NO.:,J14_1")
+N20 MSG("CUT V21.04.55 B00 - TruLaser 3030 (L95) - SIEMENS")
+N30 MSG("SHEET DIMENSIONS 8.00 X 2000.00 X 1000.00 ")
+N40;(DATE: 10/02/2026 TIME: 11:26:32)
+N50 MSG("scope begin NcProgramGuid: 2012479d-987b-4d79-b4f5-446ccc919301")
+N60G71
+N70F233000
+N80TC_MICROJOINT("MIJO-1")
+N90TC_PCS_PIERCE
+N100;(FILE NAME: J14_1.LST)
+N110;(TRANSFERNAME: J14_1.LST PROGRAMME RUNS: 1)
+N120;(MACHINE: L95_3030 TYPE: 51)
+N130;(CONTROL: SIN 840D VERSION:)
+N140TC_POS_LEVEL(40.0)
+N150TC_SHEET_TECH("SHT-1");BLECHLAGE
+N160TC_SHEET_LOAD("SHL-1")
+N170;GOTOF ENTRY_LASER
+N180;ENTRY_LASER:
+N190;(PART NUMBER:2 CONSECUTIVE NUMBER: 1 )
+N200X154.513Y33.192
+N210SP1
+N220TC_PART_END(1)
+N230;ENTRY_LASER:
+N240;(PART NUMBER:3 CONSECUTIVE NUMBER: 1 )
+N250X348.503Y201.461
+N260SP2
+N270TC_PART_END(2)
+N280;ENTRY_LASER:
+N290;(PART NUMBER:3 CONSECUTIVE NUMBER: 2 )
+N300X682.823Y123.398
+N310SP2
+N320TC_PART_END(3)
+N330;ENTRY_LASER:
+N340;(PART NUMBER:3 CONSECUTIVE NUMBER: 3 )
+N350X1047.143Y123.398
+N360SP2
+N370TC_PART_END(4)
+N380;ENTRY_LASER:
+N390;(PART NUMBER:1 CONSECUTIVE NUMBER: 1 )
+N400X1435.234Y210.191
+N410SP3
+N420TC_PART_END(5)
+N430;ENTRY_LASER:
+N440;(PART NUMBER:3 CONSECUTIVE NUMBER: 4 )
+N450X1565.783Y123.398
+N460SP2
+N470TC_PART_END(6)
+N480;ENTRY_LASER:
+N490;(PART NUMBER:2 CONSECUTIVE NUMBER: 2 )
+N500X1735.991Y33.192
+N510SP1
+N520TC_PART_END(7)
+N530;ENTRY_LASER:
+N540;(PART NUMBER:2 CONSECUTIVE NUMBER: 3 )
+N550X1796.113Y137.512
+N560SP1
+N570TC_PART_END(8)
+N580;ENTRY_LASER:
+N590;(PART NUMBER:2 CONSECUTIVE NUMBER: 4 )
+N600X1915.311Y33.192
+N610SP1
+N620TC_PART_END(9)
+N630;ENTRY_LASER:
+N640;(PART NUMBER:2 CONSECUTIVE NUMBER: 5 )
+N650X1935.661Y443.472
+N660SP1
+N670TC_PART_END(10)
+N680;ENTRY_LASER:
+N690;(PART NUMBER:1 CONSECUTIVE NUMBER: 2 )
+N700X1859.554Y288.511
+N710SP3
+N720TC_PART_END(11)
+N730;ENTRY_LASER:
+N740;(PART NUMBER:2 CONSECUTIVE NUMBER: 6 )
+N750X1848.585Y339.152
+N760SP1
+N770TC_PART_END(12)
+N780;ENTRY_LASER:
+N790;(PART NUMBER:1 CONSECUTIVE NUMBER: 3 )
+N800X1643.914Y445.151
+N810SP3
+N820TC_PART_END(13)
+N830;ENTRY_LASER:
+N840;(PART NUMBER:1 CONSECUTIVE NUMBER: 4 )
+N850X1219.594Y366.831
+N860SP3
+N870TC_PART_END(14)
+N880;ENTRY_LASER:
+N890;(PART NUMBER:1 CONSECUTIVE NUMBER: 5 )
+N900X795.274Y288.511
+N910SP3
+N920TC_PART_END(15)
+N930;ENTRY_LASER:
+N940;(PART NUMBER:3 CONSECUTIVE NUMBER: 5 )
+N950X348.503Y429.358
+N960SP2
+N970TC_PART_END(16)
+N980;ENTRY_LASER:
+N990;(PART NUMBER:3 CONSECUTIVE NUMBER: 6 )
+N1000X348.503Y656.998
+N1010SP2
+N1020TC_PART_END(17)
+N1030;ENTRY_LASER:
+N1040;(PART NUMBER:1 CONSECUTIVE NUMBER: 6 )
+N1050X795.274Y516.151
+N1060SP3
+N1070TC_PART_END(18)
+N1080;ENTRY_LASER:
+N1090;(PART NUMBER:1 CONSECUTIVE NUMBER: 7 )
+N1100X1219.594Y594.471
+N1110SP3
+N1120TC_PART_END(19)
+N1130;ENTRY_LASER:
+N1140;(PART NUMBER:2 CONSECUTIVE NUMBER: 7 )
+N1150X1577.021Y495.792
+N1160SP1
+N1170TC_PART_END(20)
+N1180;ENTRY_LASER:
+N1190;(PART NUMBER:1 CONSECUTIVE NUMBER: 8 )
+N1200X1643.914Y672.791
+N1210SP3
+N1220TC_PART_END(21)
+N1230;ENTRY_LASER:
+N1240;(PART NUMBER:2 CONSECUTIVE NUMBER: 8 )
+N1250X1756.341Y495.792
+N1260SP1
+N1270TC_PART_END(22)
+N1280;ENTRY_LASER:
+N1290;(PART NUMBER:2 CONSECUTIVE NUMBER: 9 )
+N1300X1790.351Y723.432
+N1310SP1
+N1320TC_PART_END(23)
+N1330;ENTRY_LASER:
+N1340;(PART NUMBER:2 CONSECUTIVE NUMBER: 10 )
+N1350X1850.473Y600.112
+N1360SP1
+N1370TC_PART_END(24)
+N1380;ENTRY_LASER:
+N1390;(PART NUMBER:2 CONSECUTIVE NUMBER: 11 )
+N1400X1879.550Y827.752
+N1410SP1
+N1420TC_PART_END(25)
+N1430;ENTRY_LASER:
+N1440;(PART NUMBER:3 CONSECUTIVE NUMBER: 7 )
+N1450X1739.220Y962.958
+N1460SP2
+N1470TC_PART_END(26)
+N1480;ENTRY_LASER:
+N1490;(PART NUMBER:3 CONSECUTIVE NUMBER: 8 )
+N1500X1620.143Y813.638
+N1510SP2
+N1520TC_PART_END(27)
+N1530;ENTRY_LASER:
+N1540;(PART NUMBER:2 CONSECUTIVE NUMBER: 12 )
+N1550X1366.031Y872.752
+N1560SP1
+N1570TC_PART_END(28)
+N1580;ENTRY_LASER:
+N1590;(PART NUMBER:1 CONSECUTIVE NUMBER: 9 )
+N1600X1219.594Y822.111
+N1610SP3
+N1620TC_PART_END(29)
+N1630;ENTRY_LASER:
+N1640;(PART NUMBER:3 CONSECUTIVE NUMBER: 9 )
+N1650X1195.823Y962.958
+N1660SP2
+N1670TC_PART_END(30)
+N1680;ENTRY_LASER:
+N1690;(PART NUMBER:1 CONSECUTIVE NUMBER: 10 )
+N1700X795.274Y743.791
+N1710SP3
+N1720TC_PART_END(31)
+N1730;ENTRY_LASER:
+N1740;(PART NUMBER:1 CONSECUTIVE NUMBER: 11 )
+N1750X795.274Y971.431
+N1760SP3
+N1770TC_PART_END(32)
+N1780;ENTRY_LASER:
+N1790;(PART NUMBER:3 CONSECUTIVE NUMBER: 10 )
+N1800X348.503Y884.638
+N1810SP2
+N1820TC_PART_END(33)
+N1830TC_LASER_OFF(2)
+N1840TC_PART_END(-1)
+N1850 MSG("scope end NcProgramGuid: 2012479d-987b-4d79-b4f5-446ccc919301")
+N1860G04F1
+N1870M30
+STOP_TEXT
+DA,'2','PG','1045572',0.00,'GEO',0,2
+START_TEXT
+#~1
+1.03
+1
+02.10.2026
+0.000000000 0.000000000 0.000000000
+165.000000000 90.000000000 0.000000000
+13818.838756809
+1
+0.001000000
+0
+1
+##~~
+#~11
+
+
+
+
+
+St37-80
+8.000000000
+
+
+
+0
+0
+1
+0
+0
+0
+0
+0
+0
+
+##~~
+#~END
+#~3
+Lagerpall
+LASER
+
+0.000000000 0.000000000 1.000000000
+1.000000000 0.000000000 0.000000000 0.000000000
+0.000000000 1.000000000 0.000000000 0.000000000
+0.000000000 0.000000000 1.000000000 0.000000000
+0.000000000 0.000000000 0.000000000 1.000000000
+0.000000000 0.000000000 0.000000000
+165.000000000 90.000000000 0.000000000
+82.888931324 45.000000000 0.000000000
+13818.838756809
+5
+0
+0
+0
+0
+##~~
+#~30
+ANSI_CODEPAGE@1252
+AUFTR@*BELEGT*
+BEND_COUNT@0
+BEZCH@Lagerpall
+DREHINKR@90
+FNAME@C:\Users\EmilA\AppData\Local\Temp\TRUMPF\TruTops\Cut\ToPsProcess44292\TruTopsWorkspaces\job_16\parts\partid_3\1045572.geo
+FORM_COUNT@0
+GEOKERNEL_VERSION@21.0.67.0
+IDENT@1045572
+INFO_BLOCK_READ@true
+MAT@St37-80
+PART_NESTFITTYPE@2
+PART_VERSION@3
+PRIOFRGEO@5
+ROTALLOWED@0
+SOURCE_FILE_NAME@C:\Program Files (x86)\TRUMPF\TruTops\Server\FabServer\TEMP\1045572.GEO
+TEILANZAHL@1
+TEILANZAHLMAX@1
+THREAD_COUNT@0
+TMUSTER@0
+TOTAL_LENGTH@689.343
+TeilVerschmolzenId@true
+WERKSTOFF@1.0038
+#~TTINFO_END
+#~31
+P
+1
+1.252334060 1.252334060 0.000000000
+|~
+P
+2
+17.000000000 12.500000000 0.000000000
+|~
+P
+3
+17.000000000 17.808991915 0.000000000
+|~
+P
+4
+127.500000000 20.000000000 0.000000000
+|~
+P
+5
+132.808991915 20.000000000 0.000000000
+|~
+P
+6
+135.000000000 61.500000000 0.000000000
+|~
+P
+7
+135.000000000 66.808991915 0.000000000
+|~
+P
+8
+25.500000000 70.000000000 0.000000000
+|~
+P
+9
+20.191008085 70.000000000 0.000000000
+|~
+P
+10
+158.262979823 66.667466474 0.000000000
+|~
+P
+11
+-0.161879503 2.666547622 0.000000000
+|~
+P
+12
+1.252334060 1.252334060 0.000000000
+|~
+P
+13
+1.252334060 1.252334060 0.000000000
+|~
+P
+14
+1.252334060 1.252334060 0.000000000
+|~
+P
+15
+4.080761184 4.080761184 0.000000000
+|~
+P
+16
+1.252334060 1.252334060 0.000000000
+|~
+P
+17
+4.787867966 4.787867966 0.000000000
+|~
+P
+18
+4.080761184 4.080761184 0.000000000
+|~
+P
+19
+4.787867966 5.212132034 0.000000000
+|~
+P
+20
+4.787867966 4.787867966 0.000000000
+|~
+P
+21
+4.575735931 5.000000000 0.000000000
+|~
+P
+22
+4.787867966 5.212132034 0.000000000
+|~
+P
+23
+18.996409691 17.689207333 0.000000000
+|~
+P
+24
+17.000000000 17.808991915 0.000000000
+|~
+P
+25
+17.000000000 17.808991915 0.000000000
+|~
+P
+26
+17.000000000 17.808991915 0.000000000
+|~
+P
+27
+16.760430837 13.816172533 0.000000000
+|~
+P
+28
+17.000000000 17.808991915 0.000000000
+|~
+P
+29
+16.700538546 12.817967687 0.000000000
+|~
+P
+30
+16.760430837 13.816172533 0.000000000
+|~
+P
+31
+17.000000000 12.500000000 0.000000000
+|~
+P
+32
+16.700538546 12.817967687 0.000000000
+|~
+P
+33
+17.000000000 12.800000000 0.000000000
+|~
+P
+34
+17.000000000 12.500000000 0.000000000
+|~
+P
+35
+132.689207333 18.003590309 0.000000000
+|~
+P
+36
+132.808991915 20.000000000 0.000000000
+|~
+P
+37
+132.808991915 20.000000000 0.000000000
+|~
+P
+38
+132.808991915 20.000000000 0.000000000
+|~
+P
+39
+128.816172533 20.239569163 0.000000000
+|~
+P
+40
+132.808991915 20.000000000 0.000000000
+|~
+P
+41
+127.817967687 20.299461454 0.000000000
+|~
+P
+42
+128.816172533 20.239569163 0.000000000
+|~
+P
+43
+127.500000000 20.000000000 0.000000000
+|~
+P
+44
+127.817967687 20.299461454 0.000000000
+|~
+P
+45
+127.800000000 20.000000000 0.000000000
+|~
+P
+46
+127.500000000 20.000000000 0.000000000
+|~
+P
+47
+136.996409691 66.689207333 0.000000000
+|~
+P
+48
+135.000000000 66.808991915 0.000000000
+|~
+P
+49
+135.000000000 66.808991915 0.000000000
+|~
+P
+50
+135.000000000 66.808991915 0.000000000
+|~
+P
+51
+134.760430837 62.816172533 0.000000000
+|~
+P
+52
+135.000000000 66.808991915 0.000000000
+|~
+P
+53
+134.700538546 61.817967687 0.000000000
+|~
+P
+54
+134.760430837 62.816172533 0.000000000
+|~
+P
+55
+135.000000000 61.500000000 0.000000000
+|~
+P
+56
+134.700538546 61.817967687 0.000000000
+|~
+P
+57
+135.000000000 61.800000000 0.000000000
+|~
+P
+58
+135.000000000 61.500000000 0.000000000
+|~
+P
+59
+20.310792667 71.996409691 0.000000000
+|~
+P
+60
+20.191008085 70.000000000 0.000000000
+|~
+P
+61
+20.191008085 70.000000000 0.000000000
+|~
+P
+62
+20.191008085 70.000000000 0.000000000
+|~
+P
+63
+24.183827467 69.760430837 0.000000000
+|~
+P
+64
+20.191008085 70.000000000 0.000000000
+|~
+P
+65
+25.182032313 69.700538546 0.000000000
+|~
+P
+66
+24.183827467 69.760430837 0.000000000
+|~
+P
+67
+25.500000000 70.000000000 0.000000000
+|~
+P
+68
+25.182032313 69.700538546 0.000000000
+|~
+P
+69
+25.200000000 70.000000000 0.000000000
+|~
+P
+70
+25.500000000 70.000000000 0.000000000
+|~
+P
+71
+0.000000000 12.071067812 0.000000000
+|~
+P
+72
+0.000000000 77.928932188 0.000000000
+|~
+P
+73
+1.464466094 8.535533906 0.000000000
+|~
+P
+74
+1.464466094 81.464466094 0.000000000
+|~
+P
+75
+5.000000000 12.071067812 0.000000000
+|~
+P
+76
+5.000000000 77.928932188 0.000000000
+|~
+P
+77
+8.535533906 1.464466094 0.000000000
+|~
+P
+78
+8.535533906 88.535533906 0.000000000
+|~
+P
+79
+12.071067812 0.000000000 0.000000000
+|~
+P
+80
+12.071067812 5.000000000 0.000000000
+|~
+P
+81
+12.071067812 85.000000000 0.000000000
+|~
+P
+82
+12.071067812 90.000000000 0.000000000
+|~
+P
+83
+16.000000000 12.500000000 0.000000000
+|~
+P
+84
+16.000000000 20.000000000 0.000000000
+|~
+P
+85
+16.000000000 27.500000000 0.000000000
+|~
+P
+86
+16.000000000 62.500000000 0.000000000
+|~
+P
+87
+16.000000000 70.000000000 0.000000000
+|~
+P
+88
+16.000000000 77.500000000 0.000000000
+|~
+P
+89
+18.000000000 12.500000000 0.000000000
+|~
+P
+90
+18.000000000 20.000000000 0.000000000
+|~
+P
+91
+18.000000000 27.500000000 0.000000000
+|~
+P
+92
+18.000000000 62.500000000 0.000000000
+|~
+P
+93
+18.000000000 70.000000000 0.000000000
+|~
+P
+94
+18.000000000 77.500000000 0.000000000
+|~
+P
+95
+127.500000000 19.000000000 0.000000000
+|~
+P
+96
+127.500000000 21.000000000 0.000000000
+|~
+P
+97
+127.500000000 69.000000000 0.000000000
+|~
+P
+98
+127.500000000 71.000000000 0.000000000
+|~
+P
+99
+135.000000000 19.000000000 0.000000000
+|~
+P
+100
+135.000000000 21.000000000 0.000000000
+|~
+P
+101
+135.000000000 69.000000000 0.000000000
+|~
+P
+102
+135.000000000 71.000000000 0.000000000
+|~
+P
+103
+142.500000000 19.000000000 0.000000000
+|~
+P
+104
+142.500000000 21.000000000 0.000000000
+|~
+P
+105
+142.500000000 69.000000000 0.000000000
+|~
+P
+106
+142.500000000 71.000000000 0.000000000
+|~
+P
+107
+151.387979823 47.471138349 0.000000000
+|~
+P
+108
+152.928932188 0.000000000 0.000000000
+|~
+P
+109
+152.928932188 5.000000000 0.000000000
+|~
+P
+110
+152.928932188 85.000000000 0.000000000
+|~
+P
+111
+152.928932188 90.000000000 0.000000000
+|~
+P
+112
+156.464466094 1.464466094 0.000000000
+|~
+P
+113
+156.464466094 88.535533906 0.000000000
+|~
+P
+114
+160.000000000 12.071067812 0.000000000
+|~
+P
+115
+160.000000000 77.928932188 0.000000000
+|~
+P
+116
+163.535533906 8.535533906 0.000000000
+|~
+P
+117
+163.535533906 81.464466094 0.000000000
+|~
+P
+118
+165.000000000 12.071067812 0.000000000
+|~
+P
+119
+165.000000000 77.928932188 0.000000000
+|~
+##~~
+#~36
+ATT
+1
+7
+|~
+ATT
+2
+18
+MARK
+PROCESS_TYPE
+0
+|~
+#~ATTRIBUTE_END
+#~32
+TXT
+3 1
+107
+10.000000000 1.000000000 0.000000000
+3.000000000 90.000000000
+18 1 1
+1045572
+2
+1
+2
+|~
+##~~
+#~33
+147713
+1 24 0
+4
+0.000000000 0.000000000 -1.000000000
+0.000000000 0.000000000 0.000000000
+165.000000000 90.000000000 0.000000000
+82.500000000 45.000000000 0.000000000
+14645.697103865
+0
+##~~
+#~331
+LIN
+1 0
+119 118
+|~
+ARC
+1 0
+114 118 116
+-1
+|~
+LIN
+1 0
+116 112
+|~
+ARC
+1 0
+109 112 108
+-1
+|~
+LIN
+1 0
+108 79
+|~
+ARC
+1 0
+80 79 77
+-1
+|~
+LIN
+1 0
+77 73
+|~
+ARC
+1 0
+75 73 71
+-1
+|~
+LIN
+1 0
+71 72
+|~
+ARC
+1 0
+76 72 74
+-1
+|~
+LIN
+1 0
+74 78
+|~
+ARC
+1 0
+81 78 82
+-1
+|~
+LIN
+1 0
+82 111
+|~
+ARC
+1 0
+110 111 113
+-1
+|~
+LIN
+1 0
+113 117
+|~
+ARC
+1 0
+115 117 119
+-1
+|~
+##~~
+#~KONT_END
+#~33
+131329
+2 24 1
+0
+0.000000000 0.000000000 1.000000000
+8.500000000 12.500000000 0.000000000
+25.500000000 27.500000000 0.000000000
+17.000000000 20.000000000 0.000000000
+206.714586764
+1
+##~~
+#~331
+ARC
+1 0
+84 85 83
+1
+|~
+LIN
+1 0
+83 89
+|~
+ARC
+1 0
+90 89 91
+1
+|~
+LIN
+1 0
+91 85
+|~
+##~~
+#~KONT_END
+#~33
+131329
+3 24 1
+0
+0.000000000 0.000000000 1.000000000
+8.500000000 62.500000000 0.000000000
+25.500000000 77.500000000 0.000000000
+17.000000000 70.000000000 0.000000000
+206.714586764
+1
+##~~
+#~331
+ARC
+1 0
+93 92 94
+1
+|~
+LIN
+1 0
+94 88
+|~
+ARC
+1 0
+87 88 86
+1
+|~
+LIN
+1 0
+86 92
+|~
+##~~
+#~KONT_END
+#~33
+131329
+4 24 1
+0
+0.000000000 0.000000000 1.000000000
+127.500000000 11.500000000 0.000000000
+142.500000000 28.500000000 0.000000000
+135.000000000 20.000000000 0.000000000
+206.714586764
+1
+##~~
+#~331
+ARC
+1 0
+100 104 96
+1
+|~
+LIN
+1 0
+96 95
+|~
+ARC
+1 0
+99 95 103
+1
+|~
+LIN
+1 0
+103 104
+|~
+##~~
+#~KONT_END
+#~33
+131329
+5 24 1
+0
+0.000000000 0.000000000 1.000000000
+127.500000000 61.500000000 0.000000000
+142.500000000 78.500000000 0.000000000
+135.000000000 70.000000000 0.000000000
+206.714586764
+1
+##~~
+#~331
+ARC
+1 0
+102 106 98
+1
+|~
+LIN
+1 0
+98 97
+|~
+ARC
+1 0
+101 97 105
+1
+|~
+LIN
+1 0
+105 106
+|~
+##~~
+#~KONT_END
+#~END
+#~EOF
+STOP_TEXT
+DA,'3','PG','1045575',0.00,'GEO',0,3
+START_TEXT
+#~1
+1.03
+2
+02.10.2026
+0.000000000 0.000000000 0.000000000
+350.000000000 135.000000000 0.000000000
+31590.795757972
+1
+0.001000000
+0
+1
+##~~
+#~11
+
+
+
+
+
+St37-80
+8.000000000
+
+
+
+0
+0
+1
+0
+0
+0
+0
+0
+0
+
+##~~
+#~END
+#~3
+Lagerpall
+LASER
+
+0.000000000 0.000000000 1.000000000
+1.000000000 0.000000000 0.000000000 0.000000000
+0.000000000 1.000000000 0.000000000 0.000000000
+0.000000000 0.000000000 1.000000000 0.000000000
+0.000000000 0.000000000 0.000000000 1.000000000
+0.000000000 0.000000000 0.000000000
+350.000000000 135.000000000 0.000000000
+197.023748381 83.662752326 0.000000000
+31590.795757972
+4
+0
+0
+0
+0
+##~~
+#~30
+ANSI_CODEPAGE@1252
+AUFTR@*BELEGT*
+BEND_COUNT@0
+BEZCH@Lagerpall
+DREHINKR@90
+FNAME@C:\Users\EmilA\AppData\Local\Temp\TRUMPF\TruTops\Cut\ToPsProcess44292\TruTopsWorkspaces\job_16\parts\partid_2\1045575.geo
+FORM_COUNT@0
+GEOKERNEL_VERSION@21.0.67.0
+IDENT@1045575
+INFO_BLOCK_READ@true
+MAT@St37-80
+PART_NESTFITTYPE@2
+PART_VERSION@3
+PRIOFRGEO@5
+ROTALLOWED@0
+SOURCE_FILE_NAME@C:\Program Files (x86)\TRUMPF\TruTops\Server\FabServer\TEMP\1045575.GEO
+TEILANZAHL@1
+TEILANZAHLMAX@1
+THREAD_COUNT@0
+TMUSTER@0
+TOTAL_LENGTH@1082.3
+TeilVerschmolzenId@true
+WERKSTOFF@1.0038
+#~TTINFO_END
+#~31
+P
+1
+181.252334060 1.252334060 0.000000000
+|~
+P
+2
+194.343145751 12.343145751 0.000000000
+|~
+P
+3
+198.022169257 16.170615047 0.000000000
+|~
+P
+4
+242.000000000 18.000000000 0.000000000
+|~
+P
+5
+247.307891964 18.104967024 0.000000000
+|~
+P
+6
+292.000000000 18.000000000 0.000000000
+|~
+P
+7
+297.307891964 18.104967024 0.000000000
+|~
+P
+8
+305.027343135 117.147813115 0.000000000
+|~
+P
+9
+179.838120497 2.666547622 0.000000000
+|~
+P
+10
+181.252334060 1.252334060 0.000000000
+|~
+P
+11
+181.252334060 1.252334060 0.000000000
+|~
+P
+12
+181.252334060 1.252334060 0.000000000
+|~
+P
+13
+184.080761184 4.080761184 0.000000000
+|~
+P
+14
+181.252334060 1.252334060 0.000000000
+|~
+P
+15
+184.787867966 4.787867966 0.000000000
+|~
+P
+16
+184.080761184 4.080761184 0.000000000
+|~
+P
+17
+184.787867966 5.212132034 0.000000000
+|~
+P
+18
+184.787867966 4.787867966 0.000000000
+|~
+P
+19
+184.575735931 5.000000000 0.000000000
+|~
+P
+20
+184.787867966 5.212132034 0.000000000
+|~
+P
+21
+199.380209821 14.702376024 0.000000000
+|~
+P
+22
+198.022169257 16.170615047 0.000000000
+|~
+P
+23
+198.022169257 16.170615047 0.000000000
+|~
+P
+24
+198.022169257 16.170615047 0.000000000
+|~
+P
+25
+195.085691212 13.454533920 0.000000000
+|~
+P
+26
+198.022169257 16.170615047 0.000000000
+|~
+P
+27
+194.351571700 12.775513638 0.000000000
+|~
+P
+28
+195.085691212 13.454533920 0.000000000
+|~
+P
+29
+194.343145751 12.343145751 0.000000000
+|~
+P
+30
+194.351571700 12.775513638 0.000000000
+|~
+P
+31
+194.555277785 12.555277785 0.000000000
+|~
+P
+32
+194.343145751 12.343145751 0.000000000
+|~
+P
+33
+247.229969886 16.106485563 0.000000000
+|~
+P
+34
+247.307891964 18.104967024 0.000000000
+|~
+P
+35
+247.307891964 18.104967024 0.000000000
+|~
+P
+36
+247.307891964 18.104967024 0.000000000
+|~
+P
+37
+243.310929042 18.260811180 0.000000000
+|~
+P
+38
+247.307891964 18.104967024 0.000000000
+|~
+P
+39
+242.311688312 18.299772219 0.000000000
+|~
+P
+40
+243.310929042 18.260811180 0.000000000
+|~
+P
+41
+242.000000000 18.000000000 0.000000000
+|~
+P
+42
+242.311688312 18.299772219 0.000000000
+|~
+P
+43
+242.300000000 18.000000000 0.000000000
+|~
+P
+44
+242.000000000 18.000000000 0.000000000
+|~
+P
+45
+297.229969886 16.106485563 0.000000000
+|~
+P
+46
+297.307891964 18.104967024 0.000000000
+|~
+P
+47
+297.307891964 18.104967024 0.000000000
+|~
+P
+48
+297.307891964 18.104967024 0.000000000
+|~
+P
+49
+293.310929042 18.260811180 0.000000000
+|~
+P
+50
+297.307891964 18.104967024 0.000000000
+|~
+P
+51
+292.311688312 18.299772219 0.000000000
+|~
+P
+52
+293.310929042 18.260811180 0.000000000
+|~
+P
+53
+292.000000000 18.000000000 0.000000000
+|~
+P
+54
+292.311688312 18.299772219 0.000000000
+|~
+P
+55
+292.300000000 18.000000000 0.000000000
+|~
+P
+56
+292.000000000 18.000000000 0.000000000
+|~
+P
+57
+0.000000000 81.000000000 0.000000000
+|~
+P
+58
+0.000000000 125.000000000 0.000000000
+|~
+P
+59
+10.000000000 71.000000000 0.000000000
+|~
+P
+60
+10.000000000 81.000000000 0.000000000
+|~
+P
+61
+10.000000000 125.000000000 0.000000000
+|~
+P
+62
+10.000000000 135.000000000 0.000000000
+|~
+P
+63
+170.000000000 61.000000000 0.000000000
+|~
+P
+64
+170.000000000 71.000000000 0.000000000
+|~
+P
+65
+180.000000000 12.485281374 0.000000000
+|~
+P
+66
+180.000000000 61.000000000 0.000000000
+|~
+P
+67
+181.757359313 8.242640687 0.000000000
+|~
+P
+68
+186.000000000 12.485281374 0.000000000
+|~
+P
+69
+188.242640687 1.757359313 0.000000000
+|~
+P
+70
+192.485281374 0.000000000 0.000000000
+|~
+P
+71
+192.485281374 6.000000000 0.000000000
+|~
+P
+72
+200.000000000 18.000000000 0.000000000
+|~
+P
+73
+250.000000000 18.000000000 0.000000000
+|~
+P
+74
+300.000000000 18.000000000 0.000000000
+|~
+P
+75
+307.514718626 0.000000000 0.000000000
+|~
+P
+76
+307.514718626 6.000000000 0.000000000
+|~
+P
+77
+311.757359313 1.757359313 0.000000000
+|~
+P
+78
+314.000000000 12.485281374 0.000000000
+|~
+P
+79
+318.242640687 8.242640687 0.000000000
+|~
+P
+80
+320.000000000 12.485281374 0.000000000
+|~
+P
+81
+320.000000000 61.000000000 0.000000000
+|~
+P
+82
+324.223671260 120.272813115 0.000000000
+|~
+P
+83
+330.000000000 61.000000000 0.000000000
+|~
+P
+84
+330.000000000 71.000000000 0.000000000
+|~
+P
+85
+340.000000000 71.000000000 0.000000000
+|~
+P
+86
+340.000000000 81.000000000 0.000000000
+|~
+P
+87
+340.000000000 125.000000000 0.000000000
+|~
+P
+88
+340.000000000 135.000000000 0.000000000
+|~
+P
+89
+350.000000000 81.000000000 0.000000000
+|~
+P
+90
+350.000000000 125.000000000 0.000000000
+|~
+##~~
+#~36
+ATT
+1
+7
+|~
+ATT
+2
+18
+MARK
+PROCESS_TYPE
+0
+|~
+#~ATTRIBUTE_END
+#~32
+TXT
+3 1
+82
+10.000000000 1.000000000 0.000000000
+3.000000000 180.000000000
+18 1 1
+1045575
+2
+1
+2
+|~
+##~~
+#~33
+147713
+1 24 0
+3
+0.000000000 0.000000000 -1.000000000
+0.000000000 0.000000000 0.000000000
+350.000000000 135.000000000 0.000000000
+198.016310364 82.432496322 0.000000000
+32193.981547462
+0
+##~~
+#~331
+LIN
+1 0
+90 89
+|~
+ARC
+1 0
+86 89 85
+-1
+|~
+LIN
+1 0
+85 84
+|~
+ARC
+1 0
+83 84 81
+1
+|~
+LIN
+1 0
+81 80
+|~
+ARC
+1 0
+78 80 79
+-1
+|~
+LIN
+1 0
+79 77
+|~
+ARC
+1 0
+76 77 75
+-1
+|~
+LIN
+1 0
+75 70
+|~
+ARC
+1 0
+71 70 69
+-1
+|~
+LIN
+1 0
+69 67
+|~
+ARC
+1 0
+68 67 65
+-1
+|~
+LIN
+1 0
+65 66
+|~
+ARC
+1 0
+63 66 64
+1
+|~
+LIN
+1 0
+64 59
+|~
+ARC
+1 0
+60 59 57
+-1
+|~
+LIN
+1 0
+57 58
+|~
+ARC
+1 0
+61 58 62
+-1
+|~
+LIN
+1 0
+62 88
+|~
+ARC
+1 0
+87 88 90
+-1
+|~
+##~~
+#~KONT_END
+#~33
+131329
+2 24 1
+0
+0.000000000 0.000000000 1.000000000
+192.000000000 10.000000000 0.000000000
+208.000000000 26.000000000 0.000000000
+200.000000000 18.000000000 0.000000000
+201.061929830
+1
+##~~
+#~331
+CIR
+1 0
+72
+8.000000000
+|~
+##~~
+#~KONT_END
+#~33
+131329
+3 24 1
+0
+0.000000000 0.000000000 1.000000000
+242.000000000 10.000000000 0.000000000
+258.000000000 26.000000000 0.000000000
+250.000000000 18.000000000 0.000000000
+201.061929830
+1
+##~~
+#~331
+CIR
+1 0
+73
+8.000000000
+|~
+##~~
+#~KONT_END
+#~33
+131329
+4 24 1
+0
+0.000000000 0.000000000 1.000000000
+292.000000000 10.000000000 0.000000000
+308.000000000 26.000000000 0.000000000
+300.000000000 18.000000000 0.000000000
+201.061929830
+1
+##~~
+#~331
+CIR
+1 0
+74
+8.000000000
+|~
+##~~
+#~KONT_END
+#~END
+#~EOF
+STOP_TEXT
+DA,'1','PG','1045574',0.00,'GEO',0,1
+START_TEXT
+#~1
+1.03
+3
+02.10.2026
+0.000000000 0.000000000 0.000000000
+833.000000000 135.000000000 0.000000000
+62502.795757972
+1
+0.001000000
+0
+1
+##~~
+#~11
+
+
+
+
+
+St37-80
+8.000000000
+
+
+
+0
+0
+1
+0
+0
+0
+0
+0
+0
+
+##~~
+#~END
+#~3
+Lagerpall
+LASER
+
+0.000000000 0.000000000 1.000000000
+1.000000000 0.000000000 0.000000000 0.000000000
+0.000000000 1.000000000 0.000000000 0.000000000
+0.000000000 0.000000000 1.000000000 0.000000000
+0.000000000 0.000000000 0.000000000 1.000000000
+0.000000000 0.000000000 0.000000000
+833.000000000 135.000000000 0.000000000
+427.854095175 93.226372527 0.000000000
+62502.795757972
+4
+0
+0
+0
+0
+##~~
+#~30
+ANSI_CODEPAGE@1252
+AUFTR@*BELEGT*
+BEND_COUNT@0
+BEZCH@Lagerpall
+DREHINKR@90
+FNAME@C:\Users\EmilA\AppData\Local\Temp\TRUMPF\TruTops\Cut\ToPsProcess44292\TruTopsWorkspaces\job_16\parts\partid_1\1045574.geo
+FORM_COUNT@0
+GEOKERNEL_VERSION@21.0.67.0
+IDENT@1045574
+INFO_BLOCK_READ@true
+MAT@St37-80
+PART_NESTFITTYPE@2
+PART_VERSION@3
+PRIOFRGEO@5
+ROTALLOWED@0
+SOURCE_FILE_NAME@C:\Program Files (x86)\TRUMPF\TruTops\Server\FabServer\TEMP\1045574.GEO
+TEILANZAHL@1
+TEILANZAHLMAX@1
+THREAD_COUNT@0
+TMUSTER@0
+TOTAL_LENGTH@2048.3
+TeilVerschmolzenId@true
+WERKSTOFF@1.0038
+#~TTINFO_END
+#~31
+P
+1
+424.252334060 1.252334060 0.000000000
+|~
+P
+2
+437.343145751 12.343145751 0.000000000
+|~
+P
+3
+441.022169257 16.170615047 0.000000000
+|~
+P
+4
+485.000000000 18.000000000 0.000000000
+|~
+P
+5
+490.307891964 18.104967024 0.000000000
+|~
+P
+6
+535.000000000 18.000000000 0.000000000
+|~
+P
+7
+540.307891964 18.104967024 0.000000000
+|~
+P
+8
+828.749755782 121.870972256 0.000000000
+|~
+P
+9
+422.838120497 2.666547622 0.000000000
+|~
+P
+10
+424.252334060 1.252334060 0.000000000
+|~
+P
+11
+424.252334060 1.252334060 0.000000000
+|~
+P
+12
+424.252334060 1.252334060 0.000000000
+|~
+P
+13
+427.080761184 4.080761184 0.000000000
+|~
+P
+14
+424.252334060 1.252334060 0.000000000
+|~
+P
+15
+427.787867966 4.787867966 0.000000000
+|~
+P
+16
+427.080761184 4.080761184 0.000000000
+|~
+P
+17
+427.787867966 5.212132034 0.000000000
+|~
+P
+18
+427.787867966 4.787867966 0.000000000
+|~
+P
+19
+427.575735931 5.000000000 0.000000000
+|~
+P
+20
+427.787867966 5.212132034 0.000000000
+|~
+P
+21
+442.380209821 14.702376024 0.000000000
+|~
+P
+22
+441.022169257 16.170615047 0.000000000
+|~
+P
+23
+441.022169257 16.170615047 0.000000000
+|~
+P
+24
+441.022169257 16.170615047 0.000000000
+|~
+P
+25
+438.085691212 13.454533920 0.000000000
+|~
+P
+26
+441.022169257 16.170615047 0.000000000
+|~
+P
+27
+437.351571700 12.775513638 0.000000000
+|~
+P
+28
+438.085691212 13.454533920 0.000000000
+|~
+P
+29
+437.343145751 12.343145751 0.000000000
+|~
+P
+30
+437.351571700 12.775513638 0.000000000
+|~
+P
+31
+437.555277785 12.555277785 0.000000000
+|~
+P
+32
+437.343145751 12.343145751 0.000000000
+|~
+P
+33
+490.229969886 16.106485563 0.000000000
+|~
+P
+34
+490.307891964 18.104967024 0.000000000
+|~
+P
+35
+490.307891964 18.104967024 0.000000000
+|~
+P
+36
+490.307891964 18.104967024 0.000000000
+|~
+P
+37
+486.310929042 18.260811180 0.000000000
+|~
+P
+38
+490.307891964 18.104967024 0.000000000
+|~
+P
+39
+485.311688312 18.299772219 0.000000000
+|~
+P
+40
+486.310929042 18.260811180 0.000000000
+|~
+P
+41
+485.000000000 18.000000000 0.000000000
+|~
+P
+42
+485.311688312 18.299772219 0.000000000
+|~
+P
+43
+485.300000000 18.000000000 0.000000000
+|~
+P
+44
+485.000000000 18.000000000 0.000000000
+|~
+P
+45
+540.229969886 16.106485563 0.000000000
+|~
+P
+46
+540.307891964 18.104967024 0.000000000
+|~
+P
+47
+540.307891964 18.104967024 0.000000000
+|~
+P
+48
+540.307891964 18.104967024 0.000000000
+|~
+P
+49
+536.310929042 18.260811180 0.000000000
+|~
+P
+50
+540.307891964 18.104967024 0.000000000
+|~
+P
+51
+535.311688312 18.299772219 0.000000000
+|~
+P
+52
+536.310929042 18.260811180 0.000000000
+|~
+P
+53
+535.000000000 18.000000000 0.000000000
+|~
+P
+54
+535.311688312 18.299772219 0.000000000
+|~
+P
+55
+535.300000000 18.000000000 0.000000000
+|~
+P
+56
+535.000000000 18.000000000 0.000000000
+|~
+P
+57
+0.000000000 81.000000000 0.000000000
+|~
+P
+58
+0.000000000 125.000000000 0.000000000
+|~
+P
+59
+10.000000000 71.000000000 0.000000000
+|~
+P
+60
+10.000000000 81.000000000 0.000000000
+|~
+P
+61
+10.000000000 125.000000000 0.000000000
+|~
+P
+62
+10.000000000 135.000000000 0.000000000
+|~
+P
+63
+413.000000000 61.000000000 0.000000000
+|~
+P
+64
+413.000000000 71.000000000 0.000000000
+|~
+P
+65
+423.000000000 12.485281374 0.000000000
+|~
+P
+66
+423.000000000 61.000000000 0.000000000
+|~
+P
+67
+424.757359313 8.242640687 0.000000000
+|~
+P
+68
+429.000000000 12.485281374 0.000000000
+|~
+P
+69
+431.242640687 1.757359313 0.000000000
+|~
+P
+70
+435.485281374 0.000000000 0.000000000
+|~
+P
+71
+435.485281374 6.000000000 0.000000000
+|~
+P
+72
+443.000000000 18.000000000 0.000000000
+|~
+P
+73
+493.000000000 18.000000000 0.000000000
+|~
+P
+74
+543.000000000 18.000000000 0.000000000
+|~
+P
+75
+550.514718626 0.000000000 0.000000000
+|~
+P
+76
+550.514718626 6.000000000 0.000000000
+|~
+P
+77
+554.757359313 1.757359313 0.000000000
+|~
+P
+78
+557.000000000 12.485281374 0.000000000
+|~
+P
+79
+561.242640687 8.242640687 0.000000000
+|~
+P
+80
+563.000000000 12.485281374 0.000000000
+|~
+P
+81
+563.000000000 61.000000000 0.000000000
+|~
+P
+82
+573.000000000 61.000000000 0.000000000
+|~
+P
+83
+573.000000000 71.000000000 0.000000000
+|~
+P
+84
+809.553427657 124.995972256 0.000000000
+|~
+P
+85
+823.000000000 71.000000000 0.000000000
+|~
+P
+86
+823.000000000 81.000000000 0.000000000
+|~
+P
+87
+823.000000000 125.000000000 0.000000000
+|~
+P
+88
+823.000000000 135.000000000 0.000000000
+|~
+P
+89
+833.000000000 81.000000000 0.000000000
+|~
+P
+90
+833.000000000 125.000000000 0.000000000
+|~
+##~~
+#~36
+ATT
+1
+7
+|~
+ATT
+2
+18
+MARK
+PROCESS_TYPE
+0
+|~
+#~ATTRIBUTE_END
+#~32
+TXT
+3 1
+84
+10.000000000 1.000000000 0.000000000
+3.000000000 0.000000000
+18 1 1
+1045574
+2
+1
+2
+|~
+##~~
+#~33
+147713
+1 24 0
+3
+0.000000000 0.000000000 -1.000000000
+0.000000000 0.000000000 0.000000000
+833.000000000 135.000000000 0.000000000
+428.476779159 92.507336426 0.000000000
+63105.981547462
+0
+##~~
+#~331
+LIN
+1 0
+57 58
+|~
+ARC
+1 0
+61 58 62
+-1
+|~
+LIN
+1 0
+62 88
+|~
+ARC
+1 0
+87 88 90
+-1
+|~
+LIN
+1 0
+90 89
+|~
+ARC
+1 0
+86 89 85
+-1
+|~
+LIN
+1 0
+85 83
+|~
+ARC
+1 0
+82 83 81
+1
+|~
+LIN
+1 0
+81 80
+|~
+ARC
+1 0
+78 80 79
+-1
+|~
+LIN
+1 0
+79 77
+|~
+ARC
+1 0
+76 77 75
+-1
+|~
+LIN
+1 0
+75 70
+|~
+ARC
+1 0
+71 70 69
+-1
+|~
+LIN
+1 0
+69 67
+|~
+ARC
+1 0
+68 67 65
+-1
+|~
+LIN
+1 0
+65 66
+|~
+ARC
+1 0
+63 66 64
+1
+|~
+LIN
+1 0
+64 59
+|~
+ARC
+1 0
+60 59 57
+-1
+|~
+##~~
+#~KONT_END
+#~33
+131329
+2 24 1
+0
+0.000000000 0.000000000 1.000000000
+435.000000000 10.000000000 0.000000000
+451.000000000 26.000000000 0.000000000
+443.000000000 18.000000000 0.000000000
+201.061929830
+1
+##~~
+#~331
+CIR
+1 0
+72
+8.000000000
+|~
+##~~
+#~KONT_END
+#~33
+131329
+3 24 1
+0
+0.000000000 0.000000000 1.000000000
+485.000000000 10.000000000 0.000000000
+501.000000000 26.000000000 0.000000000
+493.000000000 18.000000000 0.000000000
+201.061929830
+1
+##~~
+#~331
+CIR
+1 0
+73
+8.000000000
+|~
+##~~
+#~KONT_END
+#~33
+131329
+4 24 1
+0
+0.000000000 0.000000000 1.000000000
+535.000000000 10.000000000 0.000000000
+551.000000000 26.000000000 0.000000000
+543.000000000 18.000000000 0.000000000
+201.061929830
+1
+##~~
+#~331
+CIR
+1 0
+74
+8.000000000
+|~
+##~~
+#~KONT_END
+#~END
+#~EOF
+STOP_TEXT
+C
+ENDE_PROGRAMM
+C
+BEGIN_CONSUMPTION_TIMES
+C
+ZA,MM,10
+MM,AT,1,  10,1,1,,'ConsumptionGroup'                  ,,'',Z
+MM,AT,1,  20,1,1,,'GasType'                           ,,'',Z
+MM,AT,1,  30,1,1,,'OnTime'                            ,,'s',Z
+MM,AT,1,  40,1,1,,'PartTypeIndex'                     ,,'',Z
+MM,AT,1,  50,1,1,,'NozzleDiameter'                    ,,'mm',Z
+MM,AT,1,  60,1,1,,'GasPressure'                       ,,'bar',Z
+MM,AT,1,  70,1,1,,'LaserPower'                        ,,'W',Z
+MM,AT,1,  90,1,1,,'GasVolumeInLiters'                 ,,'',Z
+MM,AT,1, 100,1,1,,'PowerConsumption'                  ,,'W',Z
+MM,AT,1, 110,1,1,,'ProgramSection'                    ,,'',Z
+C
+ZA,DA,8
+DA,1,2,10.69,2,2.70,15.2,0.00,189.20,0.00,0
+DA,1,2,12.72,3,2.70,16.6,0.00,243.89,0.00,0
+DA,1,2,19.17,1,2.70,19.2,0.00,420.63,0.00,0
+DA,1,2,13.50,-1,2.70,15.3,0.00,238.99,0.00,0
+DA,2,0,10.72,2,0.00,0.0,5729.87,0.00,37615.69,0
+DA,2,0,12.72,3,0.00,0.0,7224.36,0.00,41920.78,0
+DA,2,0,19.17,1,0.00,0.0,8870.88,0.00,46663.85,0
+DA,2,0,21.78,-1,0.00,0.0,0.00,0.00,21109.88,0
+C
+ENDE_CONSUMPTION_TIMES
+C
+ED
+C

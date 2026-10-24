@@ -1,0 +1,13 @@
+{
+  "zRoot": "\\\\fileserver\\share",
+  "dataDir": "C:\\OperatorPicking",
+  "port": 8080,
+  "pollSeconds": 15,
+  "geoWaitMinutes": 5,
+  "recentDays": 7,
+  "geoFolders": [],
+  "backupHour": 2,
+  "keepBackups": 14,
+  "scanLogDays": 30,
+  "rawRetentionDays": 90
+}

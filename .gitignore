@@ -1,0 +1,5 @@
+# Pipeline service: demo share, database and raw copies, local settings
+demo-z/
+.pipeline-data/
+server/config.json
+node_modules/

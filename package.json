@@ -1,0 +1,14 @@
+{
+  "name": "operator-picking-support",
+  "private": true,
+  "description": "Operator support for sorting laser-cut sheet metal parts (PAI700, Högskolan Väst, with Brålanda Industri AB)",
+  "type": "module",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning server/main.js",
+    "demo": "node tools/make-demo-z.mjs && node --disable-warning=ExperimentalWarning server/main.js --config server/config.demo.json",
+    "test": "node --disable-warning=ExperimentalWarning --test \"server/test/*.test.js\""
+  }
+}
