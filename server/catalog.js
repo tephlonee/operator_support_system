@@ -1,5 +1,5 @@
 // catalog.js
-// The job lists the screens ask for, built from the catalog (files + jobs) and the runs.
+// The job lists the screens ask for, built from the catalog (files + jobs) and the sorting runs.
 //
 //   today:  the default list for a station. A job is on it when
 //             • it has a run that is not finished (whatever day it was started: S6), or
@@ -24,8 +24,12 @@ export function runSummary(r) {
   return {
     id: r.id, runNo: r.run_no, station: r.station, phase: r.phase, picked: r.picked, total: r.total,
     created: r.created, updated: r.updated, finished: r.finished,
+    startedAs: r.started_as, parentRunId: r.parent_run_id,
+    abandoned: r.abandoned, abandonedBy: r.abandoned_by, abandonReason: r.abandon_reason,
   };
 }
+
+export const isOpenRun = r => r.phase === 'setup' || r.phase === 'sort';
 
 // Everything the screen needs to show one job in a list and to open it.
 export function jobEntry(store, sha, files = store.all('SELECT * FROM files WHERE sha256 = ? OR prev_sha = ?', sha, sha)) {
@@ -46,7 +50,7 @@ export function jobEntry(store, sha, files = store.all('SELECT * FROM files WHER
     orders: (j.orders || '').split(' ').filter(Boolean), material: j.material, thickness: j.thickness, w: j.sheet_w, h: j.sheet_h,
     missing: parse(j.missing_geos, []), suspect: parse(j.suspect_geos, []),
     firstSeen: j.first_seen, runs,
-    openRun: [...runs].reverse().find(r => r.phase !== 'done') || null,
+    openRun: [...runs].reverse().find(isOpenRun) || null,   // at most one (api.js refuses a second)
     doneRuns: runs.filter(r => r.phase === 'done').length,
   };
 }
@@ -54,7 +58,7 @@ export function jobEntry(store, sha, files = store.all('SELECT * FROM files WHER
 export function listJobs(store, { scope = 'today', q = '', date = '', machine = '', now = new Date(), recentDays = 7 } = {}) {
   const files = store.files();
   const shas = new Set(files.filter(f => f.sha256 && LISTED.has(f.status)).map(f => f.sha256));
-  for (const r of store.all('SELECT DISTINCT sha256 FROM runs')) shas.add(r.sha256);
+  for (const r of store.all('SELECT DISTINCT sha256 FROM sorting_runs')) shas.add(r.sha256);
   const bySha = new Map();
   for (const f of files) for (const s of [f.sha256, f.prev_sha]) if (s) (bySha.get(s) || bySha.set(s, []).get(s)).push(f);
   let jobs = [...shas].map(s => jobEntry(store, s, bySha.get(s) || [])).filter(Boolean);

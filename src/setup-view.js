@@ -1,6 +1,7 @@
 // setup-view.js
 // The setup screens at the start of a job, shown in the right-hand panel (made wide while setting up):
-//   1. Choose the job.
+//   1. Choose the job. A job that already has sorting runs shows them first: continue, take over,
+//      restart, or sort a new sheet.
 //   2. How many pallets? (the app suggests one per order)
 //   3. Which parts go on which pallet? (move a part, split a quantity, add/remove a pallet,
 //      and the look-alike check with both outlines side by side and the difference circled in red)
@@ -126,6 +127,59 @@ function syncForm(form, list) {
     el.machine.setAttribute('aria-label', t('searchMachine'));
     if (document.activeElement !== el.machine) el.machine.value = want.includes(list.machine) ? list.machine : '';
   }
+}
+
+// ---------- 1b. a job that already has sorting runs ----------
+
+// What can be done with a job that is being sorted or was sorted before, and its sorting runs, newest
+// first. A job has at most one open run: continue it (or take it over from another station) or restart it
+// from the beginning (the old run is kept, with its log). With no open run: sort a new sheet, with the
+// pallets of the last sorted run or with a new setup.
+export function renderRunCard(root, { entry, station, fmtTime, onContinue, onRestart, onNew, onBack }) {
+  root.dataset.view = 'runs';
+  const s = entry.summary;
+  const head = node('div', 'setup-head');
+  head.append(node('div', 'eyebrow', t('setupStep', { n: 1, of: SETUP_STEPS })), node('h2', null, s?.id || entry.title));
+  if (s) head.append(node('p', 'help', t('jobPieces', { pieces: s.pieces, parts: s.partNos, orders: s.orders })));
+
+  const open = entry.openRun;
+  const lastDone = [...entry.runs].reverse().find(r => r.phase === 'done');
+  const actions = node('div', 'run-actions');
+  if (open) {
+    actions.append(
+      button('btn btn-next btn-go', open.station === station ? t('runContinue') : t('runTakeOver', { station: open.station }), onContinue),
+      button('btn btn-restart', t('runRestart'), onRestart));
+  } else {
+    if (lastDone) actions.append(button('btn btn-next btn-go', t('runNewSame', { n: lastDone.runNo }), () => onNew(lastDone)));
+    actions.append(button(lastDone ? 'btn' : 'btn btn-next btn-go', t('runNewFresh'), () => onNew(null)));
+  }
+
+  const list = node('ul', 'run-list');
+  for (const r of [...entry.runs].reverse()) list.append(runRow(r, { station, fmtTime, runs: entry.runs, pieces: s?.pieces }));
+  const body = node('div', 'run-body');
+  body.append(actions, node('h3', null, t('runsHead')), list);
+  const navRow = node('div', 'setup-nav');
+  navRow.append(button('btn btn-back-step', t('stepBack'), onBack));
+  root.replaceChildren(head, body, navRow);
+}
+
+function runRow(r, { station, fmtTime, runs, pieces }) {
+  const li = node('li', `run-row is-${r.phase}`);
+  const head = node('div', 'run-head');
+  const [cls, tag] = r.phase === 'done' ? ['is-done', t('runTagDone')]
+    : r.phase === 'abandoned' ? ['is-stopped', t('runTagStopped')]
+      : ['is-progress', r.station === station ? t('runTagHere') : t('runTagAt', { station: r.station })];
+  head.append(node('span', 'run-no', t('runNo', { n: r.runNo })), node('span', `job-tag ${cls}`, tag));
+  const when = r.phase === 'done' ? t('runWhenDone', { time: fmtTime(r.finished || r.updated) })
+    : r.phase === 'abandoned' ? t('runWhenStopped', { time: fmtTime(r.abandoned || r.updated), station: r.abandonedBy || '?' })
+      + (r.abandonReason === 'test_session' ? ` (${t('runStopForSession')})` : '')
+      : t('runWhenStarted', { time: fmtTime(r.created) });
+  li.append(head, node('div', 'run-line', `${t('runPicked', { picked: r.picked, total: r.total || pieces || '?' })} · ${when}`));
+  // How it started, when not as the first run of the job.
+  if (r.startedAs && r.startedAs !== 'first') {
+    li.append(node('div', 'job-sub', t(`runStartedAs_${r.startedAs}`, { n: runs.find(p => p.id === r.parentRunId)?.runNo ?? '?' })));
+  }
+  return li;
 }
 
 // ---------- 2. how many pallets ----------

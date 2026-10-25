@@ -3,6 +3,8 @@
 //
 //   A. Setup (setup-view.js, in a wide right-hand panel; the sheet is shown on the left as a preview)
 //      1. choose the job  →  2. how many pallets  →  3. which parts on which pallet  →  4. hang the cards
+//      A job that already has sorting runs first shows them: continue or take over the open run, restart
+//      it from the beginning, or sort a new sheet (with the pallets of the last sorted run, or a new setup).
 //   B. Sorting, one pallet at a time (picking.js): only the pallet being sorted is highlighted, the others
 //      are grey; tap each piece (or "picked N"); the next pallet starts by itself; "Pallet full" adds a pallet.
 //   C. Summary: "3 pallets · 33 pieces · 0 corrections", then the next job.
@@ -18,12 +20,12 @@ import { SheetView, drawPartDetail, drawPartPicture, nearEdge } from './sheet-vi
 import { PickSession } from './picking.js';
 import { PalletPlan, MAX_PALLETS } from './plan.js';
 import { findLookAlikes } from './lookalike.js';
-import { renderJobList, renderCount, renderAssign, renderCards, palletName } from './setup-view.js';
+import { renderJobList, renderRunCard, renderCount, renderAssign, renderCards, palletName } from './setup-view.js';
 import { loadSettings, saveSettings, sanitize, DEFAULTS } from './settings.js';
 import { TestLog } from './log.js';
 import { t, getLang, setLang, applyStatic, formatNumber } from './i18n.js';
 
-const SETUP_PHASES = ['jobs', 'count', 'assign', 'cards'];
+const SETUP_PHASES = ['jobs', 'runs', 'count', 'assign', 'cards'];
 const REFRESH_MS = 15000;      // job list and health line refresh (the server polls Z:\ every 15 s)
 const $ = id => document.getElementById(id);
 
@@ -33,10 +35,11 @@ let jobs = [];                 // the job list: [{ key, url, title, summary, sta
 let listState = { scope: 'today', q: '', date: '', machine: '', machines: [], machineKnown: false, total: 0, loading: true, error: '' };
 const jobCache = new Map();    // url → loaded job (a server url names one job content, so it never goes stale)
 let entry = null;              // the job list entry of the open job
+let cardEntry = null;          // the job whose sorting runs are shown (phase 'runs'), before it is opened
 let job = null;                // the open job (nest-loader.js)
 let pairs = [];                // look-alike pairs in the job (lookalike.js)
 let plan = null;               // the pallet plan being set up (plan.js)
-let phase = 'jobs';            // 'jobs' | 'count' | 'assign' | 'cards' | 'sort'
+let phase = 'jobs';            // 'jobs' | 'runs' | 'count' | 'assign' | 'cards' | 'sort'
 let splitOpen = new Set();     // assignment rows with the split controls open
 let session = null;            // the sorting session (picking.js)
 let pendingCard = null;        // after "Pallet full": { pallet, from, n } until the operator has hung the card
@@ -119,7 +122,7 @@ function renderSetup() {
   if (phase === 'jobs') {
     renderJobList(root, {
       jobs, station: settings.stationId, mode: backend?.mode, list: listState, fmtTime, fmtNum: formatNumber,
-      onPick: e => openJob(e),
+      onPick: e => chooseJob(e),
       onSearch: ({ q, date, machine }) => {
         listState = { ...listState, scope: 'search', q, date, machine };
         log.record('job_search', { detail: `q=${q}; date=${date}; machine=${machine}` });
@@ -129,6 +132,23 @@ function renderSetup() {
         listState = { ...listState, scope: 'today', q: '', date: '', machine: settings.stationId };
         refreshList();
       },
+    });
+    return;
+  }
+  if (phase === 'runs') {
+    const e = cardEntry;
+    renderRunCard(root, {
+      entry: e, station: settings.stationId, fmtTime,
+      onContinue: () => openJob(e, { mode: 'continue' }),
+      onRestart: () => {
+        const r = e.openRun;
+        const ask = t('restartAsk', { job: e.title, n: r.runNo, picked: r.picked, total: r.total || e.pieces || '?' })
+          + (r.station !== settings.stationId ? t('restartAskOther', { station: r.station }) : '');
+        if (!window.confirm(ask)) { log.record('run_restart_cancelled', { detail: `job=${e.title}; run=${r.runNo}` }); return; }
+        openJob(e, { mode: 'restart' });
+      },
+      onNew: from => openJob(e, { mode: 'new', nextFrom: from ? { runId: from.id } : null }),
+      onBack: () => { cardEntry = null; phase = 'jobs'; render(); refreshList(); },
     });
     return;
   }
@@ -189,10 +209,34 @@ function markersFor(palletOf) {
   return out;
 }
 
-// Open a job on this screen. With the server, this continues the run this station has, takes over a run
-// from another station (after asking), or starts a new run (a new sheet). nextFrom: { runId, plan } to start
-// the next sheet of the same program with the same pallets ("Next sheet of this program").
-async function openJob(e, { nextFrom = null, resuming = false } = {}) {
+// Forget the colours and the greying of a sorting session before the sheet is drawn without it (another
+// job, or a new test session): they read that session, which is gone.
+function forgetSheetLook() {
+  view.colorOf = () => '#9aa5ab';
+  view.secondLine = () => '';
+  view.isDim = () => false;
+}
+
+// Tapping a job in the list. With the server, a job that is being sorted or has been sorted before first
+// shows its sorting runs and what can be done; any other job opens at once (the common case: one tap).
+// The list may be up to 15 s old (another station may have opened the job since), so the job's runs are
+// asked for again first.
+async function chooseJob(e) {
+  if (backend.mode === 'server') {
+    try { e = await backend.entry(e.sha); } catch (err) { console.error(err); /* go on with what the list showed */ }
+  }
+  if (backend.mode !== 'server' || !e.runs?.length) return openJob(e);
+  cardEntry = e;
+  phase = 'runs';
+  log.record('run_card', { detail: `job=${e.title}; runs=${e.runs.length}; open=${e.openRun ? `${e.openRun.runNo} at ${e.openRun.station}` : 'none'}` });
+  render();
+}
+
+// Open a job on this screen, in one of its sorting runs (backend.js). mode: 'continue' the open run (this
+// station's own, or taken over from another station), 'restart' it from the beginning (the old run is kept,
+// with its log), or 'new' run (a new sheet); default: continue if there is an open run, otherwise new.
+// nextFrom: { runId, plan } to start the new run with that run's pallets ("Next sheet of this program").
+async function openJob(e, { nextFrom = null, resuming = false, mode } = {}) {
   const station = settings.stationId;
   const server = backend.mode === 'server';
   if (server && !station) {
@@ -200,39 +244,39 @@ async function openJob(e, { nextFrom = null, resuming = false } = {}) {
     setPanel('settings');
     return false;
   }
-  if (server && !nextFrom && !resuming) {
-    if (e.openRun && e.openRun.station !== station && !window.confirm(t('takeOverAsk', { job: e.title, ...e.openRun }))) return false;
-    if (!e.openRun && e.doneRuns && !window.confirm(t('sortAgainAsk', { job: e.title, n: e.doneRuns }))) return false;
-  }
   let state, j = jobCache.get(e.url);
   try {
     if (!j) { j = await loadJob(e.url); jobCache.set(e.url, j); }
-    state = await backend.open(e, station, { takeOver: true, copyPlanFrom: nextFrom });
+    state = await backend.open(e, station, { copyPlanFrom: nextFrom, mode });
   } catch (err) {
+    // E.g. another station opened a run of this job a moment ago: back to the (refreshed) list.
     console.error(err);
-    e.error = err.message;
     listState.error = t('openError', { job: e.title, msg: err.message });
+    cardEntry = null;
+    phase = 'jobs';
     render();
+    refreshList({ keepError: true });
     return false;
   }
+  cardEntry = null;
   j.warnings.forEach(w => console.warn(w));
   entry = e; job = j;
   // Look-alikes are only checked for parts whose real outline is known.
   pairs = findLookAlikes(new Map([...job.geos].filter(([, g]) => !g.boxOnly)));
   plan = new PalletPlan(job, pairs);
   session = null; pendingCard = null; feedback = null; splitOpen = new Set();
-  // Forget the colours of the previous job's sorting session before drawing this one.
-  view.colorOf = () => '#9aa5ab';
-  view.secondLine = () => '';
+  forgetSheetLook();
   view.show(job);
   if (log.session.jobId !== job.id) log.newSession({ ...log.session, jobId: job.id });
   // Saved progress: always from the server; in this browser only from the same test session.
   const restore = state && (server || nextFrom || state.sessionId === log.session.id) ? state : null;
-  const run = backend.run?.runNo ? `; run=${backend.run.runNo}; station=${station}` : '';
+  const r = backend.run;
+  const parent = r?.parentRunId ? e.runs?.find(x => x.id === r.parentRunId)?.runNo ?? r.parentRunId : '';
+  const run = r?.runNo ? `; run=${r.runNo}; station=${station}; started_as=${r.startedAs ?? ''}${parent ? `; after_run=${parent}` : ''}` : '';
   if (restore?.plan) {
     if (!plan.restore(restore.plan)) plan.propose();
     phase = SETUP_PHASES.includes(restore.phase) || restore.phase === 'sort' ? restore.phase : 'count';
-    if (phase === 'jobs') phase = 'count';
+    if (phase === 'jobs' || phase === 'runs') phase = 'count';
     if (phase === 'sort') {
       createSession(restore.snap);
       pendingCard = restore.pendingCard || null;
@@ -271,22 +315,23 @@ async function nextSheet() {
   await openJob(fresh, { nextFrom: from });
 }
 
-// Another station took this job over: this screen stops and goes back to the list.
-function onTakenOver(station) {
-  log.record('taken_over', { detail: `by ${station}` });
-  window.alert(t('takenOver', { job: job?.id ?? '', station }));
+// Another station took this job over, or restarted it: this screen stops and goes back to the list.
+function onTakenOver(station, info = {}) {
+  log.record(info.abandoned ? 'run_stopped_elsewhere' : 'taken_over', { detail: `by ${station}` });
+  window.alert(t(info.abandoned ? 'restartedElsewhere' : 'takenOver', { job: job?.id ?? '', station }));
   if (job) closeJob({ force: true });
 }
 
 // The job list from the backend; in the local mode each job is loaded once for its summary line.
-async function refreshList() {
+// keepError: keep the message of a job that could not be opened.
+async function refreshList({ keepError = false } = {}) {
   if (!backend) return;
   listState.loading = true;
   try {
     const params = listState.scope === 'search' ? listState : { ...listState, machine: settings.stationId };
     const data = await backend.listJobs(params);
     jobs = data.jobs;
-    listState = { ...listState, machines: data.machines, machineKnown: data.machineKnown, total: data.total ?? jobs.length, error: '' };
+    listState = { ...listState, machines: data.machines, machineKnown: data.machineKnown, total: data.total ?? jobs.length, error: keepError ? listState.error : '' };
     if (listState.scope === 'today') listState.machine = data.machineKnown ? settings.stationId : '';
     if (backend.mode === 'local') {
       await Promise.all(jobs.map(async j => {
@@ -618,17 +663,24 @@ function saveState() {
   }, { phase: isSetup() ? 'setup' : session?.isComplete ? 'done' : 'sort', picked: p?.picked ?? 0, total: p?.total ?? job.parts.length, jobId: job.id });
 }
 
-// Start a new test session: new participant data, empty log, and the job's setup starts again.
-function startNewTestSession() {
+// Start a new test session: new participant data, empty log, and the job's setup starts again. With the
+// server, the session also gets its own sorting run: the current run is stopped and kept (a sorted sheet
+// stays sorted), so each participant's picks and log stay apart.
+async function startNewTestSession() {
   if (log.unexported > 0 && !window.confirm(t('confirmNewSession', { n: log.unexported }))) return;
+  if (job && backend.run) {
+    try { await backend.restart(settings.stationId, 'test_session'); }
+    catch (err) { console.error(err); window.alert(t('sessionRunError', { msg: err.message })); return; }
+  }
   log.newSession({
     participant: $('tp-participant').value.trim(),
     condition: $('tp-condition').value.trim(),
     note: $('tp-note').value.trim(),
     jobId: job?.id ?? '',
   });
-  log.record('session_start', { detail: `${settingsDetail()}; job=${job?.id ?? ''}; window=${innerWidth}x${innerHeight}` });
+  log.record('session_start', { detail: `${settingsDetail()}; job=${job?.id ?? ''}${backend.run?.runNo ? `; run=${backend.run.runNo}` : ''}; window=${innerWidth}x${innerHeight}` });
   feedback = null; pendingCard = null; session = null; splitOpen = new Set();
+  forgetSheetLook();
   panelMode = 'work';
   view.setFit('parts');
   view.tapsEnabled = true;

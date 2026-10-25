@@ -5,8 +5,11 @@
 //
 //   files     the catalog, part 1: one row per .LST path seen on Z:\ (its status, its content hash)
 //   jobs      the catalog, part 2: one row per job content (hash): job name, parts, orders, sheet, …
-//   runs     sorting sessions: one row per sheet being sorted (job hash + run number), with the
-//             station that has claimed it and the latest saved state of the screen
+//   sorting_runs  one row per attempt at sorting a sheet of a job (job hash + run number), with the
+//             station that has claimed it and the latest saved state of the screen. A job has many runs
+//             (more sheets, sorted again, restarted); at most one is open at a time. Runs are never
+//             deleted once something happened in them: a restart stops the old run ("abandoned") and
+//             starts a new one, so every attempt keeps its own log.
 //   events    the event log: every action on a screen (one row per test-log row), never changed
 //   scan_log  what the poller noticed (files waiting, incomplete, damaged, Z:\ unreachable)
 //
@@ -15,6 +18,18 @@
 import { DatabaseSync } from 'node:sqlite';
 import fs from 'node:fs';
 import path from 'node:path';
+
+// Columns of sorting_runs added when runs could be restarted (schema version 1). An older database gets
+// them too (see migrate()).
+const RUN_COLUMNS = [
+  ['started_as', "TEXT NOT NULL DEFAULT 'first'"],  // first | next_sheet | again | restart | test_session
+  ['parent_run_id', 'INTEGER'],                      // the run it copied its pallets from, or replaced
+  ['abandoned', 'TEXT'],                             // when it was stopped on purpose
+  ['abandoned_by', 'TEXT'],                          // by which station
+  ['abandon_reason', 'TEXT'],                        // restart | test_session | …
+];
+const RUN_COLUMNS_SQL = RUN_COLUMNS.map(([c, type]) => `  ${c} ${type}`).join(',\n');
+export const SCHEMA_VERSION = 1;
 
 const SCHEMA = `
 -- The catalog, part 1: one row per .LST file on Z:\\ (a path), and what we know about it now.
@@ -47,22 +62,23 @@ CREATE TABLE IF NOT EXISTS jobs (
   first_seen  TEXT NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS runs (
+CREATE TABLE IF NOT EXISTS sorting_runs (
   id        INTEGER PRIMARY KEY,
   sha256    TEXT NOT NULL,            -- which raw copy is being sorted
-  run_no    INTEGER NOT NULL,         -- 1, 2, 3 … for the same job content (reruns, more sheets)
+  run_no    INTEGER NOT NULL,         -- 1, 2, 3 … for the same job content (reruns, more sheets, restarts)
   station   TEXT NOT NULL,            -- the claim: the station working on it, e.g. L95
-  phase     TEXT NOT NULL DEFAULT 'setup',   -- setup | sort | done
+  phase     TEXT NOT NULL DEFAULT 'setup',   -- setup | sort | done | abandoned (open = setup or sort)
   state     TEXT,                     -- the screen's state as JSON: pallet plan, progress, …
   seq       INTEGER NOT NULL DEFAULT 0,      -- last state number written (older writes are ignored)
   picked INTEGER NOT NULL DEFAULT 0, total INTEGER NOT NULL DEFAULT 0,
   created   TEXT NOT NULL, updated TEXT NOT NULL, finished TEXT,
+${RUN_COLUMNS_SQL},
   UNIQUE (sha256, run_no)
 );
 
 CREATE TABLE IF NOT EXISTS events (
   id          INTEGER PRIMARY KEY,
-  run_id      INTEGER REFERENCES runs(id),
+  run_id      INTEGER REFERENCES sorting_runs(id),
   station     TEXT, session_id TEXT, seq INTEGER,
   at          TEXT NOT NULL,          -- when the server received it
   kind        TEXT NOT NULL,          -- the test-log event: confirm, undo, missing, pallet_full …
@@ -84,7 +100,19 @@ export class Store {
     this.db = new DatabaseSync(path.join(dataDir, 'picking.db'));
     // WAL: a power cut during a write cannot damage the file.
     this.db.exec('PRAGMA journal_mode = WAL; PRAGMA synchronous = NORMAL; PRAGMA foreign_keys = ON;');
+    this.migrate();
     this.db.exec(SCHEMA);
+    this.db.exec(`PRAGMA user_version = ${SCHEMA_VERSION}`);
+  }
+
+  // A picking.db from before runs could be restarted: the table was called "runs" and had none of the
+  // RUN_COLUMNS. Renaming keeps every row, and the events keep pointing at their runs.
+  migrate() {
+    const has = name => !!this.get(`SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?`, name);
+    if (has('runs') && !has('sorting_runs')) this.db.exec('ALTER TABLE runs RENAME TO sorting_runs');
+    if (!has('sorting_runs')) return;
+    const cols = new Set(this.all('PRAGMA table_info(sorting_runs)').map(c => c.name));
+    for (const [c, type] of RUN_COLUMNS) if (!cols.has(c)) this.db.exec(`ALTER TABLE sorting_runs ADD COLUMN ${c} ${type}`);
   }
 
   close() { this.db.close(); }
@@ -120,15 +148,34 @@ export class Store {
 
   // ---------- runs ----------
 
-  runById(id) { return this.get('SELECT * FROM runs WHERE id = ?', id); }
-  runsOf(sha) { return this.all('SELECT * FROM runs WHERE sha256 = ? ORDER BY run_no', sha); }
+  runById(id) { return this.get('SELECT * FROM sorting_runs WHERE id = ?', id); }
+  runsOf(sha) { return this.all('SELECT * FROM sorting_runs WHERE sha256 = ? ORDER BY run_no', sha); }
+  // The run of a job that is being set up or sorted now (there is at most one).
+  openRunOf(sha) { return this.get(`SELECT * FROM sorting_runs WHERE sha256 = ? AND phase IN ('setup', 'sort') ORDER BY run_no DESC`, sha); }
 
-  newRun(sha, station, now, state = null) {
+  // A new run of a job, with the next run number. opts: { state, startedAs, parentId } (see RUN_COLUMNS).
+  newRun(sha, station, now, opts) { return this.tx(() => this.insertRun(sha, station, now, opts)); }
+
+  insertRun(sha, station, now, { state = null, startedAs = 'first', parentId = null } = {}) {
+    const n = (this.get('SELECT MAX(run_no) AS n FROM sorting_runs WHERE sha256 = ?', sha).n || 0) + 1;
+    const r = this.run(`INSERT INTO sorting_runs (sha256, run_no, station, phase, state, created, updated, started_as, parent_run_id)
+      VALUES (?, ?, ?, 'setup', ?, ?, ?, ?, ?)`, sha, n, station, state, now, now, startedAs, parentId);
+    return this.runById(Number(r.lastInsertRowid));
+  }
+
+  // Stop a run on purpose. It keeps its picks and its log, and no longer counts as open.
+  abandonRun(id, station, now, reason) {
+    this.run(`UPDATE sorting_runs SET phase = 'abandoned', abandoned = ?, abandoned_by = ?, abandon_reason = ?, updated = ? WHERE id = ?`,
+      now, station, reason, now, id);
+  }
+
+  // Restart, in one step: the run is stopped (unless it was finished: then it stays sorted) and a new run
+  // of the same job starts from the beginning, linked to it.
+  restartRun(id, station, now, { reason = 'restart', startedAs = 'restart' } = {}) {
     return this.tx(() => {
-      const n = (this.get('SELECT MAX(run_no) AS n FROM runs WHERE sha256 = ?', sha).n || 0) + 1;
-      const r = this.run(`INSERT INTO runs (sha256, run_no, station, phase, state, created, updated)
-        VALUES (?, ?, ?, 'setup', ?, ?, ?)`, sha, n, station, state, now, now);
-      return this.runById(Number(r.lastInsertRowid));
+      const old = this.runById(id);
+      if (old.phase === 'setup' || old.phase === 'sort') this.abandonRun(id, station, now, reason);
+      return this.insertRun(old.sha256, station, now, { startedAs, parentId: id });
     });
   }
 

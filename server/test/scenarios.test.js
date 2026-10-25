@@ -1,5 +1,6 @@
 // scenarios.test.js
-// The acceptance test of the pipeline service: scenarios S1–S18 from the design doc, run against the
+// The acceptance test of the pipeline service: scenarios S1–S18 from the design doc (+ S19–S21 for
+// restarting sorting runs), run against the
 // real J14 files (data/jobs/J14.LST, data/parts/*.GEO). Run from the project folder:  npm test
 //
 // 1045575.GEO is really missing from the J14 files we have. Where a scenario needs a complete J14, a
@@ -87,7 +88,17 @@ async function loadFromRaw(e, sha) {
 }
 
 const newRun = (e, sha, station = 'L95') => e.store.newRun(sha, station, e.now.toISOString());
-const finish = (e, run) => e.store.run(`UPDATE runs SET phase = 'done', finished = ?, updated = ? WHERE id = ?`, e.now.toISOString(), e.now.toISOString(), run.id);
+const finish = (e, run) => e.store.run(`UPDATE sorting_runs SET phase = 'done', finished = ?, updated = ? WHERE id = ?`, e.now.toISOString(), e.now.toISOString(), run.id);
+
+// The web API on a free port, as the screens use it. call() → { status, body }.
+async function startApi(e) {
+  const server = createServer({ store: e.store, pipeline: e.pipeline, appRoot: ROOT, config: { ...DEFAULTS, zRoot: e.z }, clock: () => e.now });
+  await new Promise(r => server.listen(0, '127.0.0.1', r));
+  const base = `http://127.0.0.1:${server.address().port}/api`;
+  const call = async (method, url, body) => { const r = await fetch(base + url, { method, headers: { 'Content-Type': 'application/json' }, body: body && JSON.stringify(body) }); return { status: r.status, body: await r.json() }; };
+  const csv = async url => (await fetch(base + url)).text();
+  return { call, csv, close: () => server.close() };
+}
 
 // ---------- S1–S18 ----------
 
@@ -241,7 +252,7 @@ test('S10 one program cut on several sheets: one run per sheet, the next one can
   e.poll(2);
   const sha = e.today()[0].sha;
   const r1 = newRun(e, sha);
-  e.store.run('UPDATE runs SET state = ? WHERE id = ?', JSON.stringify({ phase: 'sort', plan: { pallets: ['P1', 'P2'] } }), r1.id);
+  e.store.run('UPDATE sorting_runs SET state = ? WHERE id = ?', JSON.stringify({ phase: 'sort', plan: { pallets: ['P1', 'P2'] } }), r1.id);
   finish(e, r1);
   const r2 = newRun(e, sha);
   assert.equal(r2.run_no, 2);
@@ -424,6 +435,123 @@ test('S18 the same program cut again for a new order: a new run, never blocked',
   assert.equal(r2.run_no, 2);
   assert.equal(e.today()[0].openRun.runNo, 2, 'back on today\'s list while it is being sorted');
   e.close();
+});
+
+// ---------- sorting runs: restart, one open run per job, test sessions ----------
+
+test('S19 a run is restarted halfway: the old run is stopped and kept with its log, the new one starts at setup', async () => {
+  const e = env();
+  e.pasteJ14();
+  e.poll(2);
+  const sha = e.today()[0].sha;
+  const api = await startApi(e);
+  try {
+    const r1 = (await api.call('POST', '/runs', { sha, station: 'L95' })).body;
+    assert.equal(r1.startedAs, 'first');
+    await api.call('PUT', `/runs/${r1.id}/state`, { station: 'L95', seq: 1, phase: 'sort', state: { plan: 3 }, picked: 12, total: 33 });
+    await api.call('POST', '/events', { station: 'L95', runId: r1.id, rows: [{ session_id: 'A', seq: 1, event: 'confirm' }] });
+    // Another station restarts it (e.g. the setup was wrong).
+    const r2 = await api.call('POST', `/runs/${r1.id}/restart`, { station: 'L96' });
+    assert.equal(r2.status, 200);
+    assert.deepEqual([r2.body.runNo, r2.body.phase, r2.body.picked, r2.body.state], [2, 'setup', 0, null], 'starts from setup with nothing picked');
+    assert.deepEqual([r2.body.startedAs, r2.body.parentRunId, r2.body.station], ['restart', r1.id, 'L96']);
+    const old = (await api.call('GET', `/runs/${r1.id}`)).body;
+    assert.deepEqual([old.phase, old.picked, old.abandonedBy, old.abandonReason], ['abandoned', 12, 'L96', 'restart'], 'kept, with how far it got');
+    assert.deepEqual(old.state, { plan: 3 });
+    // The screen that still had run 1 is told on its next save, and by whom.
+    const late = await api.call('PUT', `/runs/${r1.id}/state`, { station: 'L95', seq: 2, phase: 'sort', state: {} });
+    assert.equal(late.status, 409);
+    assert.deepEqual([late.body.abandoned, late.body.claimedBy], [true, 'L96']);
+    assert.equal((await api.call('POST', `/runs/${r1.id}/claim`, { station: 'L95' })).status, 409, 'a stopped run cannot be taken over');
+    assert.equal((await api.call('POST', `/runs/${r1.id}/restart`, { station: 'L95' })).status, 409, 'nor restarted twice');
+    // Each attempt keeps its own log.
+    const log1 = await api.csv(`/runs/${r1.id}/log.csv`);
+    assert.match(log1, /confirm/);
+    assert.match(log1, /run_stopped/);
+    assert.doesNotMatch(await api.csv(`/runs/${r2.body.id}/log.csv`), /confirm/);
+    // The job list shows the new run as the open one; run 1 is neither open nor sorted.
+    const entry = (await api.call('GET', `/jobs/${sha}`)).body;
+    assert.equal(entry.openRun.runNo, 2);
+    assert.equal(entry.doneRuns, 0);
+    assert.deepEqual(entry.runs.map(r => r.phase), ['abandoned', 'setup']);
+  } finally {
+    api.close();
+    e.close();
+  }
+});
+
+test('S20 one open run per job: a second one is refused until the first is finished or stopped', async () => {
+  const e = env();
+  e.pasteJ14();
+  e.poll(2);
+  const sha = e.today()[0].sha;
+  const api = await startApi(e);
+  try {
+    const r1 = (await api.call('POST', '/runs', { sha, station: 'L95' })).body;
+    const second = await api.call('POST', '/runs', { sha, station: 'L96' });
+    assert.equal(second.status, 409);
+    assert.equal(second.body.openRun.id, r1.id, 'the screen is told which run is open, so it can offer continue or restart');
+    // Finished: the next sheet copies the pallets of run 1; a plain new run is "sorted again".
+    await api.call('PUT', `/runs/${r1.id}/state`, { station: 'L95', seq: 1, phase: 'done', state: { plan: { pallets: ['P1'] } }, picked: 33, total: 33 });
+    const r2 = (await api.call('POST', '/runs', { sha, station: 'L95', copyPlanFrom: r1.id })).body;
+    assert.deepEqual([r2.runNo, r2.startedAs, r2.parentRunId, r2.state.phase], [2, 'next_sheet', r1.id, 'cards']);
+    await api.call('POST', `/runs/${r2.id}/abandon`, { station: 'L95' });
+    const r3 = (await api.call('POST', '/runs', { sha, station: 'L95' })).body;
+    assert.deepEqual([r3.runNo, r3.startedAs, r3.parentRunId], [3, 'again', null]);
+    assert.equal((await api.call('POST', `/runs/${r1.id}/abandon`, { station: 'L95' })).status, 409, 'a sorted sheet cannot be stopped');
+  } finally {
+    api.close();
+    e.close();
+  }
+});
+
+test('S21 a new usability-test session gets its own run and log, also after a finished sheet', async () => {
+  const e = env();
+  e.pasteJ14();
+  e.poll(2);
+  const sha = e.today()[0].sha;
+  const api = await startApi(e);
+  try {
+    const r1 = (await api.call('POST', '/runs', { sha, station: 'L95' })).body;
+    await api.call('POST', '/events', { station: 'L95', runId: r1.id, rows: [{ session_id: 'P01', seq: 1, event: 'confirm' }] });
+    await api.call('PUT', `/runs/${r1.id}/state`, { station: 'L95', seq: 1, phase: 'done', state: {}, picked: 33, total: 33 });
+    const r2 = (await api.call('POST', `/runs/${r1.id}/restart`, { station: 'L95', reason: 'test_session' })).body;
+    assert.deepEqual([r2.runNo, r2.startedAs, r2.parentRunId], [2, 'test_session', r1.id]);
+    assert.equal((await api.call('GET', `/runs/${r1.id}`)).body.phase, 'done', 'a sorted sheet stays sorted');
+    await api.call('POST', '/events', { station: 'L95', runId: r2.id, rows: [{ session_id: 'P02', seq: 1, event: 'undo' }] });
+    const p2 = await api.csv('/log.csv?session=P02');
+    assert.equal(p2.trim().split('\r\n').length, 2, 'header + the one row of participant P02');
+    assert.doesNotMatch(await api.csv(`/runs/${r2.id}/log.csv`), /P01/);
+  } finally {
+    api.close();
+    e.close();
+  }
+});
+
+test('An older picking.db (table "runs") is upgraded in place: runs and their log links kept', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'pipeline-migrate-'));
+  try {
+    const db = new DatabaseSync(path.join(dir, 'picking.db'));
+    db.exec(`CREATE TABLE runs (id INTEGER PRIMARY KEY, sha256 TEXT NOT NULL, run_no INTEGER NOT NULL, station TEXT NOT NULL,
+        phase TEXT NOT NULL DEFAULT 'setup', state TEXT, seq INTEGER NOT NULL DEFAULT 0, picked INTEGER NOT NULL DEFAULT 0,
+        total INTEGER NOT NULL DEFAULT 0, created TEXT NOT NULL, updated TEXT NOT NULL, finished TEXT, UNIQUE (sha256, run_no));
+      CREATE TABLE events (id INTEGER PRIMARY KEY, run_id INTEGER REFERENCES runs(id), station TEXT, session_id TEXT, seq INTEGER,
+        at TEXT NOT NULL, kind TEXT NOT NULL, data TEXT NOT NULL, UNIQUE (session_id, seq));
+      INSERT INTO runs (sha256, run_no, station, phase, picked, total, created, updated) VALUES ('abc', 1, 'L95', 'sort', 5, 33, 'x', 'x');
+      INSERT INTO events (run_id, at, kind, data) VALUES (1, 'x', 'confirm', '{}');`);
+    db.close();
+    const store = new Store(dir);
+    const [run] = store.runsOf('abc');
+    assert.deepEqual([run.picked, run.started_as, run.abandoned], [5, 'first', null], 'the old run, with the new columns');
+    assert.equal(store.openRunOf('abc').id, run.id);
+    assert.match(store.get(`SELECT sql FROM sqlite_master WHERE name = 'events'`).sql, /REFERENCES "?sorting_runs"?/, 'events point at the renamed table');
+    assert.equal(store.get('PRAGMA user_version').user_version, 1);
+    assert.equal(store.get(`SELECT COUNT(*) AS n FROM sqlite_master WHERE name = 'runs'`).n, 0);
+    store.close();
+    new Store(dir).close(); // opening it again changes nothing
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 test('Housekeeping: a consistent nightly backup copy, old log lines removed', () => {

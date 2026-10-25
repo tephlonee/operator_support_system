@@ -237,6 +237,20 @@ body { background: var(--bg); color: var(--fg); touch-action: manipulation; }
 .job-caption.error { color: var(--error); }
 .job-empty { padding: 24px 4px; }
 /* Search: job, part number or order; date; machine. Big enough for a glove, on one row. */
+/* A job's sorting runs: what can be done (big buttons), then the runs, newest first. */
+.run-body { display: grid; gap: 14px; }
+.run-actions { display: grid; gap: 12px; }
+.run-actions .btn { min-height: 84px; font-size: 24px; }
+.btn-restart { border-color: var(--error); color: var(--error); }
+.run-body h3 { margin: 10px 0 0; font-size: 20px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.run-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.run-row { display: grid; gap: 4px; padding: 12px 16px; border: 2px solid var(--line); border-radius: 12px; }
+.run-row.is-setup, .run-row.is-sort { border-color: #1d4f91; }
+.run-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.run-no { font-size: 22px; font-weight: 800; }
+.run-line { font-size: 18px; }
+.job-tag.is-stopped { background: #e3e7ea; color: var(--muted); }
+
 .job-search { display: flex; flex-wrap: wrap; gap: 10px; margin: 0 0 12px; }
 .job-search input, .job-search select {
   min-height: var(--touch); padding: 0 14px; font: inherit; font-size: 20px; color: var(--fg);
@@ -462,6 +476,9 @@ body { background: var(--bg); color: var(--fg); touch-action: manipulation; }
   .setup-head h2 { font-size: 24px; }
   .setup .help { font-size: 15px; }
   .setup-nav .btn { min-height: 56px; font-size: 20px; }
+  .run-actions .btn { min-height: 60px; font-size: 20px; }
+  .run-no { font-size: 19px; }
+  .run-line { font-size: 16px; }
   .btn-step { min-height: 84px; font-size: 44px; }
   .count-number { font-size: 80px; }
   .la-pic { height: 110px; }

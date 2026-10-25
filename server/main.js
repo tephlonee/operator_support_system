@@ -60,7 +60,7 @@ export function housekeeping(store, cfg, now = new Date()) {
   for (const name of fs.readdirSync(store.rawDir)) {
     if (!/^[0-9a-f]{64}$/.test(name)) continue;
     const onZ = store.get(`SELECT 1 FROM files WHERE sha256 = ? AND status != 'gone'`, name);
-    const recent = store.get(`SELECT 1 FROM runs WHERE sha256 = ? AND (phase != 'done' OR updated >= ?)`, name, cutoff);
+    const recent = store.get(`SELECT 1 FROM sorting_runs WHERE sha256 = ? AND (phase IN ('setup', 'sort') OR updated >= ?)`, name, cutoff);
     const job = store.job(name);
     if (onZ || recent || (job && job.first_seen >= cutoff)) continue;
     fs.rmSync(path.join(store.rawDir, name), { recursive: true, force: true });

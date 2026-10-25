@@ -46,10 +46,10 @@ export class ServerBackend {
     this.reachable = true;
     this.run = null;               // the run open on this screen: { id, runNo, station, sha, … }
     this.seq = 0;
-    this.onConflict = () => {};    // another station took the job over
+    this.onConflict = () => {};    // fn(station, { abandoned }): another station took the job over or restarted it
     this.onChange = () => {};      // health or outbox changed (redraw the health line)
     this.outbox = readJSON(OUTBOX_KEY, { rows: [], states: {} });
-    this.flushing = false;
+    this.flushing = null;          // the send going on (a promise)
     this.flush();
   }
 
@@ -72,20 +72,38 @@ export class ServerBackend {
 
   async entry(sha) { return toEntry(await call('GET', `api/jobs/${sha}`)); }
 
-  // Open a job on this screen: continue its open run, take it over, or start a new run.
+  // Open a job on this screen, in one of its sorting runs (a job has at most one open run). mode:
+  //   'continue'  the open run: this station's own, or taken over from another station
+  //   'restart'   stop the open run (kept, with its log) and start a new run from setup
+  //   'new'       a new run; copyPlanFrom: { runId } starts it with that run's pallets ("next sheet")
+  // Default: continue the open run if there is one, otherwise a new run.
   // Returns the saved state of the run (null for a new one).
-  async open(entry, station, { takeOver = false, copyPlanFrom = null } = {}) {
+  async open(entry, station, { copyPlanFrom = null, mode = entry.openRun && !copyPlanFrom ? 'continue' : 'new' } = {}) {
     let run;
-    if (entry.openRun && !copyPlanFrom) {
+    if (mode === 'continue') {
+      if (!entry.openRun) throw new Error('This job has no open run');
       run = entry.openRun.station === station ? await call('GET', `api/runs/${entry.openRun.id}`)
-        : takeOver ? await call('POST', `api/runs/${entry.openRun.id}/claim`, { station }) : null;
-      if (!run) throw new Error('claimed');
+        : await call('POST', `api/runs/${entry.openRun.id}/claim`, { station });
+    } else if (mode === 'restart') {
+      run = await call('POST', `api/runs/${entry.openRun.id}/restart`, { station, reason: 'restart' });
     } else {
+      await this.drain(); // the previous run's "done" must reach the server first, or it still counts as open
       run = await call('POST', 'api/runs', { sha: entry.sha, station, copyPlanFrom: copyPlanFrom?.runId ?? null });
     }
     this.run = run;
     this.seq = run.seq;
     return run.state;
+  }
+
+  // Start the open job again in a new run, on this screen (a new usability-test session): the current run
+  // is stopped and kept with its log; a finished one stays sorted. Returns the new run.
+  async restart(station, reason) {
+    if (!this.run) return null;
+    await this.drain(); // the old run keeps how far it got
+    const run = await call('POST', `api/runs/${this.run.id}/restart`, { station, reason });
+    this.run = run;
+    this.seq = run.seq;
+    return run;
   }
 
   // Leave the job. A run that never got past setup is cancelled, so it does not show as "in progress".
@@ -115,10 +133,19 @@ export class ServerBackend {
   }
 
   // Send what is waiting: test-log rows first, then the latest state of each run. On a network error,
-  // try again in a few seconds; on "taken over", tell the screen.
-  async flush() {
-    if (this.flushing) return;
-    this.flushing = true;
+  // try again in a few seconds; on "taken over" or "stopped", tell the screen. One send at a time; the
+  // promise resolves when it is over.
+  flush() {
+    if (!this.flushing) this.flushing = this.send().finally(() => { this.flushing = null; this.onChange(); });
+    return this.flushing;
+  }
+
+  // Wait until everything waiting has been sent (a few tries; not while the server cannot be reached).
+  async drain() {
+    for (let i = 0; i < 5 && this.waiting && this.reachable; i++) await this.flush();
+  }
+
+  async send() {
     try {
       while (this.outbox.rows.length) {
         const batch = this.outbox.rows.slice(0, 200);
@@ -139,7 +166,7 @@ export class ServerBackend {
           if (e.status !== 409 && e.status !== 404) throw e;
           if (this.outbox.states[runId] === s) delete this.outbox.states[runId];
           this.saveOutbox();
-          if (e.status === 409 && String(this.run?.id) === runId) this.onConflict(e.body.claimedBy || '?');
+          if (e.status === 409 && String(this.run?.id) === runId) this.onConflict(e.body.claimedBy || '?', e.body);
           continue;
         }
         if (this.outbox.states[runId] === s) delete this.outbox.states[runId];
@@ -149,9 +176,6 @@ export class ServerBackend {
     } catch {
       this.reachable = false;
       setTimeout(() => this.flush(), 4000);
-    } finally {
-      this.flushing = false;
-      this.onChange();
     }
   }
 
@@ -209,12 +233,16 @@ export class LocalBackend {
     return { jobs, machines: [], machineKnown: false };
   }
 
-  async open(entry, station, { copyPlanFrom = null } = {}) {
+  // One run per job in this browser: the saved one (mode 'continue', the default) or a fresh start.
+  async open(entry, station, { copyPlanFrom = null, mode = 'continue' } = {}) {
     const saved = readJSON(LOCAL_STATE_KEY, {});
     this.run = { id: 'local', entry };
     if (copyPlanFrom) return { phase: 'cards', plan: copyPlanFrom.plan };
-    return saved.job?.url === entry.url ? saved : null;
+    return mode === 'continue' && saved.job?.url === entry.url ? saved : null;
   }
+
+  // A new test session starts the job again: the saved progress is replaced by the next save.
+  async restart() { return this.run; }
 
   async close() {
     this.run = null;
