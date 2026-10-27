@@ -6,7 +6,8 @@
 //      A job that already has sorting runs first shows them: continue or take over the open run, restart
 //      it from the beginning, or sort a new sheet (with the pallets of the last sorted run, or a new setup).
 //   B. Sorting, one pallet at a time (picking.js): only the pallet being sorted is highlighted, the others
-//      are grey; tap each piece (or "picked N"); the next pallet starts by itself; "Pallet full" adds a pallet.
+//      are grey; the operator sorts the whole pallet and taps "Blue 1 done" (or, as a station setting, taps
+//      each piece / "picked N"); the next pallet starts by itself; "Pallet full" adds a pallet.
 //   C. Summary: "3 pallets · 33 pieces · 0 corrections", then the next job.
 //
 // It also keeps the station settings and the test log, saves the progress after every change (backend.js:
@@ -24,6 +25,7 @@ import { renderJobList, renderRunCard, renderCount, renderAssign, renderCards, p
 import { loadSettings, saveSettings, sanitize, DEFAULTS } from './settings.js';
 import { TestLog } from './log.js';
 import { t, getLang, setLang, applyStatic, formatNumber } from './i18n.js';
+import { ask, tell, isOpen as dialogOpen } from './dialog.js';
 
 const SETUP_PHASES = ['jobs', 'runs', 'count', 'assign', 'cards'];
 const REFRESH_MS = 15000;      // job list and health line refresh (the server polls Z:\ every 15 s)
@@ -55,6 +57,22 @@ const log = new TestLog({ onRecord: row => backend?.record(row, settings.station
 const partByUid = uid => session?.parts.get(uid) ?? job.parts.find(p => p.uid === uid);
 const palletOfPiece = part => session.pallet(part.pallet);
 const isSetup = () => SETUP_PHASES.includes(phase);
+// Confirming per pallet: only when sorting one pallet at a time (station setting "Confirming picks").
+const perPallet = () => settings.confirm === 'pallet' && session?.order === 'pallet';
+
+// The app's own dialogs (dialog.js), with every question and its answer in the test log.
+async function askLogged(id, opts) {
+  log.record('dialog', { detail: `${id}; shown` });
+  const yes = await ask(opts);
+  log.record('dialog', { detail: `${id}; ${yes ? 'yes' : 'no'}` });
+  return yes;
+}
+
+async function tellLogged(id, opts) {
+  log.record('dialog', { detail: `${id}; shown` });
+  await tell(opts);
+  log.record('dialog', { detail: `${id}; closed` });
+}
 
 // ---------- drawing the screen ----------
 
@@ -140,11 +158,15 @@ function renderSetup() {
     renderRunCard(root, {
       entry: e, station: settings.stationId, fmtTime,
       onContinue: () => openJob(e, { mode: 'continue' }),
-      onRestart: () => {
+      onRestart: async () => {
         const r = e.openRun;
-        const ask = t('restartAsk', { job: e.title, n: r.runNo, picked: r.picked, total: r.total || e.pieces || '?' })
-          + (r.station !== settings.stationId ? t('restartAskOther', { station: r.station }) : '');
-        if (!window.confirm(ask)) { log.record('run_restart_cancelled', { detail: `job=${e.title}; run=${r.runNo}` }); return; }
+        const yes = await askLogged('restart', {
+          title: t('restartTitle', { job: e.title }),
+          text: t('restartAsk', { n: r.runNo, picked: r.picked, total: r.total || e.pieces || '?' })
+            + (r.station !== settings.stationId ? t('restartAskOther', { station: r.station }) : ''),
+          yes: t('restartYes'), no: t('restartNo'), danger: true,
+        });
+        if (!yes) { log.record('run_restart_cancelled', { detail: `job=${e.title}; run=${r.runNo}` }); return; }
         openJob(e, { mode: 'restart' });
       },
       onNew: from => openJob(e, { mode: 'new', nextFrom: from ? { runId: from.id } : null }),
@@ -240,7 +262,7 @@ async function openJob(e, { nextFrom = null, resuming = false, mode } = {}) {
   const station = settings.stationId;
   const server = backend.mode === 'server';
   if (server && !station) {
-    window.alert(t('needStation'));
+    await tellLogged('need_station', { title: t('needStationTitle'), text: t('needStation'), ok: t('toSettings') });
     setPanel('settings');
     return false;
   }
@@ -294,8 +316,11 @@ async function openJob(e, { nextFrom = null, resuming = false, mode } = {}) {
 
 // Back to the job list. Without a server, unfinished sorting is lost, so ask first. With a server the
 // progress is saved and the job stays "in progress here" until it is finished.
-function closeJob({ force = false } = {}) {
-  if (!force && backend.mode === 'local' && session && !session.isComplete && !window.confirm(t('leaveJob', { job: job.id }))) return;
+async function closeJob({ force = false } = {}) {
+  if (!force && backend.mode === 'local' && session && !session.isComplete && !await askLogged('leave_job', {
+    title: t('leaveTitle', { job: job.id }), text: t('leaveJob'), yes: t('leaveYes'), no: t('leaveNo'), danger: true,
+  })) return;
+  if (!job) return;   // closed meanwhile (e.g. taken over while the question was open)
   log.record('job_closed', { detail: `job=${job?.id}; phase=${phase}${session ? `; picked=${session.count('picked')}/${session.progress().total}` : ''}` });
   backend.close(settings.stationId, isSetup() ? 'setup' : 'sort');
   entry = null; job = null; plan = null; session = null; pendingCard = null; pairs = []; feedback = null;
@@ -318,8 +343,10 @@ async function nextSheet() {
 // Another station took this job over, or restarted it: this screen stops and goes back to the list.
 function onTakenOver(station, info = {}) {
   log.record(info.abandoned ? 'run_stopped_elsewhere' : 'taken_over', { detail: `by ${station}` });
-  window.alert(t(info.abandoned ? 'restartedElsewhere' : 'takenOver', { job: job?.id ?? '', station }));
+  const text = t(info.abandoned ? 'restartedElsewhere' : 'takenOver', { job: job?.id ?? '', station });
+  // Leave first, so this screen can't keep sorting a run it no longer has; then say why.
   if (job) closeJob({ force: true });
+  tellLogged('taken_over', { title: t(info.abandoned ? 'restartedTitle' : 'takenOverTitle', { station }), text, ok: t('backToList') });
 }
 
 // The job list from the backend; in the local mode each job is loaded once for its summary line.
@@ -435,7 +462,7 @@ function renderCurrent() {
 
   // While a new card has to be hung, that is the one thing to do (Undo stays, to take "Pallet full" back).
   const waiting = !!pendingCard;
-  for (const id of ['next-card', 'destination', 'confirm-btn', 'batch', 'reopen-btn']) if (waiting) $(id).hidden = true;
+  for (const id of ['next-card', 'destination', 'confirm-btn', 'pallet-done-btn', 'batch', 'reopen-btn']) if (waiting) $(id).hidden = true;
   $('next-card').hidden = waiting;
   if (waiting) { document.querySelector('.exceptions').hidden = true; return; }
 
@@ -444,7 +471,8 @@ function renderCurrent() {
   $('selected-strip').hidden = !selected;
   if (selected) {
     const sp = palletOfPiece(cur);
-    $('selected-text').textContent = active && cur.pallet !== active.id ? t('goesLater', { pallet: palletName(sp) }) : t('notSuggested', { part: session.next?.partNo ?? '–' });
+    $('selected-text').textContent = active && cur.pallet !== active.id ? t('goesLater', { pallet: palletName(sp) })
+      : perPallet() ? t('tappedPiece') : t('notSuggested', { part: session.next?.partNo ?? '–' });
   }
   $('next-card').classList.toggle('is-complete', !cur);
   $('next-card').classList.toggle('has-problems', !cur && (p.missing + p.scrap) > 0);
@@ -454,6 +482,17 @@ function renderCurrent() {
   $('summary').hidden = !!cur;
   const canReopen = !!cur && session.can('reopen', cur.uid);
   $('reopen-btn').hidden = !canReopen;
+  // Per pallet, the main button is "Blue 1 done"; Confirm stays below it, smaller, for one piece at a time.
+  // A tapped piece makes Confirm the main button again (one main action at a time).
+  const openOnPallet = session.openOnActive().length;
+  const showDone = perPallet() && !!cur && !selected && !!active && openOnPallet > 0;
+  $('pallet-done-btn').hidden = !showDone;
+  if (showDone) {
+    $('pallet-done-main').textContent = t('palletDoneMain', { pallet: palletName(active) });
+    $('pallet-done-sub').textContent = t('palletDoneSub', { n: openOnPallet });
+  }
+  $('confirm-btn').textContent = showDone ? t('confirmOne') : t('confirm');
+  $('confirm-btn').classList.toggle('is-secondary', showDone);
   $('confirm-btn').hidden = !cur || (canReopen && !session.can('confirm'));
   $('confirm-btn').disabled = !session.can('confirm');
   $('missing-btn').disabled = !session.can('missing');
@@ -465,7 +504,7 @@ function renderCurrent() {
 
   // "Picked 2 / 3 / 4 / All": only while sorting one pallet at a time, with at least two pieces left on it.
   const open = session.openOnActive().length;
-  const showBatch = !!cur && !selected && session.order === 'pallet' && open >= 2;
+  const showBatch = !!cur && !selected && session.order === 'pallet' && !perPallet() && open >= 2;
   $('batch').hidden = !showBatch;
   if (showBatch) {
     const ns = [2, 3, 4].filter(n => n < open);
@@ -588,6 +627,7 @@ function renderSettings() {
   $('mirror-btn').setAttribute('aria-pressed', String(settings.mirror));
   $('zoom-btn').setAttribute('aria-pressed', String(settings.zoomSmall));
   document.querySelectorAll('[data-order]').forEach(b => b.setAttribute('aria-checked', String(b.dataset.order === settings.order)));
+  document.querySelectorAll('[data-confirm]').forEach(b => b.setAttribute('aria-checked', String(b.dataset.confirm === settings.confirm)));
   $('saved-note').textContent = settingsSaved ? t('savedHere') : t('notSaved');
   $('saved-note').classList.toggle('error', !settingsSaved);
 }
@@ -643,7 +683,7 @@ function changeSettings(change) {
 }
 
 const settingsDetail = () =>
-  `station=${settings.stationId}; rotation=${settings.rotation}; mirror=${+settings.mirror}; order=${settings.order}; zoom_small=${+settings.zoomSmall}; lang=${getLang()}; backend=${backend?.mode ?? ''}`;
+  `station=${settings.stationId}; rotation=${settings.rotation}; mirror=${+settings.mirror}; order=${settings.order}; confirm=${settings.confirm}; zoom_small=${+settings.zoomSmall}; lang=${getLang()}; backend=${backend?.mode ?? ''}`;
 
 function turn(direction) {
   const step = direction === 'left' ? 90 : -90;
@@ -667,10 +707,17 @@ function saveState() {
 // server, the session also gets its own sorting run: the current run is stopped and kept (a sorted sheet
 // stays sorted), so each participant's picks and log stay apart.
 async function startNewTestSession() {
-  if (log.unexported > 0 && !window.confirm(t('confirmNewSession', { n: log.unexported }))) return;
+  if (log.unexported > 0 && !await askLogged('new_session', {
+    title: t('newSessionTitle'), text: t('confirmNewSession', { n: log.unexported }),
+    yes: t('newSessionYes'), no: t('newSessionNo'), danger: true,
+  })) return;
   if (job && backend.run) {
     try { await backend.restart(settings.stationId, 'test_session'); }
-    catch (err) { console.error(err); window.alert(t('sessionRunError', { msg: err.message })); return; }
+    catch (err) {
+      console.error(err);
+      await tellLogged('session_error', { title: t('sessionErrorTitle'), text: t('sessionRunError', { msg: err.message }), ok: t('closeDialog') });
+      return;
+    }
   }
   log.newSession({
     participant: $('tp-participant').value.trim(),
@@ -695,15 +742,18 @@ function exportLog() {
   render();
 }
 
-// Tapping a piece of the pallet being sorted (or the piece shown in the panel) confirms it.
+// Confirming per piece: tapping a piece of the pallet being sorted (or the piece shown in the panel) confirms it.
 // Tapping any other piece shows it in the panel first, with its pallet, so nothing is confirmed by accident.
+// Confirming per pallet: a tap only shows the piece (Confirm, Missing, Scrap); a second tap on it confirms it.
+// Nobody looks at the screen while sorting, so a glove brushing the screen must not pick anything.
 function onPartTap(uid) {
   if (phase !== 'sort' || !session) return;
   const part = partByUid(uid);
   const status = session.status.get(uid);
   const tap = result => log.record('tap', { uid, part_no: part.partNo, pallet: palletLabel(part.pallet), via: 'tap', detail: result });
   const onActive = session.order === 'pallet' && part.pallet === session.activePallet;
-  if (uid === session.current?.uid || (onActive && status === 'open')) {
+  const confirms = perPallet() ? uid === session.selectedUid : uid === session.current?.uid || (onActive && status === 'open');
+  if (confirms) {
     if (session.can('confirm', uid)) { tap('confirm'); session.confirm(uid, 'tap'); return; }
     tap(`refused: ${status}`);
     feedback = { key: status === 'scrap' ? 'fbIsScrap' : 'fbAlreadyPicked', params: { part: part.partNo } };
@@ -711,7 +761,7 @@ function onPartTap(uid) {
     return;
   }
   tap('select');
-  session.select(uid);
+  session.select(uid, { keepSuggested: perPallet() });
   if (session.selectedUid) {
     feedback = session.activePallet && part.pallet !== session.activePallet && status === 'open'
       ? { key: 'fbOtherPallet', params: { part: part.partNo, pallet: palletLabel(part.pallet) } }
@@ -724,10 +774,14 @@ function onSessionEvent(e) {
   log.recordSessionEvent(e, partByUid, palletLabel);
   saveState();
   const part = e.uid ? partByUid(e.uid) : null;
-  if (e.type === 'confirm' && e.via !== 'batch') {
+  if (e.type === 'confirm' && e.via !== 'batch' && e.via !== 'pallet') {
     feedback = { key: e.outOfOrder ? 'fbPickedOutOfOrder' : 'fbPicked', params: { part: part.partNo, pallet: palletLabel(part.pallet) } };
   } else if (e.type === 'pallet' && e.previous && !e.reason) {
-    feedback = { key: 'fbPalletDone', params: { pallet: palletLabel(e.previous), next: palletLabel(e.pallet) } };
+    // Honest kit status: a pallet with missing or scrapped pieces is not "complete".
+    const pp = session.progress(e.previous), issues = pp.missing + pp.scrap;
+    feedback = { key: issues ? 'fbPalletDoneIssues' : 'fbPalletDone', params: { pallet: palletLabel(e.previous), next: palletLabel(e.pallet), n: issues } };
+  } else if (e.type === 'pallet_done') {
+    feedback = { key: 'fbPalletDoneN', params: { pallet: palletLabel(e.pallet), n: e.count } };
   } else if (e.type === 'missing') {
     feedback = { key: 'fbMissing', params: { part: part.partNo } };
   } else if (e.type === 'scrap') {
@@ -745,6 +799,8 @@ function onSessionEvent(e) {
       feedback = { key: 'fbUndonePallet', params: { pallet: e.removed ? palletName(e.removed) : e.pallet, from: palletLabel(e.fromPallet) } };
       view.recolor();
       saveState();
+    } else if (e.undid === 'pallet_done') {
+      feedback = { key: 'fbUndonePalletDone', params: { pallet: palletLabel(e.pallet), n: e.count } };
     } else if (e.undid === 'batch') {
       feedback = { key: 'fbUndoneBatch', params: { n: e.count } };
     } else {
@@ -754,6 +810,15 @@ function onSessionEvent(e) {
     feedback = null;
   }
   render();
+}
+
+// Enter does what the big green button says ("Blue 1 done", or Confirm), so a push button or foot pedal
+// set to send Enter can confirm at the station without touching the screen. True if it did something.
+function mainActionByKey() {
+  if (phase !== 'sort' || !session || panelMode !== 'work' || pendingCard) return false;
+  if (!$('pallet-done-btn').hidden) return session.palletDone('key') > 0;
+  if (!$('confirm-btn').hidden && session.can('confirm')) return session.confirm(undefined, 'key');
+  return false;
 }
 
 // ---------- start ----------
@@ -834,10 +899,12 @@ async function start() {
   $('mirror-btn').addEventListener('click', () => changeSettings({ mirror: !settings.mirror }));
   $('zoom-btn').addEventListener('click', () => changeSettings({ zoomSmall: !settings.zoomSmall }));
   document.querySelectorAll('[data-order]').forEach(b => b.addEventListener('click', () => changeSettings({ order: b.dataset.order })));
+  document.querySelectorAll('[data-confirm]').forEach(b => b.addEventListener('click', () => changeSettings({ confirm: b.dataset.confirm })));
   $('reset-btn').addEventListener('click', () => changeSettings({ ...DEFAULTS }));
   $('export-btn').addEventListener('click', exportLog);
   $('new-session-btn').addEventListener('click', startNewTestSession);
   $('confirm-btn').addEventListener('click', () => session.confirm());
+  $('pallet-done-btn').addEventListener('click', () => session.palletDone('button'));
   $('missing-btn').addEventListener('click', () => session.markMissing());
   $('scrap-btn').addEventListener('click', () => session.markScrap());
   $('reopen-btn').addEventListener('click', () => session.reopen());
@@ -864,8 +931,9 @@ async function start() {
   // Keys for laptops and demos: + / − zoom, 0 shows the whole view, H = hand (move), V = arrow (select).
   // Not while typing in a field.
   document.addEventListener('keydown', e => {
-    if (e.ctrlKey || e.metaKey || e.altKey || e.target.closest?.('input, textarea, select')) return;
+    if (e.ctrlKey || e.metaKey || e.altKey || dialogOpen() || e.target.closest?.('input, textarea, select')) return;
     const key = e.key.toLowerCase();
+    if (key === 'enter') { if (mainActionByKey()) e.preventDefault(); return; }
     if (key === 'h' || key === 'v') { setTool(key === 'h', 'key'); return; }
     const action = { '+': 'zoomIn', '=': 'zoomIn', '-': 'zoomOut', '0': 'fitView' }[e.key];
     if (action) { e.preventDefault(); view[action]('key'); }

@@ -18,7 +18,7 @@
 ## Workflow (decided 23 Oct 2026, built in step 9: keep this)
 - **A. Setup per job:** choose the job → number of pallets (app suggests one per order) → check the proposed assignment (move a part, split a quantity, add/remove a pallet; warn about look-alikes on different pallets and show the difference) → hang the cards ("Hang Blue 1, Orange 2, …") → Ready.
 - **Pallets come from the operator, not from the job file.** Colours follow a fixed order by pallet number (Okabe–Ito: Blue 1, Orange 2, Green 3, Yellow 4, Pink 5, Sky blue 6, Red 7, Black 8, then repeat), always shown with the number. Reusable hanging cards.
-- **B. Sorting one pallet at a time:** only the active pallet is highlighted, the rest grey; next pallet starts by itself; tap each piece or "picked N"; "Pallet full" adds the next colour/number and moves the remaining pieces; always on screen: count per pallet broken down by part, sheet progress, Undo.
+- **B. Sorting one pallet at a time:** only the active pallet is highlighted, the rest grey; next pallet starts by itself; **confirm per pallet** (decided 26 Oct 2026: one tap on "Blue 1 done" or the Enter key / a push button; tap a piece only for missing / scrap / a single pick; a tap only selects, never picks) or, as a station setting, per piece (tap each piece or "picked N"); "Pallet full" adds the next colour/number and moves the remaining pieces; always on screen: count per pallet broken down by part, sheet progress, Undo.
 - **C. Summary:** "3 pallets · 33 pieces · 0 corrections".
 - **Look-alikes are computed from the .GEO outlines** (size, area, holes, overlap; mirror images detected). Shown side by side with the difference circled in red during setup, and as small red markers on the pieces during sorting.
 
@@ -91,7 +91,7 @@ A working JavaScript parser for this format (contours to polylines, arc sweep, e
   CLAUDE.md
   index.html, src/ (geo-parser.js, nest-loader.js, ui.js, setup-view.js, plan.js, lookalike.js, picking.js, sheet-view.js, log.js, backend.js, …)
   server/ (main.js, pipeline.js, catalog.js, store.js, api.js, config.example.json, test/scenarios.test.js)
-  tools/ (serve.py, make_examples.py, make-demo-z.mjs), package.json (scripts only)
+  tools/ (serve.py, make_examples.py, make-demo-z.mjs, projector-3d.html, vendor/three/), package.json (scripts only)
   data/parts/1045572.GEO, data/parts/examples/*.GEO
   data/jobs/index.json, data/jobs/J14.LST, data/jobs/example-sheet.json
   reference/geo-viewer.html

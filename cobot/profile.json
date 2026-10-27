@@ -1,0 +1,57 @@
+{
+  "name": "GoFa CRB 15000 + OnRobot MG10 (assumed, for simulation)",
+  "robotId": "COBOT-L95",
+  "maxPartKg": 2,
+  "minThicknessMm": 3,
+  "pad": {
+    "w": 65.4,
+    "h": 65.4
+  },
+  "padMarginMm": 2,
+  "maxCogOffsetMm": 40,
+  "base": {
+    "x": 2350,
+    "y": 500
+  },
+  "reachMm": 1200,
+  "minReachMm": 250,
+  "minPlaceReachMm": 550,
+  "docks": [
+    {
+      "id": "A",
+      "x": 2450,
+      "y": -400,
+      "w": 800,
+      "h": 600,
+      "z": 0
+    },
+    {
+      "id": "B",
+      "x": 2450,
+      "y": 800,
+      "w": 800,
+      "h": 600,
+      "z": 0
+    }
+  ],
+  "edgeMarginMm": 25,
+  "gapMm": 25,
+  "maxStackMm": 150,
+  "secondsPerPiece": 14,
+  "tableZ": 0,
+  "palletHeightMm": 144,
+  "tool": {
+    "tcpZ": 80,
+    "massKg": 0.9,
+    "cogZ": 35
+  },
+  "home": {
+    "x": -450,
+    "y": 0,
+    "z": 350
+  },
+  "server": {
+    "host": "127.0.0.1",
+    "port": 5099
+  }
+}

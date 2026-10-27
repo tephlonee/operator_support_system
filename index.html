@@ -107,7 +107,12 @@
         <!-- For a part that is already picked/missing/scrap: put just this part back, however long ago it was done.
              For picked and scrapped parts it takes the place of Confirm, which can't be used for them anyway. -->
         <button class="btn btn-reopen" id="reopen-btn" type="button" hidden></button>
-        <button class="btn btn-confirm" id="confirm-btn" type="button" data-i18n="confirm"></button>
+        <!-- Confirming per pallet (station setting): sort the whole pallet, then one tap. The Enter key does the same,
+             so a push button or foot pedal set to Enter can be fitted at the station. -->
+        <button class="btn btn-confirm btn-pallet-done" id="pallet-done-btn" type="button" hidden>
+          <span class="pd-main" id="pallet-done-main"></span><span class="pd-sub" id="pallet-done-sub"></span>
+        </button>
+        <button class="btn btn-confirm" id="confirm-btn" type="button"></button>
         <!-- "Picked 4": several pieces of the pallet being sorted, taken in one go (one Undo takes them back). -->
         <div class="batch" id="batch" hidden>
           <span class="batch-label" data-i18n="pickedSeveral"></span>
@@ -155,6 +160,16 @@
           </button>
           <button class="btn btn-choice" type="button" role="radio" data-order="nearest">
             <strong data-i18n="orderNearest"></strong><span data-i18n="orderNearestSub"></span>
+          </button>
+        </div>
+
+        <h3 data-i18n="settingsConfirmHead"></h3>
+        <div class="choices" role="radiogroup" data-i18n-aria="settingsConfirmHead">
+          <button class="btn btn-choice" type="button" role="radio" data-confirm="pallet">
+            <strong data-i18n="confirmPallet"></strong><span data-i18n="confirmPalletSub"></span>
+          </button>
+          <button class="btn btn-choice" type="button" role="radio" data-confirm="piece">
+            <strong data-i18n="confirmPiece"></strong><span data-i18n="confirmPieceSub"></span>
           </button>
         </div>
 

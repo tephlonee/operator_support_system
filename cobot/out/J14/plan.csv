@@ -1,0 +1,34 @@
+﻿piece,part_no,order,pallet,picked_by,reason,mass_kg,grip_x,grip_y,task,spot
+J14-01,1045572,OR17,order OR17,operator,outside the cobot's reach,0.868,87.9,50.0,,
+J14-02,1045575,OR14,order OR14,operator,no part file: the grip cannot be checked,1.984,,,,
+J14-03,1045575,OR14,order OR14,operator,no part file: the grip cannot be checked,1.984,,,,
+J14-04,1045575,OR14,order OR14,operator,no part file: the grip cannot be checked,1.984,,,,
+J14-05,1045574,OR13,order OR13,operator,"3.93 kg, over the cobot's 2.00 kg",3.925,,,,
+J14-06,1045575,OR14,order OR14,operator,no part file: the grip cannot be checked,1.984,,,,
+J14-07,1045572,OR17,order OR17,cobot,,0.868,1669.4,50.0,9,A
+J14-08,1045572,OR17,order OR17,cobot,,0.868,1729.5,154.3,8,A
+J14-09,1045572,OR17,order OR17,cobot,,0.868,1848.7,50.0,7,A
+J14-10,1045572,OR17,order OR17,cobot,,0.868,1869.0,460.3,1,A
+J14-11,1045574,OR13,order OR13,operator,"3.93 kg, over the cobot's 2.00 kg",3.925,,,,
+J14-12,1045572,OR17,order OR17,cobot,,0.868,1782.0,356.0,3,A
+J14-13,1045574,OR13,order OR13,operator,"3.93 kg, over the cobot's 2.00 kg",3.925,,,,
+J14-14,1045574,OR13,order OR13,operator,"3.93 kg, over the cobot's 2.00 kg",3.925,,,,
+J14-15,1045574,OR13,order OR13,operator,"3.93 kg, over the cobot's 2.00 kg",3.925,,,,
+J14-16,1045575,OR14,order OR14,operator,no part file: the grip cannot be checked,1.984,,,,
+J14-17,1045575,OR14,order OR14,operator,no part file: the grip cannot be checked,1.984,,,,
+J14-18,1045574,OR13,order OR13,operator,"3.93 kg, over the cobot's 2.00 kg",3.925,,,,
+J14-19,1045574,OR13,order OR13,operator,"3.93 kg, over the cobot's 2.00 kg",3.925,,,,
+J14-20,1045572,OR17,order OR17,cobot,,0.868,1510.4,512.6,10,A
+J14-21,1045574,OR13,order OR13,operator,"3.93 kg, over the cobot's 2.00 kg",3.925,,,,
+J14-22,1045572,OR17,order OR17,cobot,,0.868,1689.7,512.6,5,A
+J14-23,1045572,OR17,order OR17,cobot,,0.868,1723.7,740.2,6,A
+J14-24,1045572,OR17,order OR17,cobot,,0.868,1783.8,616.9,2,A
+J14-25,1045572,OR17,order OR17,cobot,,0.868,1812.9,844.6,4,A
+J14-26,1045575,OR14,order OR14,operator,no part file: the grip cannot be checked,1.984,,,,
+J14-27,1045575,OR14,order OR14,operator,no part file: the grip cannot be checked,1.984,,,,
+J14-28,1045572,OR17,order OR17,cobot,,0.868,1299.4,889.6,11,A
+J14-29,1045574,OR13,order OR13,operator,"3.93 kg, over the cobot's 2.00 kg",3.925,,,,
+J14-30,1045575,OR14,order OR14,operator,no part file: the grip cannot be checked,1.984,,,,
+J14-31,1045574,OR13,order OR13,operator,"3.93 kg, over the cobot's 2.00 kg",3.925,,,,
+J14-32,1045574,OR13,order OR13,operator,"3.93 kg, over the cobot's 2.00 kg",3.925,,,,
+J14-33,1045575,OR14,order OR14,operator,no part file: the grip cannot be checked,1.984,,,,

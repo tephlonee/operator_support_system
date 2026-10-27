@@ -1,0 +1,1449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sorting Workflow Simulation</title>
+<style>
+  :root { --navy:#14213D; --paper:#F5F4EF; --muted:#5b6676; --accent:#C2410C; --panel:rgba(245,244,239,0.95); --btn:#fff; --btn-hover:#eef1f5; --line:#c3c9d2; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --navy:#e6ebf2; --muted:#a3adbb; --panel:rgba(22,28,40,0.94); --btn:#1f2937; --btn-hover:#2b3647; --line:#3a4555; } }
+  :root[data-theme="dark"] { --navy:#e6ebf2; --muted:#a3adbb; --panel:rgba(22,28,40,0.94); --btn:#1f2937; --btn-hover:#2b3647; --line:#3a4555; }
+  html,body { margin:0; height:100%; overflow:hidden; background:#cfd5dc; font-family:"Segoe UI", system-ui, Arial, sans-serif; }
+  #c { display:block; width:100vw; height:100vh; }
+  .panel { position:absolute; background:var(--panel); color:var(--navy); border-radius:12px; box-shadow:0 4px 18px rgba(0,0,0,.18); }
+  #tabs { left:50%; transform:translateX(-50%); top:12px; padding:6px; display:flex; gap:4px; flex-wrap:wrap; justify-content:center; max-width:calc(100vw - 32px); box-sizing:border-box; }
+  #tabs button.on { background:var(--accent); color:#fff; border-color:var(--accent); }
+  #title { left:16px; top:72px; padding:12px 16px; width:330px; box-sizing:border-box; }
+  #title h1 { font-size:17px; margin:0 0 6px; }
+  #title p { font-size:13px; margin:3px 0; color:var(--muted); line-height:1.4; }
+  #hud { margin-top:8px; padding-top:8px; border-top:1px solid #d6d9de; display:grid; grid-template-columns:1fr auto; gap:2px 10px; font-size:13px; }
+  #hud b { font-variant-numeric:tabular-nums; text-align:right; }
+  #hud .note { grid-column:1 / 3; font-size:11px; color:var(--muted); }
+  #steps { right:16px; top:72px; padding:12px 14px; width:310px; box-sizing:border-box; }
+  #steps h2 { font-size:13px; margin:0 0 8px; text-transform:uppercase; letter-spacing:1px; color:var(--accent); }
+  #steps ol { margin:0; padding-left:20px; font-size:13px; line-height:1.4; }
+  #steps li { margin-bottom:5px; color:#8a94a3; }
+  #steps li.active { color:var(--navy); font-weight:600; }
+  #steps li.done { color:var(--muted); }
+  #caption { left:50%; transform:translateX(-50%); bottom:110px; padding:12px 20px; font-size:17px; font-weight:600; width:min(820px, calc(100vw - 32px)); box-sizing:border-box; text-align:center; line-height:1.4; }
+  #controls { left:50%; transform:translateX(-50%); bottom:16px; padding:8px 10px; display:flex; gap:6px; flex-wrap:wrap; align-items:center; justify-content:center; width:max-content; max-width:calc(100vw - 32px); box-sizing:border-box; }
+  button { font:inherit; font-size:13px; border:1px solid var(--line); background:var(--btn); color:var(--navy); padding:7px 11px; border-radius:8px; cursor:pointer; }
+  button:hover { background:var(--btn-hover); }
+  button.primary { background:var(--accent); color:#fff; border-color:var(--accent); }
+  button.on { background:var(--btn-hover); border-color:#2f5da8; }
+  #tabs button.on:hover { background:var(--accent); }
+  .sep { width:1px; height:24px; background:#c3c9d2; margin:0 2px; }
+  label { font-size:13px; display:flex; align-items:center; gap:4px; }
+  @media (max-width:1300px) { #steps { display:none; } }
+  @media (max-width:760px) {
+    #tabs { left:16px; right:16px; transform:none; max-width:none; }
+    #title { width:auto; left:16px; right:16px; padding:8px 12px; }
+    #title .desc, #title .foot { display:none; }
+    #hud { grid-template-columns:1fr auto 1fr auto; }
+    #caption { font-size:14px; padding:8px 12px; }
+    button { padding:6px 8px; font-size:12px; }
+    .hide-sm { display:none; }
+  }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div id="tabs" class="panel"></div>
+
+<div id="title" class="panel">
+  <h1 id="vname"></h1>
+  <p class="desc" id="vdesc"></p>
+  <div id="hud"></div>
+  <p class="foot" style="font-size:11px;margin-top:8px">Job J14 from TruTops: 2000 × 1000 × 8 mm, 33 pieces, 3 part numbers, 3 orders. The outline of 1045575 is approximated (no GEO file). Times are shortened for the demo; process timing is in the SimPy model. Drag to orbit, scroll to zoom.</p>
+</div>
+
+<div id="steps" class="panel"><h2>Workflow</h2><ol id="stepList"></ol></div>
+
+<div id="caption" class="panel">Press <b>Play</b> to start.</div>
+
+<div id="controls" class="panel">
+  <button id="play" class="primary">▶ Play</button>
+  <button id="pause">❚❚ Pause</button>
+  <button id="restart">↺ Restart</button>
+  <span class="sep"></span>
+  <button data-speed="1" class="on">1×</button>
+  <button data-speed="2">2×</button>
+  <button data-speed="4">4×</button>
+  <span class="sep"></span>
+  <button data-cam="overview">Overview</button>
+  <button data-cam="operator">Operator</button>
+  <button data-cam="display">Display</button>
+  <button data-cam="top" class="hide-sm">Top</button>
+  <label><input type="checkbox" id="autocam" checked> Auto cam</label>
+  <label class="hide-sm"><input type="checkbox" id="labels" checked> Labels</label>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// =====================================================================
+// Data: real job J14 (LST positions + GEO outlines)
+// =====================================================================
+const SHAPES = {"1045574":{"outer":[[0.0,81.0],[0.19,79.05],[0.76,77.17],[1.69,75.44],[2.93,73.93],[4.44,72.69],[6.17,71.76],[8.05,71.19],[10.0,71.0],[413.0,71.0],[414.95,70.81],[416.83,70.24],[418.56,69.31],[420.07,68.07],[421.31,66.56],[422.24,64.83],[422.81,62.95],[423.0,61.0],[423.0,12.49],[423.12,11.31],[423.46,10.19],[424.01,9.15],[424.76,8.24],[431.24,1.76],[432.15,1.01],[433.19,0.46],[434.31,0.12],[435.49,0.0],[550.51,0.0],[551.69,0.12],[552.81,0.46],[553.85,1.01],[554.76,1.76],[561.24,8.24],[561.99,9.15],[562.54,10.19],[562.88,11.31],[563.0,12.49],[563.0,61.0],[563.19,62.95],[563.76,64.83],[564.69,66.56],[565.93,68.07],[567.44,69.31],[569.17,70.24],[571.05,70.81],[573.0,71.0],[823.0,71.0],[824.95,71.19],[826.83,71.76],[828.56,72.69],[830.07,73.93],[831.31,75.44],[832.24,77.17],[832.81,79.05],[833.0,81.0],[833.0,125.0],[832.81,126.95],[832.24,128.83],[831.31,130.56],[830.07,132.07],[828.56,133.31],[826.83,134.24],[824.95,134.81],[823.0,135.0],[10.0,135.0],[8.05,134.81],[6.17,134.24],[4.44,133.31],[2.93,132.07],[1.69,130.56],[0.76,128.83],[0.19,126.95],[0.0,125.0]],"holes":[[[451.0,18.0],[450.73,20.07],[449.93,22.0],[448.66,23.66],[447.0,24.93],[445.07,25.73],[443.0,26.0],[440.93,25.73],[439.0,24.93],[437.34,23.66],[436.07,22.0],[435.27,20.07],[435.0,18.0],[435.27,15.93],[436.07,14.0],[437.34,12.34],[439.0,11.07],[440.93,10.27],[443.0,10.0],[445.07,10.27],[447.0,11.07],[448.66,12.34],[449.93,14.0],[450.73,15.93]],[[501.0,18.0],[500.73,20.07],[499.93,22.0],[498.66,23.66],[497.0,24.93],[495.07,25.73],[493.0,26.0],[490.93,25.73],[489.0,24.93],[487.34,23.66],[486.07,22.0],[485.27,20.07],[485.0,18.0],[485.27,15.93],[486.07,14.0],[487.34,12.34],[489.0,11.07],[490.93,10.27],[493.0,10.0],[495.07,10.27],[497.0,11.07],[498.66,12.34],[499.93,14.0],[500.73,15.93]],[[551.0,18.0],[550.73,20.07],[549.93,22.0],[548.66,23.66],[547.0,24.93],[545.07,25.73],[543.0,26.0],[540.93,25.73],[539.0,24.93],[537.34,23.66],[536.07,22.0],[535.27,20.07],[535.0,18.0],[535.27,15.93],[536.07,14.0],[537.34,12.34],[539.0,11.07],[540.93,10.27],[543.0,10.0],[545.07,10.27],[547.0,11.07],[548.66,12.34],[549.93,14.0],[550.73,15.93]]]},"1045572":{"outer":[[165.0,77.93],[164.9,78.9],[164.62,79.84],[164.16,80.71],[163.54,81.46],[156.46,88.54],[155.71,89.16],[154.84,89.62],[153.9,89.9],[152.93,90.0],[12.07,90.0],[11.1,89.9],[10.16,89.62],[9.29,89.16],[8.54,88.54],[1.46,81.46],[0.84,80.71],[0.38,79.84],[0.1,78.9],[0.0,77.93],[0.0,12.07],[0.1,11.1],[0.38,10.16],[0.84,9.29],[1.46,8.54],[8.54,1.46],[9.29,0.84],[10.16,0.38],[11.1,0.1],[12.07,0.0],[152.93,0.0],[153.9,0.1],[154.84,0.38],[155.71,0.84],[156.46,1.46],[163.54,8.54],[164.16,9.29],[164.62,10.16],[164.9,11.1],[165.0,12.07]],"holes":[[[16.0,27.5],[18.0,27.5],[19.46,27.36],[20.87,26.93],[22.17,26.24],[23.3,25.3],[24.24,24.17],[24.93,22.87],[25.36,21.46],[25.5,20.0],[25.36,18.54],[24.93,17.13],[24.24,15.83],[23.3,14.7],[22.17,13.76],[20.87,13.07],[19.46,12.64],[18.0,12.5],[16.0,12.5],[14.54,12.64],[13.13,13.07],[11.83,13.76],[10.7,14.7],[9.76,15.83],[9.07,17.13],[8.64,18.54],[8.5,20.0],[8.64,21.46],[9.07,22.87],[9.76,24.17],[10.7,25.3],[11.83,26.24],[13.13,26.93],[14.54,27.36]],[[18.0,62.5],[16.0,62.5],[14.54,62.64],[13.13,63.07],[11.83,63.76],[10.7,64.7],[9.76,65.83],[9.07,67.13],[8.64,68.54],[8.5,70.0],[8.64,71.46],[9.07,72.87],[9.76,74.17],[10.7,75.3],[11.83,76.24],[13.13,76.93],[14.54,77.36],[16.0,77.5],[18.0,77.5],[19.46,77.36],[20.87,76.93],[22.17,76.24],[23.3,75.3],[24.24,74.17],[24.93,72.87],[25.36,71.46],[25.5,70.0],[25.36,68.54],[24.93,67.13],[24.24,65.83],[23.3,64.7],[22.17,63.76],[20.87,63.07],[19.46,62.64]],[[142.5,21.0],[142.5,19.0],[142.36,17.54],[141.93,16.13],[141.24,14.83],[140.3,13.7],[139.17,12.76],[137.87,12.07],[136.46,11.64],[135.0,11.5],[133.54,11.64],[132.13,12.07],[130.83,12.76],[129.7,13.7],[128.76,14.83],[128.07,16.13],[127.64,17.54],[127.5,19.0],[127.5,21.0],[127.64,22.46],[128.07,23.87],[128.76,25.17],[129.7,26.3],[130.83,27.24],[132.13,27.93],[133.54,28.36],[135.0,28.5],[136.46,28.36],[137.87,27.93],[139.17,27.24],[140.3,26.3],[141.24,25.17],[141.93,23.87],[142.36,22.46]],[[142.5,71.0],[142.5,69.0],[142.36,67.54],[141.93,66.13],[141.24,64.83],[140.3,63.7],[139.17,62.76],[137.87,62.07],[136.46,61.64],[135.0,61.5],[133.54,61.64],[132.13,62.07],[130.83,62.76],[129.7,63.7],[128.76,64.83],[128.07,66.13],[127.64,67.54],[127.5,69.0],[127.5,71.0],[127.64,72.46],[128.07,73.87],[128.76,75.17],[129.7,76.3],[130.83,77.24],[132.13,77.93],[133.54,78.36],[135.0,78.5],[136.46,78.36],[137.87,77.93],[139.17,77.24],[140.3,76.3],[141.24,75.17],[141.93,73.87],[142.36,72.46]]]},"1045575":{"outer":[[0,81],[150,81],[150,0],[310,0],[310,81],[350,81],[350,135],[0,135]],"holes":[[[188.0,18.0],[187.73,20.07],[186.93,22.0],[185.66,23.66],[184.0,24.93],[182.07,25.73],[180.0,26.0],[177.93,25.73],[176.0,24.93],[174.34,23.66],[173.07,22.0],[172.27,20.07],[172.0,18.0],[172.27,15.93],[173.07,14.0],[174.34,12.34],[176.0,11.07],[177.93,10.27],[180.0,10.0],[182.07,10.27],[184.0,11.07],[185.66,12.34],[186.93,14.0],[187.73,15.93]],[[238.0,18.0],[237.73,20.07],[236.93,22.0],[235.66,23.66],[234.0,24.93],[232.07,25.73],[230.0,26.0],[227.93,25.73],[226.0,24.93],[224.34,23.66],[223.07,22.0],[222.27,20.07],[222.0,18.0],[222.27,15.93],[223.07,14.0],[224.34,12.34],[226.0,11.07],[227.93,10.27],[230.0,10.0],[232.07,10.27],[234.0,11.07],[235.66,12.34],[236.93,14.0],[237.73,15.93]],[[288.0,18.0],[287.73,20.07],[286.93,22.0],[285.66,23.66],[284.0,24.93],[282.07,25.73],[280.0,26.0],[277.93,25.73],[276.0,24.93],[274.34,23.66],[273.07,22.0],[272.27,20.07],[272.0,18.0],[272.27,15.93],[273.07,14.0],[274.34,12.34],[276.0,11.07],[277.93,10.27],[280.0,10.0],[282.07,10.27],[284.0,11.07],[285.66,12.34],[286.93,14.0],[287.73,15.93]]],"approx":true}};
+const JOB = [{"n":1,"partNo":"1045572","x":5.0,"y":5.0,"rot":0.0,"order":"OR17"},{"n":2,"partNo":"1045575","x":5.0,"y":83.06,"rot":0.0,"order":"OR14"},{"n":3,"partNo":"1045575","x":339.32,"y":5.0,"rot":0.0,"order":"OR14"},{"n":4,"partNo":"1045575","x":703.64,"y":5.0,"rot":0.0,"order":"OR14"},{"n":5,"partNo":"1045574","x":644.96,"y":83.32,"rot":0.0,"order":"OR13"},{"n":6,"partNo":"1045575","x":1222.28,"y":5.0,"rot":0.0,"order":"OR14"},{"n":7,"partNo":"1045572","x":1586.48,"y":5.0,"rot":0.0,"order":"OR17"},{"n":8,"partNo":"1045572","x":1646.6,"y":109.32,"rot":0.0,"order":"OR17"},{"n":9,"partNo":"1045572","x":1765.8,"y":5.0,"rot":0.0,"order":"OR17"},{"n":10,"partNo":"1045572","x":1786.15,"y":415.28,"rot":0.0,"order":"OR17"},{"n":11,"partNo":"1045574","x":1069.28,"y":161.64,"rot":0.0,"order":"OR13"},{"n":12,"partNo":"1045572","x":1699.07,"y":310.96,"rot":0.0,"order":"OR17"},{"n":13,"partNo":"1045574","x":853.64,"y":318.28,"rot":0.0,"order":"OR13"},{"n":14,"partNo":"1045574","x":429.32,"y":239.96,"rot":0.0,"order":"OR13"},{"n":15,"partNo":"1045574","x":5.0,"y":161.64,"rot":0.0,"order":"OR13"},{"n":16,"partNo":"1045575","x":5.0,"y":310.96,"rot":0.0,"order":"OR14"},{"n":17,"partNo":"1045575","x":5.0,"y":538.6,"rot":0.0,"order":"OR14"},{"n":18,"partNo":"1045574","x":5.0,"y":389.28,"rot":0.0,"order":"OR13"},{"n":19,"partNo":"1045574","x":429.32,"y":467.6,"rot":0.0,"order":"OR13"},{"n":20,"partNo":"1045572","x":1427.51,"y":467.6,"rot":0.0,"order":"OR17"},{"n":21,"partNo":"1045574","x":853.64,"y":545.92,"rot":0.0,"order":"OR13"},{"n":22,"partNo":"1045572","x":1606.83,"y":467.6,"rot":0.0,"order":"OR17"},{"n":23,"partNo":"1045572","x":1640.84,"y":695.24,"rot":0.0,"order":"OR17"},{"n":24,"partNo":"1045572","x":1700.96,"y":571.92,"rot":0.0,"order":"OR17"},{"n":25,"partNo":"1045572","x":1730.04,"y":799.56,"rot":0.0,"order":"OR17"},{"n":26,"partNo":"1045575","x":1395.72,"y":844.56,"rot":0.0,"order":"OR14"},{"n":27,"partNo":"1045575","x":1276.64,"y":695.24,"rot":0.0,"order":"OR14"},{"n":28,"partNo":"1045572","x":1216.52,"y":844.56,"rot":0.0,"order":"OR17"},{"n":29,"partNo":"1045574","x":429.32,"y":695.24,"rot":0.0,"order":"OR13"},{"n":30,"partNo":"1045575","x":852.32,"y":844.56,"rot":0.0,"order":"OR14"},{"n":31,"partNo":"1045574","x":5.0,"y":616.92,"rot":0.0,"order":"OR13"},{"n":32,"partNo":"1045574","x":5.0,"y":844.56,"rot":0.0,"order":"OR13"},{"n":33,"partNo":"1045575","x":5.0,"y":766.24,"rot":0.0,"order":"OR14"}];
+
+// =====================================================================
+// Variants
+// =====================================================================
+const VARIANTS = {
+  v0: { tab:'V0 Paper list', name:'V0 · Paper list (today)', table:false, display:'paper',
+        desc:'Today\'s way: a paper part list. The operator reads the list, searches the sheet for each part number, decides the pallet and keeps a tally by hand.' },
+  v3: { tab:'V3 Printed layout', name:'V3 · Printed colour layout', table:false, display:'print',
+        desc:'A colour-coded layout printed when the job is released. Colours and pallets are fixed by the office; the operator follows the print and ticks pieces off.' },
+  v1: { tab:'V1 Fixed screen', name:'V1 · Fixed touchscreen', table:false, display:'screen',
+        desc:'Touchscreen on an arm at the pallet changer. The operator chooses the pallets, places the cards on them and sorts one pallet at a time, then confirms the whole pallet with one tap.' },
+  v2: { tab:'V2 Mobile screen', name:'V2 · Mobile screen (Wi-Fi)', table:true, display:'screen', mobile:true,
+        desc:'The sheet is craned to a sorting table so the laser can cut the next sheet. The screen sits on a wheeled stand and connects over Wi-Fi.' },
+  v4: { tab:'V4 Human–cobot', name:'V4 · Human–cobot collaboration', table:true, display:'screen', cobot:true,
+        desc:'The sheet is craned to a sorting table. A cobot with a suction gripper takes parts ≤ 2 kg into its own pallets; the operator takes the heavy parts. One shared screen.' },
+};
+const TAB_ORDER = ['v0', 'v3', 'v1', 'v2', 'v4'];
+let VID = (location.hash || '').slice(1);
+if (!VARIANTS[VID]) VID = 'v1';
+const V = VARIANTS[VID];
+const SCREEN = V.display === 'screen';
+
+const tabs = document.getElementById('tabs');
+TAB_ORDER.forEach(id => {
+  const b = document.createElement('button'); b.textContent = VARIANTS[id].tab;
+  if (id === VID) b.className = 'on';
+  b.onclick = () => { if (id !== VID) { location.hash = id; location.reload(); } };
+  tabs.appendChild(b);
+});
+document.getElementById('vname').textContent = V.name;
+document.getElementById('vdesc').textContent = V.desc;
+
+// Colour order for pallet cards (Okabe–Ito, colour-blind safe); always shown with a number
+const PALETTE = [   // as in the app (src/plan.js): colour + the text colour on it
+  { name:'Blue',   hex:'#0072B2', fg:'#ffffff' }, { name:'Orange', hex:'#E69F00', fg:'#111111' },
+  { name:'Green',  hex:'#009E73', fg:'#ffffff' }, { name:'Yellow', hex:'#F0E442', fg:'#111111' },
+  { name:'Pink',   hex:'#CC79A7', fg:'#111111' }, { name:'Sky',    hex:'#56B4E9', fg:'#111111' },
+  { name:'Red',    hex:'#D55E00', fg:'#ffffff' }, { name:'Black',  hex:'#1d1d1d', fg:'#ffffff' },
+];
+
+// =====================================================================
+// Part analysis (from the GEO outlines): size, weight, look-alikes
+// =====================================================================
+const polyArea = p => Math.abs(p.reduce((s, [x, y], i) => { const [x2, y2] = p[(i + 1) % p.length]; return s + x * y2 - x2 * y; }, 0)) / 2;
+const centroid = pts => [pts.reduce((s, p) => s + p[0], 0) / pts.length, pts.reduce((s, p) => s + p[1], 0) / pts.length];
+const PART = {};
+for (const [no, def] of Object.entries(SHAPES)) {
+  const xs = def.outer.map(p => p[0]), ys = def.outer.map(p => p[1]);
+  const bb = { x0:Math.min(...xs), x1:Math.max(...xs), y0:Math.min(...ys), y1:Math.max(...ys) };
+  const area = polyArea(def.outer) - def.holes.reduce((s, h) => s + polyArea(h), 0);
+  PART[no] = { no, def, bb, len:bb.x1 - bb.x0, ht:bb.y1 - bb.y0, kg:area * 8 * 7.85e-6,
+               holesC:def.holes.map(centroid), qty:0, order:null, approx:!!def.approx };
+}
+JOB.forEach(p => { PART[p.partNo].qty++; PART[p.partNo].order = p.order; });
+const PARTNOS = Object.keys(PART).sort((a, b) => PART[a].order.localeCompare(PART[b].order));
+
+// Two parts are look-alikes when the profile height and the hole pattern match (within tolerance).
+function lookAlike(a, b) {
+  const A = PART[a], B = PART[b];
+  if (!A.holesC.length || A.holesC.length !== B.holesC.length) return null;
+  if (Math.abs(A.ht - B.ht) > 0.05 * Math.max(A.ht, B.ht)) return null;
+  const ca = centroid(A.holesC), cb = centroid(B.holesC);
+  const sort = arr => arr.sort((p, q) => p[0] - q[0] || p[1] - q[1]);
+  const ra = sort(A.holesC.map(([x, y]) => [x - ca[0], y - ca[1]]));
+  const rb = sort(B.holesC.map(([x, y]) => [x - cb[0], y - cb[1]]));
+  if (ra.some((p, i) => Math.hypot(p[0] - rb[i][0], p[1] - rb[i][1]) > 3)) return null;
+  return { a, b, off:[ca[0] - cb[0], ca[1] - cb[1]] };   // B point + off = same point in A's frame
+}
+const LOOKALIKES = [];
+PARTNOS.forEach((a, i) => PARTNOS.slice(i + 1).forEach(b => { const l = lookAlike(a, b); if (l) LOOKALIKES.push(l); }));
+const lookOf = no => LOOKALIKES.find(l => l.a === no || l.b === no);
+const otherOf = (l, no) => l.a === no ? l.b : l.a;
+
+// =====================================================================
+// Pallet plans
+// =====================================================================
+function makePlan(spec, colourless = false) {
+  return spec.map(([parts, who], i) => ({
+    num:i + 1, ...(colourless ? { name:PART[parts[0]].order, hex:'#7b828a', fg:'#fff' } : PALETTE[i]),
+    label:colourless ? PART[parts[0]].order : `${PALETTE[i].name} ${i + 1}`,
+    parts, who:who || 'human', count:0, done:{}, total:parts.reduce((s, n) => s + PART[n].qty, 0),
+  }));
+}
+const PROPOSAL = PARTNOS.map(n => [[n]]);                               // one pallet per order
+const PLANS = {
+  v0: makePlan(PROPOSAL, true),
+  v3: makePlan(PROPOSAL),
+  v1: makePlan([[['1045574', '1045572']], [['1045575']]]),
+  v2: makePlan([[['1045574', '1045572']], [['1045575']]]),
+  v4: makePlan([[['1045574'], 'human'], [['1045575'], 'cobot'], [['1045572'], 'cobot']]),
+};
+let plan = SCREEN ? makePlan(PROPOSAL) : PLANS[VID];      // screen variants start from the app's proposal
+const finalPlan = PLANS[VID];
+
+// =====================================================================
+// Renderer, scene, camera
+// =====================================================================
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias:true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xcfd5dc);
+scene.fog = new THREE.Fog(0xcfd5dc, 16, 34);
+const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.05, 100);
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true;
+controls.maxPolarAngle = Math.PI * 0.49;
+
+const placeCaption = () => {
+  document.getElementById('caption').style.bottom = (document.getElementById('controls').offsetHeight + 26) + 'px';
+  const top = document.getElementById('tabs').offsetHeight + 24 + 'px';
+  document.getElementById('title').style.top = top; document.getElementById('steps').style.top = top;
+};
+setTimeout(placeCaption, 0);
+addEventListener('resize', () => {
+  placeCaption(); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight);
+});
+
+scene.add(new THREE.HemisphereLight(0xffffff, 0x8a8f94, 1.0));
+const sun = new THREE.DirectionalLight(0xffffff, 1.6);
+sun.position.set(3, 9, 6); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, { left:-8, right:8, top:8, bottom:-8, near:1, far:28 });
+scene.add(sun);
+
+// ---------------- helpers ----------------
+const V3 = (x, y, z) => new THREE.Vector3(x, y, z);
+const mat = (color, o = {}) => new THREE.MeshStandardMaterial({ color, roughness:0.75, metalness:0.05, ...o });
+function box(w, h, d, material, x, y, z, parent = scene) {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), material);
+  m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true; parent.add(m); return m;
+}
+function cyl(r, h, material, x, y, z, parent = scene, seg = 20) {
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, seg), material);
+  m.position.set(x, y, z); m.castShadow = true; parent.add(m); return m;
+}
+function textSprite(text, { size = 0.18, bg = 'rgba(20,33,61,0.88)', fg = '#ffffff' } = {}) {
+  const c = document.createElement('canvas'), ctx = c.getContext('2d');
+  const font = 'bold 44px Segoe UI, Arial, sans-serif';
+  ctx.font = font; const w = Math.ceil(ctx.measureText(text).width) + 40;
+  c.width = w; c.height = 72;
+  ctx.font = font; ctx.fillStyle = bg; ctx.beginPath(); ctx.roundRect(0, 0, w, 72, 18); ctx.fill();
+  ctx.fillStyle = fg; ctx.textBaseline = 'middle'; ctx.fillText(text, 20, 38);
+  const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map:tex, depthTest:false, sizeAttenuation:false }));
+  const k = size * 0.22; s.scale.set(k * w / 72, k, 1); s.renderOrder = 10; return s;
+}
+const labels = [];
+function addLabel(text, x, y, z, opts, parent = scene) { const s = textSprite(text, opts); s.position.set(x, y, z); parent.add(s); labels.push(s); return s; }
+const worldOf = o => { const v = new THREE.Vector3(); o.getWorldPosition(v); return v; };
+
+// =====================================================================
+// Building, laser, pallet changer, crane
+// =====================================================================
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(20, 20), mat(0x8f918e, { roughness:0.95 }));
+floor.rotation.x = -Math.PI / 2; floor.position.z = 2; floor.receiveShadow = true; scene.add(floor);
+box(0.15, 5, 16, mat(0xe7e1cf), -2.9, 2.5, 1);
+box(14, 5, 0.15, mat(0xe9e5d8), 0, 2.5, -5.5);
+box(0.03, 1.2, 0.9, mat(0xcaa676), -2.81, 1.0, 0.0);
+box(0.03, 1.2, 0.9, mat(0xcaa676), -2.81, 1.0, -1.1);
+box(0.12, 0.3, 0.22, mat(0x9aa0a6), -2.77, 1.75, -2.0);
+for (let i = 0; i < 4; i++) box(0.12, 0.05, 1.6, new THREE.MeshBasicMaterial({ color:0xffffff }), -1.6 + i * 1.2, 4.9, -1 + (i % 2) * 3).castShadow = false;
+
+const machineGrey = mat(0xdcded9), blue = mat(0x1f3a72), yellow = mat(0xf2b705), dark = mat(0x2d3540);
+box(4.6, 2.3, 3.6, machineGrey, 0, 1.15, -2.75);
+box(3.6, 0.32, 0.02, mat(0x23324a, { roughness:0.2, metalness:0.3 }), -0.2, 1.62, -0.94);
+box(4.6, 0.35, 3.6, blue, 0, 0.17, -2.75);
+box(1.0, 2.0, 1.4, blue, 2.9, 1.0, -2.2);
+box(0.7, 2.7, 0.8, mat(0x22407a), 3.1, 1.35, -0.6);
+box(1.3, 0.35, 2.2, mat(0x9ca3ab, { metalness:0.4 }), 3.1, 0.18, 1.4);
+const keep = new THREE.Mesh(new THREE.PlaneGeometry(2.0, 5.0), new THREE.MeshBasicMaterial({ color:0xb91c1c, transparent:true, opacity:0.18 }));
+keep.rotation.x = -Math.PI / 2; keep.position.set(3.05, 0.01, 0.2); scene.add(keep);
+// pallet-changer frame
+box(3.3, 0.35, 0.12, blue, 0, 0.62, 0.95);
+box(0.12, 0.35, 2.0, blue, -1.62, 0.62, 0); box(0.12, 0.35, 2.0, blue, 1.62, 0.62, 0);
+[[-1.6, 0.9], [1.6, 0.9], [-1.6, -0.9], [1.6, -0.9]].forEach(([x, z]) => box(0.14, 0.5, 0.14, blue, x, 0.25, z));
+
+// pallet with the real J14 sheet; the sheet (skeleton + parts) is its own group so the crane can lift it
+const pallet = new THREE.Group(); scene.add(pallet); pallet.position.z = -3.4;
+box(3.1, 0.08, 1.7, blue, 0, 0.86, 0, pallet);
+const slatMat = mat(0x4a4d50, { metalness:0.5, roughness:0.6 });
+for (let x = -1.45; x <= 1.46; x += 0.1) box(0.006, 0.06, 1.55, slatMat, x, 0.915, 0, pallet);
+const sheet = new THREE.Group(); pallet.add(sheet);
+const SHEET_Y = 0.946, T = 0.008;
+const partGeo = {}, partCenter = {};
+for (const [no, def] of Object.entries(SHAPES)) {
+  const P = PART[no]; const cx = (P.bb.x0 + P.bb.x1) / 2, cy = (P.bb.y0 + P.bb.y1) / 2;
+  partCenter[no] = [cx, cy];
+  const shape = new THREE.Shape(def.outer.map(([x, y]) => new THREE.Vector2(x / 1000, y / 1000)));
+  def.holes.forEach(h => shape.holes.push(new THREE.Path(h.map(([x, y]) => new THREE.Vector2(x / 1000, y / 1000)))));
+  const g = new THREE.ExtrudeGeometry(shape, { depth:T, bevelEnabled:false, curveSegments:8 });
+  g.rotateX(-Math.PI / 2); g.translate(-cx / 1000, 0, cy / 1000);
+  partGeo[no] = g;
+}
+const skel = new THREE.Shape([[0, 0], [2, 0], [2, 1], [0, 1]].map(([x, y]) => new THREE.Vector2(x, y)));
+JOB.forEach(p => skel.holes.push(new THREE.Path(SHAPES[p.partNo].outer.map(([x, y]) => new THREE.Vector2((p.x + x) / 1000, (p.y + y) / 1000)))));
+const skelGeo = new THREE.ExtrudeGeometry(skel, { depth:T, bevelEnabled:false }); skelGeo.rotateX(-Math.PI / 2);
+const skeleton = new THREE.Mesh(skelGeo, mat(0x5f6468, { metalness:0.55, roughness:0.45 }));
+skeleton.position.set(-1, SHEET_Y, 0.5); skeleton.castShadow = skeleton.receiveShadow = true; sheet.add(skeleton);
+const steel = mat(0x8c939a, { metalness:0.6, roughness:0.4 });
+const pieces = JOB.map(p => {
+  const [cx, cy] = partCenter[p.partNo];
+  const m = new THREE.Mesh(partGeo[p.partNo], steel.clone());
+  m.position.set(-1 + (p.x + cx) / 1000, SHEET_Y, 0.5 - (p.y + cy) / 1000);
+  m.castShadow = m.receiveShadow = true; sheet.add(m);
+  return { ...p, mesh:m, status:'open', pallet:null, cx:p.x + cx, cy:p.y + cy };
+});
+function applyPlan(pl) { plan = pl; pieces.forEach(p => p.pallet = pl.find(q => q.parts.includes(p.partNo))); }
+applyPlan(plan);
+
+// overhead crane (both variants with a table use it; it is also there in the others)
+box(0.25, 0.3, 16, yellow, -2.55, 4.3, 1); box(0.25, 0.3, 16, yellow, 2.55, 4.3, 1);
+const bridge = new THREE.Group(); scene.add(bridge); bridge.position.z = V.table ? 3.6 : 5.2;
+box(5.3, 0.28, 0.3, yellow, 0, 4.05, 0, bridge);
+box(0.45, 0.3, 0.5, dark, 0, 3.78, 0, bridge);
+const spreader = new THREE.Group(); spreader.position.y = 3.0; bridge.add(spreader);
+box(1.9, 0.07, 0.14, yellow, 0, 0.05, 0, spreader);
+box(0.1, 0.07, 0.7, yellow, -0.7, 0.05, 0, spreader); box(0.1, 0.07, 0.7, yellow, 0.7, 0.05, 0, spreader);
+[[-0.7, -0.3], [-0.7, 0.3], [0.7, -0.3], [0.7, 0.3]].forEach(([x, z]) => box(0.2, 0.05, 0.2, dark, x, -0.03, z, spreader));
+const cable = cyl(0.012, 1, mat(0x333333), 0, 3.3, 0, bridge, 8);
+const GRAB_Y = 1.01;
+addLabel('Overhead crane', 0, 4.55, 0, { size:0.12 }, bridge);
+
+// sorting table (V2, V4)
+const TABLE_Z = 3.6;
+if (V.table) {
+  box(2.3, 0.06, 1.25, mat(0x4b5563, { metalness:0.4 }), 0, 0.916, TABLE_Z);
+  [[-1.05, -0.55], [1.05, -0.55], [-1.05, 0.55], [1.05, 0.55]].forEach(([x, z]) => box(0.08, 0.89, 0.08, dark, x, 0.445, TABLE_Z + z));
+  addLabel('Sorting table', 0.8, 1.35, TABLE_Z + 0.75, { size:0.12 });
+}
+
+// =====================================================================
+// Pallets (on wheels) with their colour cards
+// =====================================================================
+function cardTexture(pl, handwritten = false) {
+  const c = document.createElement('canvas'); c.width = 256; c.height = 200;
+  const x = c.getContext('2d');
+  if (handwritten) {
+    x.fillStyle = '#f7f5ee'; x.fillRect(0, 0, 256, 200);
+    x.fillStyle = '#3f3f46'; x.font = 'italic bold 64px "Comic Sans MS", "Segoe Print", cursive'; x.textAlign = 'center'; x.fillText(pl.name, 128, 120);
+  } else {
+    x.fillStyle = pl.hex; x.fillRect(0, 0, 256, 200);
+    x.fillStyle = pl.fg; x.font = 'bold 120px Segoe UI, Arial'; x.textAlign = 'center'; x.fillText(pl.num, 128, 125);
+    x.font = 'bold 34px Segoe UI, Arial'; x.fillText(pl.name.toUpperCase(), 128, 180);
+  }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+const wood = mat(0xc69c6d, { roughness:0.9 });
+function trolleyHome(i, n, who) {
+  if (VID === 'v4') return [[0, 5.45, 0], [-1.7, 2.45, -Math.PI / 2], [1.7, 2.45, Math.PI / 2]][i];
+  const z = V.table ? 5.45 : 2.15;
+  const xs = n === 2 ? [-0.7, 0.7] : [-1.3, 0, 1.3];
+  return [xs[i], z, 0];
+}
+const trolleys = finalPlan.map((pl, i) => {
+  const g = new THREE.Group();
+  box(1.2, 0.06, 0.8, blue, 0, 0.32, 0, g);
+  [[-0.5, 0.32], [0.5, 0.32], [-0.5, -0.32], [0.5, -0.32]].forEach(([x, z]) => {
+    box(0.05, 0.25, 0.05, blue, x, 0.18, z, g);
+    const w = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.04, 16), mat(0x222222)); w.rotation.z = Math.PI / 2; w.position.set(x, 0.06, z); g.add(w);
+  });
+  box(1.2, 0.04, 0.8, wood, 0, 0.38, 0, g);
+  box(1.2, 0.2, 0.03, wood, 0, 0.5, 0.385, g); box(1.2, 0.2, 0.03, wood, 0, 0.5, -0.385, g);
+  box(0.03, 0.2, 0.8, wood, 0.585, 0.5, 0, g); box(0.03, 0.2, 0.8, wood, -0.585, 0.5, 0, g);
+  // The card is placed on the pallet itself: clipped to the front rim, facing the operator.
+  const card = new THREE.Mesh(new THREE.PlaneGeometry(0.34, 0.27), new THREE.MeshBasicMaterial({ map:cardTexture(pl, VID === 'v0') }));
+  card.position.set(0.3, 0.55, -0.404); card.rotation.y = Math.PI; g.add(card);
+  const back = new THREE.Mesh(card.geometry, card.material); back.position.z = 0.004; back.rotation.y = Math.PI; card.add(back);   // readable from both sides
+  card.visible = VID === 'v0'; card.scale.setScalar(VID === 'v0' ? 1 : 0.01);
+  const [hx, hz, ry] = trolleyHome(i, finalPlan.length);
+  const home = V3(hx, 0, hz);
+  const park = V3(hx, 0, hz + (ry ? 4.2 : 3.2));
+  g.position.copy(park); g.rotation.y = ry; scene.add(g);
+  return { pl, group:g, card, home, rotY:ry, stack:0 };
+});
+finalPlan.forEach((pl, i) => pl.trolley = trolleys[i]);
+
+if (VID === 'v4') {
+  const zone = new THREE.Mesh(new THREE.PlaneGeometry(4.6, 1.1), new THREE.MeshBasicMaterial({ color:0xfacc15, transparent:true, opacity:0.28 }));
+  zone.rotation.x = -Math.PI / 2; zone.position.set(0, 0.012, 2.45); scene.add(zone);
+  const edge = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(4.6, 1.1)), new THREE.LineBasicMaterial({ color:0x111111 }));
+  edge.rotation.x = -Math.PI / 2; edge.position.set(0, 0.014, 2.45); scene.add(edge);
+  addLabel('Cobot zone (speed & separation monitoring)', -1.2, 0.3, 1.85, { size:0.1, bg:'rgba(133,77,14,0.9)' });
+}
+
+// =====================================================================
+// Display: paper list (V0), printed layout (V3) or touchscreen (V1, V2, V4)
+// =====================================================================
+const DISP_START = V3(-1.95, 0, 1.35), DISP_STAND = V3(-1.5, 0, 1.62);
+const DISP_TABLE = V3(-1.75, 0, 4.85), DISP_TABLE_STAND = V3(-1.28, 0, 4.62);
+const yawTo = (from, to) => Math.atan2(to.x - from.x, to.z - from.z);
+
+const SW = 1920, SH = 1080;   // the app's target screen
+const dispCanvas = document.createElement('canvas');
+dispCanvas.width = SCREEN ? SW : 1120; dispCanvas.height = SCREEN ? SH : 800;
+const dx = dispCanvas.getContext('2d');
+const dispTex = new THREE.CanvasTexture(dispCanvas); dispTex.colorSpace = THREE.SRGBColorSpace; dispTex.anisotropy = 8;
+
+const standGroup = new THREE.Group(); scene.add(standGroup);   // carries the display
+const displayGroup = new THREE.Group(); standGroup.add(displayGroup);
+const postMat = mat(0x3b4048, { metalness:0.5 });
+let dispStandPoint;
+if (V.display === 'screen') {
+  displayGroup.position.y = 1.3;
+  box(0.58, 0.35, 0.035, mat(0x15181c), 0, 0, -0.02, displayGroup);
+  const d = new THREE.Mesh(new THREE.PlaneGeometry(0.53, 0.298), new THREE.MeshBasicMaterial({ map:dispTex })); displayGroup.add(d);
+  cyl(0.03, 1.15, postMat, 0, 0.575, -0.06, standGroup, 12);
+  if (V.mobile) {   // wheeled stand
+    [0, 1, 2, 3].forEach(k => { const a = k * Math.PI / 2 + Math.PI / 4; const leg = box(0.42, 0.04, 0.05, postMat, Math.cos(a) * 0.19, 0.07, Math.sin(a) * 0.19 - 0.06, standGroup); leg.rotation.y = -a;
+      cyl(0.035, 0.05, mat(0x111111), Math.cos(a) * 0.37, 0.025, Math.sin(a) * 0.37 - 0.06, standGroup, 12); });
+    box(0.16, 0.1, 0.05, mat(0xe5e7eb), 0, 0.98, -0.07, standGroup);   // Wi-Fi client box
+    addLabel('Mobile screen · Wi-Fi', 0, 1.75, 0, { size:0.12 }, standGroup);
+    // access point on the wall
+    box(0.04, 0.2, 0.2, mat(0xf3f4f6), -2.82, 3.2, 2.6); addLabel('Wi-Fi access point', -2.6, 3.55, 2.6, { size:0.1 });
+  } else {
+    box(0.3, 0.04, 0.3, postMat, 0, 0.02, -0.06, standGroup);
+    addLabel(V.table ? 'Touchscreen' : 'Touchscreen (fixed arm)', 0, 1.75, 0, { size:0.12 }, standGroup);
+  }
+} else {
+  displayGroup.position.y = 1.1;
+  box(0.5, 0.36, 0.03, wood, 0, 0, -0.02, displayGroup);
+  const d = new THREE.Mesh(new THREE.PlaneGeometry(0.44, 0.31), new THREE.MeshBasicMaterial({ map:dispTex })); d.position.z = 0.002; displayGroup.add(d);
+  cyl(0.025, 1.05, postMat, 0, 0.53, -0.08, standGroup, 12);
+  box(0.3, 0.03, 0.3, postMat, 0, 0.015, -0.06, standGroup);
+  d.visible = false; displayGroup.userData.paper = d;
+  addLabel(V.display === 'paper' ? 'Paper part list' : 'Printed colour layout', 0, 1.6, 0, { size:0.12 }, standGroup);
+  // printer desk
+  box(0.7, 0.75, 0.55, mat(0x9aa0a6), -2.45, 0.375, 3.0); box(0.42, 0.22, 0.36, mat(0xe5e7eb), -2.45, 0.86, 3.0);
+  addLabel('Printer', -2.45, 1.25, 3.0, { size:0.1 });
+}
+displayGroup.rotation.x = -0.3;
+function placeStand(pos, standPt) { standGroup.position.copy(pos); standGroup.rotation.y = yawTo(pos, standPt); }
+if (V.table && !V.mobile) placeStand(DISP_TABLE, DISP_TABLE_STAND); else placeStand(DISP_START, DISP_STAND);
+dispStandPoint = () => {
+  displayGroup.updateWorldMatrix(true, false);
+  const p = worldOf(displayGroup);
+  const n = V3(0, 0, 1).applyQuaternion(displayGroup.getWorldQuaternion(new THREE.Quaternion())); n.y = 0; n.normalize();
+  const s = p.clone().addScaledVector(n, 0.5);
+  return { x:s.x, z:s.z, face:Math.atan2(p.x - s.x, p.z - s.z), p, n };
+};
+
+// =====================================================================
+// Cobot (V4)
+// =====================================================================
+const L1 = 0.95, L2 = 0.95, TOOL = 0.25, COBOT_BASE = V3(0, 0, 2.62), SH_Y = 0.9;
+let cobot = null, yawG, shG, elG, wrG, tip, cobotCur = V3(0, 1.15, 2.95);
+if (V.cobot) {
+  cobot = new THREE.Group(); cobot.position.copy(COBOT_BASE); scene.add(cobot);
+  const grey = mat(0xd1d5db, { metalness:0.3 }), cblue = mat(0x2563eb, { metalness:0.2 });
+  cyl(0.17, 0.6, dark, 0, 0.3, 0, cobot); cyl(0.12, 0.15, grey, 0, 0.675, 0, cobot);
+  yawG = new THREE.Group(); yawG.position.y = 0.75; cobot.add(yawG);
+  cyl(0.09, 0.15, cblue, 0, 0.075, 0, yawG);
+  shG = new THREE.Group(); shG.position.y = 0.15; yawG.add(shG);
+  const sj = cyl(0.08, 0.2, cblue, 0, 0, 0, shG); sj.rotation.z = Math.PI / 2;
+  box(0.11, 0.11, L1, grey, 0, 0, L1 / 2, shG);
+  elG = new THREE.Group(); elG.position.z = L1; shG.add(elG);
+  const ej = cyl(0.07, 0.17, cblue, 0, 0, 0, elG); ej.rotation.z = Math.PI / 2;
+  box(0.09, 0.09, L2, grey, 0, 0, L2 / 2, elG);
+  wrG = new THREE.Group(); wrG.position.z = L2; elG.add(wrG);
+  cyl(0.05, 0.12, cblue, 0, -0.04, 0, wrG, 12);
+  box(0.05, TOOL - 0.06, 0.05, grey, 0, -0.06 - (TOOL - 0.06) / 2, 0, wrG);
+  cyl(0.06, 0.03, mat(0x111111), 0, -TOOL + 0.015, 0, wrG, 16);
+  tip = new THREE.Object3D(); tip.position.y = -TOOL - 0.012; wrG.add(tip);
+  addLabel('Cobot · suction gripper · parts ≤ 2 kg', 0, 2.25, 0, { size:0.11 }, cobot);
+}
+function cobotIK(P) {
+  const dxw = P.x - COBOT_BASE.x, dzw = P.z - COBOT_BASE.z;
+  const r = Math.hypot(dxw, dzw), h = P.y + TOOL + 0.012 - SH_Y;
+  const d = Math.min(Math.hypot(r, h), L1 + L2 - 0.001);
+  const c = THREE.MathUtils.clamp((d * d - L1 * L1 - L2 * L2) / (2 * L1 * L2), -1, 1), g = Math.acos(c);
+  const th1 = Math.atan2(h, r) + Math.atan2(L2 * Math.sin(g), L1 + L2 * Math.cos(g));
+  yawG.rotation.y = Math.atan2(dxw, dzw); shG.rotation.x = -th1; elG.rotation.x = g; wrG.rotation.x = th1 - g;
+}
+if (V.cobot) cobotIK(cobotCur);
+
+// =====================================================================
+// Operator figure and viewer aids
+// =====================================================================
+function makeWorker() {
+  const g = new THREE.Group();
+  const vest = mat(0xf59e0b), skin = mat(0xc8956d), white = mat(0xf3f4f6);
+  const leg = x => { const p = new THREE.Group(); p.position.set(x, 0.88, 0); box(0.13, 0.86, 0.15, dark, 0, -0.43, 0, p); g.add(p); return p; };
+  const legL = leg(-0.1), legR = leg(0.1);
+  box(0.44, 0.6, 0.25, vest, 0, 1.18, 0, g);
+  box(0.45, 0.05, 0.26, mat(0xe5e7eb, { emissive:0x666666 }), 0, 1.05, 0, g);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.11, 20, 16), skin); head.position.y = 1.62; head.castShadow = true; g.add(head);
+  const helmet = new THREE.Mesh(new THREE.SphereGeometry(0.12, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2), white); helmet.position.y = 1.65; g.add(helmet);
+  const arm = x => { const p = new THREE.Group(); p.position.set(x, 1.44, 0); box(0.1, 0.6, 0.11, dark, 0, -0.3, 0, p);
+    const h = new THREE.Mesh(new THREE.SphereGeometry(0.05, 12, 10), mat(0x374151)); h.position.y = -0.63; p.add(h); g.add(p); return p; };
+  const armL = arm(-0.28), armR = arm(0.28);
+  const carry = new THREE.Object3D(); carry.position.set(0, 1.0, 0.42); g.add(carry);
+  g.userData = { legL, legR, armL, armR, carry, walking:false, phase:0 };
+  return g;
+}
+const worker = makeWorker(); scene.add(worker);
+if (V.table) { worker.position.set(-1.4, 0, 2.2); worker.rotation.y = Math.PI; } else { worker.position.set(-1.0, 0, 3.4); worker.rotation.y = Math.PI; }
+
+let bubble = null;
+function think(text) {
+  if (bubble) { worker.remove(bubble); bubble.material.map.dispose(); bubble.material.dispose(); bubble = null; }
+  if (!text) return;
+  bubble = textSprite(text, { size:0.13, bg:'rgba(255,255,255,0.95)', fg:'#14213D' });
+  bubble.position.y = 2.05; worker.add(bubble);
+}
+const arrow = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.16, 16), new THREE.MeshBasicMaterial({ color:0xfacc15 }));
+arrow.rotation.x = Math.PI; arrow.visible = false; scene.add(arrow);
+const qMarks = [];
+function showArrow(p) { if (!p) { arrow.visible = false; return; } const v = worldOf(p.mesh); arrow.position.set(v.x, 1.25, v.z); arrow.visible = true; }
+function showQuestionMarks(list) {
+  qMarks.splice(0).forEach(s => scene.remove(s));
+  list.forEach(p => { const v = worldOf(p.mesh); const s = textSprite('?', { size:0.16, bg:'rgba(234,88,12,0.92)' }); s.position.set(v.x, 1.2, v.z); scene.add(s); qMarks.push(s); });
+}
+
+addLabel('TruLaser 3030', 0, 2.7, -1.0);
+addLabel('Pallet changer', 1.9, 1.3, -0.6, { size:0.12 });
+addLabel('Loader – keep clear', 3.0, 3.0, -0.4, { size:0.12, bg:'rgba(153,27,27,0.9)' });
+
+// =====================================================================
+// 2-D drawing shared by the screen app and the printouts
+// =====================================================================
+function polyPath(path, poly, ox, oy) { poly.forEach(([x, y], i) => i ? path.lineTo(ox + x, oy + y) : path.moveTo(ox + x, oy + y)); path.closePath(); }
+function partPath(no, ox = 0, oy = 0, path = new Path2D()) { const d = PART[no].def; [d.outer, ...d.holes].forEach(poly => polyPath(path, poly, ox, oy)); return path; }
+pieces.forEach(p => {
+  p.path = partPath(p.partNo, p.x, p.y);
+  const L = lookOf(p.partNo);
+  if (L) {   // region of this piece that its look-alike does NOT have = where the difference lies
+    const other = otherOf(L, p.partNo), sg = L.a === p.partNo ? 1 : -1;
+    const cut = new Path2D(); cut.rect(-5000, -5000, 12000, 12000);
+    partPath(other, p.x + L.off[0] * sg, p.y + L.off[1] * sg, cut);
+    p.diffCut = cut; p.other = other;
+  }
+});
+const toMap = (m, X, Y) => [m.ox + X * m.s, m.oy + (1000 - Y) * m.s];
+function drawMap(ctx, m, style) {
+  ctx.save();
+  ctx.fillStyle = '#cdd3da'; ctx.fillRect(m.ox, m.oy, 2000 * m.s, 1000 * m.s);
+  ctx.strokeStyle = '#7d8793'; ctx.lineWidth = 2; ctx.strokeRect(m.ox, m.oy, 2000 * m.s, 1000 * m.s);
+  ctx.translate(m.ox, m.oy + 1000 * m.s); ctx.scale(m.s, -m.s);
+  for (const p of pieces) {
+    const st = style(p);
+    ctx.globalAlpha = st.alpha ?? 1; ctx.fillStyle = st.fill; ctx.fill(p.path, 'evenodd'); ctx.globalAlpha = 1;
+    if (st.diff && p.diffCut) { ctx.save(); ctx.clip(p.path, 'evenodd'); ctx.fillStyle = 'rgba(220,38,38,0.95)'; ctx.fill(p.diffCut, 'evenodd'); ctx.restore(); }
+    ctx.strokeStyle = st.stroke || '#1f2937'; ctx.lineWidth = (st.lw || 1.2) / m.s; ctx.stroke(p.path);
+  }
+  ctx.restore();
+  for (const p of pieces) {   // labels in screen space
+    const st = style(p); if (!st.label) continue;
+    const [x, y] = toMap(m, p.cx, p.cy + PART[p.partNo].ht * 0.22);
+    ctx.font = `bold ${st.labelSize || 15}px Segoe UI, Arial`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = st.labelColor || '#fff'; ctx.fillText(st.label, x, y);
+  }
+}
+function rr(ctx, x, y, w, h, r, fill, stroke, lw = 2) {
+  ctx.beginPath(); ctx.roundRect(x, y, w, h, r);
+  if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+  if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lw; ctx.stroke(); }
+}
+function txt(ctx, s, x, y, { size = 24, bold = false, color = '#14213D', align = 'left', base = 'middle' } = {}) {
+  ctx.font = `${bold ? 'bold ' : ''}${size}px Segoe UI, Arial`; ctx.fillStyle = color; ctx.textAlign = align; ctx.textBaseline = base; ctx.fillText(s, x, y);
+}
+// =====================================================================
+// Paper list (V0) and printed colour layout (V3)
+// =====================================================================
+const tally = {};
+function drawTallyMarks(ctx, n, x, y) {
+  ctx.strokeStyle = '#1e3a8a'; ctx.lineWidth = 3;
+  for (let i = 0; i < n; i++) {
+    const g = Math.floor(i / 5), k = i % 5, gx = x + g * 62;
+    ctx.beginPath();
+    if (k < 4) { ctx.moveTo(gx + k * 11, y - 18); ctx.lineTo(gx + k * 11 + 2, y + 18); }
+    else { ctx.moveTo(gx - 6, y + 12); ctx.lineTo(gx + 42, y - 12); }
+    ctx.stroke();
+  }
+}
+function drawPaper() {
+  const c = dx; c.fillStyle = '#fbfaf6'; c.fillRect(0, 0, 1120, 800);
+  if (V.display === 'paper') {
+    txt(c, 'Job J14 · Part list', 50, 60, { size:40, bold:true });
+    txt(c, 'St37 8 mm · 2000 × 1000 · printed 06:12', 50, 105, { size:24, color:'#555' });
+    const cols = [50, 130, 330, 480, 580];
+    ['Pos', 'Part no', 'Order', 'Qty', 'Tally'].forEach((h, i) => txt(c, h, cols[i], 175, { size:26, bold:true }));
+    c.fillStyle = '#14213D'; c.fillRect(50, 195, 1020, 3);
+    PARTNOS.forEach((no, i) => {
+      const y = 250 + i * 95;
+      txt(c, String(i + 1), cols[0], y, { size:28 }); txt(c, no, cols[1], y, { size:28 }); txt(c, PART[no].order, cols[2], y, { size:28 });
+      txt(c, String(PART[no].qty), cols[3], y, { size:28 });
+      drawTallyMarks(c, tally[no] || 0, cols[4], y);
+      c.fillStyle = '#d6d3c8'; c.fillRect(50, y + 45, 1020, 2);
+    });
+    txt(c, 'Positions on the sheet: see the machine screen (TruTops print not attached)', 50, 720, { size:22, color:'#7c2d12' });
+  } else {
+    txt(c, 'Job J14 · Colour layout', 40, 50, { size:36, bold:true });
+    txt(c, 'printed when the job was released', 450, 52, { size:22, color:'#555' });
+    const m = { ox:60, oy:90, s:0.5 };
+    drawMap(c, m, p => ({ fill:p.pallet.hex, diff:!!p.diffCut, label:String(p.pallet.num), labelColor:p.pallet.fg, labelSize:20 }));
+    pieces.filter(p => p.status === 'picked').forEach(p => {   // ticks with a pen
+      const [x, y] = toMap(m, p.cx, p.cy); c.strokeStyle = '#111'; c.lineWidth = 5; c.beginPath(); c.moveTo(x - 14, y); c.lineTo(x - 3, y + 12); c.lineTo(x + 16, y - 14); c.stroke();
+    });
+    plan.forEach((pl, i) => {
+      const x = 60 + i * 340, y = 620;
+      rr(c, x, y, 60, 60, 8, pl.hex); txt(c, String(pl.num), x + 30, y + 31, { size:34, bold:true, color:pl.fg, align:'center' });
+      txt(c, `${pl.label} · ${pl.parts.join(', ')}`, x + 72, y + 18, { size:22, bold:true });
+      txt(c, `${PART[pl.parts[0]].order} · ${pl.total} pcs`, x + 72, y + 46, { size:20, color:'#555' });
+    });
+    if (LOOKALIKES.length) txt(c, `Red = where ${LOOKALIKES[0].a} and ${LOOKALIKES[0].b} differ (look-alikes)`, 60, 730, { size:22, color:'#b91c1c', bold:true });
+  }
+  dispTex.needsUpdate = true;
+}
+
+// =====================================================================
+// Touchscreen app: drawn like the real app (index.html + styles.css) at its 1920 × 1080 target size.
+// Same header, sheet, pallet tiles and right-hand panel; confirming per pallet ("✓ Blue 1 done").
+// =====================================================================
+const A = { bg:'#e6eaed', panel:'#ffffff', fg:'#0f1417', muted:'#45525a', line:'#c3ccd2', sheet:'#cbd2d7', sheetEdge:'#4f5c64',
+            dim:'#d3d8dc', picked:'#a3acb2', go:'#1f7a3a', next:'#ffd23f', error:'#b3261e', cobot:'#6d28d9' };
+const ui = { mode:'off', count:3, next:null, selected:null, cobotNext:null, active:[], tap:null, feedback:'', hit:{} };
+const MAP = { ox:38, oy:216, s:0.63 };          // the sheet while sorting
+const MAP_SETUP = { ox:30, oy:414, s:0.374 };   // the sheet preview left of the setup panel
+// Where the laser marks the part number (text anchor in the .GEO file), for the yellow ring in the close-up.
+const MARK = { '1045572':[151.4, 47.5], '1045574':[809.6, 125.0] };
+const BOXONLY = no => PART[no].approx;          // 1045575 has no .GEO file yet: the app draws its box
+pieces.forEach(p => {
+  const P = PART[p.partNo];
+  if (BOXONLY(p.partNo)) { p.screenPath = new Path2D(); p.screenPath.rect(p.x + P.bb.x0, p.y + P.bb.y0, P.len, P.ht); }
+  else p.screenPath = p.path;
+});
+const orderOf = q => [...new Set(q.parts.map(no => PART[no].order))].join(', ');
+const firstOpen = pl => pieces.filter(p => p.pallet === pl && p.status === 'open').sort((a, b) => a.y - b.y || a.x - b.x)[0] || null;
+function palletProgress(q) {
+  const mine = pieces.filter(p => p.pallet === q), by = {};
+  mine.forEach(p => { if (p.status === 'picked') by[p.partNo] = (by[p.partNo] || 0) + 1; });
+  return { total:mine.length, picked:mine.filter(p => p.status === 'picked').length,
+           missing:mine.filter(p => p.status === 'missing').length, open:mine.filter(p => p.status === 'open').length, by };
+}
+const breakdown = q => { const pr = palletProgress(q); return q.parts.map(no => `${pr.by[no] || 0}/${PART[no].qty} × ${no}`).join(' · '); };
+
+const font = (size, weight = 400) => `${weight} ${size}px "Segoe UI", system-ui, Arial, sans-serif`;
+function tx(s, x, y, { size = 20, weight = 400, color = A.fg, align = 'left', spacing = 0 } = {}) {
+  dx.font = font(size, weight); dx.fillStyle = color; dx.textAlign = align; dx.textBaseline = 'middle';
+  dx.letterSpacing = `${spacing}px`; dx.fillText(s, x, y); dx.letterSpacing = '0px';
+}
+function appBtn(x, y, w, h, label, { fill = A.panel, stroke = A.fg, color = A.fg, size = 20, weight = 600, dash = false, alpha = 1 } = {}) {
+  dx.save(); dx.globalAlpha = alpha;
+  if (dash) dx.setLineDash([8, 6]);
+  rr(dx, x, y, w, h, 10, fill, stroke, 2);
+  dx.setLineDash([]);
+  const lines = String(label).split('\n');
+  lines.forEach((l, i) => tx(l, x + w / 2, y + h / 2 + (i - (lines.length - 1) / 2) * size * 1.2, { size, weight, color, align:'center' }));
+  dx.restore();
+}
+const eyebrow = { size:16, weight:700, color:'#2b343a', spacing:1.6 };
+
+// Header: the yellow "part file missing" banner (J14 has no .GEO for 1045575) and the top bar.
+function chrome({ job = true, sorting = false } = {}) {
+  dx.fillStyle = A.bg; dx.fillRect(0, 0, SW, SH);
+  let top = 0;
+  if (job) {
+    dx.fillStyle = '#ffd23f'; dx.fillRect(0, 0, SW, 44);
+    tx('PART FILE MISSING', 24, 23, { size:18, weight:700, color:'#1a1400', spacing:1.5 });
+    tx('No .GEO file yet for 1045575: shown as its box only and not checked for look-alikes.', 228, 23, { size:18, color:'#1a1400' });
+    top = 44;
+  }
+  dx.fillStyle = A.panel; dx.fillRect(0, top, SW, 80); dx.fillStyle = A.line; dx.fillRect(0, top + 79, SW, 2);
+  const cy = top + 41;
+  tx('Picking support', 24, cy, { size:28, weight:700 });
+  const health = 'Jobs updated 06:12', hx = sorting ? 1045 : job ? 1257 : 1557;
+  if (V.mobile) {   // Wi-Fi icon before the health line
+    dx.font = font(18); const wx = hx - dx.measureText(health).width - 26;
+    dx.strokeStyle = A.muted; dx.lineWidth = 3;
+    for (let k = 1; k <= 3; k++) { dx.beginPath(); dx.arc(wx, cy + 9, k * 6, -Math.PI * 0.75, -Math.PI * 0.25); dx.stroke(); }
+    dx.fillStyle = A.muted; dx.beginPath(); dx.arc(wx, cy + 9, 2.5, 0, 7); dx.fill();
+  }
+  if (sorting) {
+    tx('Sheet J14 · St37-80 8 mm · 2,000 ×', 264, cy - 15, { size:22, color:A.muted });
+    tx('1,000 mm · 33 parts', 264, cy + 15, { size:22, color:A.muted });
+    const n = pieces.filter(p => p.status === 'picked').length;
+    tx(`Sheet ${n} / 33`, 1089, cy - 6, { size:20, weight:700 });
+    rr(dx, 1089, cy + 9, 180, 10, 5, A.line);
+    if (n) rr(dx, 1089, cy + 9, 180 * n / 33, 10, 5, A.go);
+  } else if (job) tx('Sheet J14 · St37-80 8 mm · 2,000 × 1,000 mm · 33 parts', 264, cy, { size:22, color:A.muted });
+  tx(health, hx, cy, { size:18, color:A.muted, align:'right' });
+  (job ? [['☰ Jobs', 1301, 116], ['📋 Test', 1449, 120], ['⚙ Station', 1601, 139], ['Svenska', 1772, 124]]
+       : [['⚙ Station', 1601, 139], ['Svenska', 1772, 124]]).forEach(([l, x, w]) => appBtn(x, top + 8, w, 64, l));
+  return top + 81;
+}
+
+// The sheet from above: every piece in place, coloured by its pallet, labelled with part number and pallet.
+function drawSheet(m, style) {
+  const W = 2000 * m.s, H = 1000 * m.s;
+  dx.fillStyle = A.sheet; dx.fillRect(m.ox, m.oy, W, H);
+  dx.strokeStyle = A.sheetEdge; dx.lineWidth = 2; dx.strokeRect(m.ox, m.oy, W, H);
+  dx.save(); dx.translate(m.ox, m.oy + H); dx.scale(m.s, -m.s);
+  for (const p of pieces) {
+    const st = style(p);
+    dx.setLineDash(st.dash ? [10 / m.s, 7 / m.s] : []);
+    dx.fillStyle = st.fill; dx.fill(p.screenPath, 'evenodd');
+    dx.strokeStyle = st.stroke; dx.lineWidth = (st.lw || 1.5) / m.s; dx.stroke(p.screenPath);
+  }
+  dx.setLineDash([]); dx.restore();
+  for (const p of pieces) {
+    const st = style(p), P = PART[p.partNo];
+    const size = Math.max(8, Math.min(26, P.len * m.s / 6.2, P.ht * m.s / 2.4));
+    // As in the app: the label sits on the spot where the laser marks the number, kept inside the part.
+    dx.font = font(size, 700); const hw = dx.measureText(p.partNo).width / 2 / m.s + 3, hh = size * 1.25 / m.s;
+    const [mx, my] = MARK[p.partNo] || [(P.bb.x0 + P.bb.x1) / 2, (P.bb.y0 + P.bb.y1) / 2];
+    const lx = Math.min(Math.max(mx, P.bb.x0 + hw), P.bb.x1 - hw), ly = Math.min(Math.max(my, P.bb.y0 + hh), P.bb.y1 - hh);
+    const [x, y] = toMap(m, p.x + lx, p.y + ly);
+    [[p.partNo, size, 700, -0.55], [st.label2, size * 0.8, 600, 0.6]].forEach(([s, sz, w, dy]) => {
+      if (!s) return;
+      dx.font = font(sz, w); dx.textAlign = 'center'; dx.textBaseline = 'middle'; dx.lineJoin = 'round';
+      dx.lineWidth = Math.max(2.5, sz / 5); dx.strokeStyle = st.halo; dx.strokeText(s, x, y + dy * sz);
+      dx.fillStyle = st.text; dx.fillText(s, x, y + dy * sz);
+    });
+  }
+}
+const onColour = pl => ({ fill:pl.hex, stroke:A.fg, label2:pl.label, text:'#fff', halo:'rgba(15,20,23,0.85)' });
+function sortStyle(p) {
+  const pl = p.pallet;
+  if (p.status === 'picked') return { fill:A.picked, stroke:'#7a858c', label2:pl.label, text:'#3a444b', halo:'rgba(255,255,255,0.55)' };
+  if (p.status === 'missing') return { fill:'rgba(255,255,255,0.6)', stroke:A.error, lw:3, dash:true, label2:'MISSING', text:'#8c1d18', halo:'rgba(255,255,255,0.9)' };
+  if (!(ui.mode === 'sort' && ui.active.includes(pl.num))) return { fill:A.dim, stroke:'#8d979e', label2:pl.label, text:'#59646b', halo:'rgba(255,255,255,0.7)' };
+  return { ...onColour(pl), ...(p.handover ? { stroke:A.error, lw:5 } : {}) };
+}
+function ringPiece(p, color, dashed = false) {
+  const P = PART[p.partNo];
+  const [x0, y1] = toMap(MAP, p.x + P.bb.x0, p.y + P.bb.y0), [x1, y0] = toMap(MAP, p.x + P.bb.x1, p.y + P.bb.y1);
+  dx.save(); if (dashed) dx.setLineDash([12, 8]);
+  rr(dx, x0 - 10, y0 - 10, x1 - x0 + 20, y1 - y0 + 20, 10, null, A.fg, 9);
+  rr(dx, x0 - 10, y0 - 10, x1 - x0 + 20, y1 - y0 + 20, 10, null, color, 5);
+  dx.restore();
+}
+// The strip right of the sheet: arrow (selected), hand, +, −, Fit.
+function zoomTools(x, y) {
+  rr(dx, x, y, 76, 76, 10, A.fg, A.fg, 2);
+  dx.fillStyle = '#fff'; dx.beginPath();
+  [[-9, -18], [-9, 14], [-2, 7], [4, 19], [9, 17], [3, 5], [13, 5]].forEach(([a, b], i) => i ? dx.lineTo(x + 38 + a, y + 38 + b) : dx.moveTo(x + 38 + a, y + 38 + b));
+  dx.closePath(); dx.fill();
+  appBtn(x, y + 83, 76, 76, '✋︎', { size:34, weight:400 });
+  appBtn(x, y + 183, 76, 76, '+', { size:44, weight:700 });
+  appBtn(x, y + 269, 76, 76, '−', { size:44, weight:700, alpha:0.35 });
+  appBtn(x, y + 355, 76, 76, 'Fit', { size:20, alpha:0.35 });
+}
+// A part outline (or its box) fitted into a rectangle.
+function drawPart(no, x, y, w, h, fill, { ring = false } = {}) {
+  const P = PART[no], s = Math.min(w / P.len, h / P.ht), ox = x + (w - P.len * s) / 2, oy = y + h - (h - P.ht * s) / 2;
+  dx.save(); dx.translate(ox, oy); dx.scale(s, -s); dx.translate(-P.bb.x0, -P.bb.y0);
+  const path = BOXONLY(no) ? (() => { const r = new Path2D(); r.rect(P.bb.x0, P.bb.y0, P.len, P.ht); return r; })() : partPath(no);
+  if (BOXONLY(no)) { dx.setLineDash([8 / s, 6 / s]); dx.globalAlpha = 0.55; }
+  dx.fillStyle = fill; dx.fill(path, 'evenodd'); dx.globalAlpha = 1;
+  dx.lineWidth = 2 / s; dx.strokeStyle = A.fg; dx.stroke(path); dx.restore();
+  if (ring && MARK[no]) {
+    const [mx, my] = MARK[no], px = ox + (mx - P.bb.x0) * s, py = oy - (my - P.bb.y0) * s;
+    dx.lineWidth = 7; dx.strokeStyle = A.fg; dx.beginPath(); dx.arc(px, py, 17, 0, 7); dx.stroke();
+    dx.lineWidth = 4; dx.strokeStyle = A.next; dx.beginPath(); dx.arc(px, py, 17, 0, 7); dx.stroke();
+  }
+}
+
+// Pallet tiles under the sheet: count, breakdown per part, progress bar; Complete / Incomplete at the end.
+function tiles() {
+  const n = plan.length, gap = 15, w = (1370 - gap * (n - 1)) / n, y = 940, h = 122;
+  plan.forEach((q, i) => {
+    const x = 14 + i * (w + gap), pr = palletProgress(q), active = ui.mode === 'sort' && ui.active.includes(q.num);
+    rr(dx, x, y, w, h, 12, A.panel, active ? q.hex : A.line, active ? 6 : 2);
+    rr(dx, x + 18, y + 14, 56, 56, 8, q.hex);
+    tx(String(q.num), x + 46, y + 43, { size:26, weight:800, color:q.fg, align:'center' });
+    tx(q.label, x + 88, y + 33, { size:22, weight:700 });
+    tx(`Order ${orderOf(q)}${q.who === 'cobot' ? ' · cobot' : ''}`, x + 88, y + 58, { size:16, color:q.who === 'cobot' ? A.cobot : A.muted });
+    if (pr.missing) tx(`${pr.missing} missing`, x + 88, y + 80, { size:16, weight:700, color:A.error });
+    if (!pr.open) {
+      const ok = !pr.missing;
+      tx(ok ? '✓' : '⚠', x + w - 62, y + 30, { size:28, weight:700, color:ok ? A.go : A.error, align:'center' });
+      tx(ok ? 'Complete' : 'Incomplete', x + w - 14, y + 60, { size:ok ? 24 : 18, weight:700, color:ok ? A.go : A.fg, align:'right' });
+    } else {
+      tx(`${pr.picked} / ${pr.total}`, x + w - 14, y + 43, { size:26, weight:700, align:'right' });
+      tx(breakdown(q), x + 18, y + 94, { size:15, color:A.muted });
+    }
+    dx.save(); dx.beginPath(); dx.roundRect(x, y, w, h, 12); dx.clip();
+    dx.fillStyle = A.line; dx.fillRect(x, y + h - 8, w, 8);
+    dx.fillStyle = q.hex; dx.fillRect(x, y + h - 8, w * pr.picked / pr.total, 8);
+    dx.fillStyle = A.error; dx.fillRect(x + w * pr.picked / pr.total, y + h - 8, w * pr.missing / pr.total, 8);
+    dx.restore();
+  });
+}
+
+function wrapText(s, x, y, maxW, opts) {
+  dx.font = font(opts.size, opts.weight); let line = '', yy = y;
+  for (const word of s.split(' ')) {
+    if (line && dx.measureText(`${line} ${word}`).width > maxW) { tx(line, x, yy, opts); line = word; yy += opts.size * 1.35; }
+    else line = line ? `${line} ${word}` : word;
+  }
+  if (line) tx(line, x, yy, opts);
+  return yy;
+}
+
+// Right-hand panel while sorting: the piece, where it goes, "✓ Blue 1 done", exceptions, Undo.
+function sortPanel() {
+  dx.fillStyle = A.panel; dx.fillRect(1405, 125, SW - 1405, SH - 125); dx.fillStyle = A.line; dx.fillRect(1403, 125, 2, SH - 125);
+  const x = 1424, w = 476, picked = pieces.filter(p => p.status === 'picked').length;
+  if (ui.mode === 'done') return summaryPanel(x, w);
+  const human = plan.find(q => q.who === 'human' && ui.active.includes(q.num) && pieces.some(p => p.pallet === q && p.status === 'open'));
+  const sel = ui.selected, cur = sel || ui.next;
+  const cardH = sel ? 389 : 315;
+  rr(dx, x, 143, w, cardH, 12, A.panel, A.line, 2);
+  let cy = 143;
+  if (sel) {
+    rr(dx, x + 10, 152, w - 20, 66, 8, A.next);
+    tx('Tapped: confirm it, or mark it', x + 22, 173, { size:18, weight:700 }); tx('missing or scrap', x + 22, 197, { size:18, weight:700 });
+    appBtn(x + w - 106, 156, 86, 58, 'Back');
+    cy += 74;
+  }
+  tx(sel ? 'SELECTED PART' : human ? `NOW SORTING: ${human.label.toUpperCase()}` : 'COBOT SORTING', x + 18, cy + 25, eyebrow);
+  tx(`${picked} OF 33 PICKED`, x + w - 18, cy + 25, { ...eyebrow, align:'right' });
+  if (!cur) {
+    const h = pieces.find(p => p.handover);
+    wrapText(h ? `The cobot could not lift ${h.partNo} (micro-joint). Place it on ${h.pallet.label}, then tap it on the sheet and Confirm.`
+               : 'Your pallet is done. The cobot is finishing its pallets; the screen shows its progress.',
+             x + 18, cy + 120, w - 36, { size:22, weight:600, color:h ? A.error : A.fg });
+    return panelFeedback(x, w, 143 + cardH + 30);
+  }
+  drawPart(cur.partNo, x + 18, cy + 50, w - 36, 135, cur.pallet.hex, { ring:true });
+  if (!BOXONLY(cur.partNo)) tx('Yellow ring: where the number is marked on the part.', x + 18, cy + 215, { size:15, color:A.muted });
+  tx(cur.partNo, x + 18, cy + 256, { size:44, weight:800 });
+  tx(BOXONLY(cur.partNo) ? 'No .GEO file yet: only its box is shown' : 'Lagerpall', x + 18, cy + 291, { size:20, color:A.muted });
+  let y = 143 + cardH + 15;
+  const pl = cur.pallet;
+  rr(dx, x, y, w, 100, 12, pl.hex);
+  tx(`→ ${pl.label.toUpperCase()}`, x + 19, y + 40, { size:46, weight:800, color:pl.fg });
+  tx(`Order ${cur.order}`, x + 19, y + 77, { size:20, color:pl.fg });
+  y += 115;
+  ui.hit = {};
+  const open = human ? palletProgress(human).open : 0;
+  if (!sel && human && cur.pallet === human) {
+    rr(dx, x, y, w, 103, 10, A.go, A.go, 2);
+    tx(`✓ ${human.label} done`, x + w / 2, y + 42, { size:36, weight:800, color:'#fff', align:'center' });
+    tx(`marks the ${open} open pieces as picked`, x + w / 2, y + 76, { size:18, weight:600, color:'#fff', align:'center' });
+    ui.hit.palletDone = [x + w / 2, y + 52];
+    y += 118;
+    appBtn(x, y, w, 64, 'Confirm this piece only', { stroke:A.go, color:A.go, size:22, weight:700 });
+    y += 79;
+  } else {
+    rr(dx, x, y, w, 104, 10, A.go, A.go, 2);
+    tx('Confirm pick', x + w / 2, y + 52, { size:34, weight:800, color:'#fff', align:'center' });
+    ui.hit.confirm = [x + w / 2, y + 52];
+    y += 119;
+  }
+  const ew = (w - 20) / 3;
+  appBtn(x, y, ew, 74, 'Missing', { stroke:A.error, color:A.error, size:19 });
+  appBtn(x + ew + 10, y, ew, 74, 'Scrap /\ndamaged', { stroke:A.error, color:A.error, size:19 });
+  appBtn(x + 2 * (ew + 10), y, ew, 74, 'Took another\npart', { size:19 });
+  ui.hit.missing = [x + ew / 2, y + 37];
+  y += 89;
+  const any = pieces.some(p => p.status !== 'open');
+  appBtn(x, y, 232, 63, 'Undo', { size:24, alpha:any ? 1 : 0.35 });
+  appBtn(x + 243, y, 233, 63, 'Pallet full → new pallet', { size:19, dash:true });
+  panelFeedback(x, w, y + 91);
+}
+function panelFeedback(x, w, y) { if (ui.feedback) wrapText(ui.feedback, x, y, w, { size:19 }); }
+function summaryPanel(x, w) {
+  const miss = pieces.filter(p => p.status === 'missing').length;
+  const h = 300 + plan.length * 40 + (miss ? 30 : 0);
+  rr(dx, x, 143, w, h, 12, A.panel, A.line, 2);
+  tx('SHEET J14', x + 18, 168, eyebrow);
+  tx('Job J14 done', x + 18, 210, { size:44, weight:800, color:miss ? A.error : A.go });
+  tx(`${plan.length} pallets · 33 pieces · 0 corrections`, x + 18, 258, { size:26, weight:800 });
+  let y = 285;
+  if (miss) { tx(`Not on a pallet: ${miss} missing, 0 scrap`, x + 18, y + 4, { size:18, weight:700, color:A.error }); y += 30; }
+  plan.forEach(q => {
+    rr(dx, x + 18, y, 34, 34, 6, q.hex); tx(String(q.num), x + 35, y + 17, { size:18, weight:800, color:q.fg, align:'center' });
+    tx(`${q.label}: ${breakdown(q)}`, x + 62, y + 17, { size:17 }); y += 40;
+  });
+  appBtn(x + 18, y + 6, w - 36, 70, 'Next sheet of this program', { size:24, weight:400 });
+  appBtn(x + 18, y + 86, w - 36, 70, 'Next job', { fill:A.fg, color:'#fff', size:24, weight:400 });
+  appBtn(x, 143 + h + 15, w, 63, 'Undo', { size:24, weight:400 });
+  panelFeedback(x, w, 143 + h + 105);
+}
+
+// ---- setup: wide panel on the right, the sheet as a preview on the left ----
+function setupFrame(n, title, help) {
+  const top = chrome({ job:n > 1 });
+  dx.fillStyle = A.panel; dx.fillRect(885, top, SW - 885, SH - top); dx.fillStyle = A.line; dx.fillRect(883, top, 2, SH - top);
+  tx(`SETUP ${n} OF 4`, 906, top + 29, eyebrow);
+  tx(title, 906, top + 65, { size:32, weight:700 });
+  help.forEach((s, i) => tx(s, 906, top + 101 + i * 25, { size:18, color:A.muted }));
+  if (n > 1) { drawSheet(MAP_SETUP, p => onColour(p.pallet)); zoomTools(791, 638); }
+  ui.hit = {};
+}
+function navButtons(y, nextLabel = 'Next', green = false) {
+  appBtn(906, y, 326, 75, 'Back', { size:24, weight:400 });
+  appBtn(1245, y, 655, 75, nextLabel, { fill:green ? A.go : A.fg, stroke:green ? A.go : A.fg, color:'#fff', size:24, weight:400 });
+  ui.hit.next = ui.hit.ready = [1572, y + 37];
+}
+function jobCard(y, { id, tag, line, subs, note }) {
+  const h = 125 + subs.length * 27 + (note ? 27 : 0);
+  rr(dx, 906, y, 993, h, 10, A.panel, A.line, 2);
+  tx(id, 928, y + 39, { size:30, weight:800 });
+  dx.font = font(15, 800); dx.letterSpacing = '1px'; const tw = dx.measureText(tag[0].toUpperCase()).width + 20; dx.letterSpacing = '0px';
+  rr(dx, 1877 - tw, y + 23, tw, 28, 6, tag[1]); tx(tag[0].toUpperCase(), 1877 - tw / 2, y + 37, { size:15, weight:800, color:tag[2], align:'center', spacing:1 });
+  tx(line, 928, y + 78, { size:20, weight:600 });
+  subs.forEach((s, i) => tx(s, 928, y + 107 + i * 27, { size:16, color:A.muted }));
+  if (note) tx(note, 928, y + 107 + subs.length * 27, { size:16, weight:600, color:A.error });
+  return h;
+}
+function screenList() {
+  setupFrame(1, 'Choose the job', ['The app loads the parts, quantities and sheet map from the job files.']);
+  tx('Choose a job to start.', 442, 393, { size:28, align:'center' });
+  rr(dx, 906, 211, 755, 62, 8, A.panel, A.line, 2); tx('Job, part number or order', 922, 243, { size:20, color:'#7a858c' });
+  appBtn(1672, 211, 111, 62, 'Search', { fill:A.fg, color:'#fff' });
+  appBtn(1795, 211, 104, 62, 'Today', { fill:'#dbe7f7', stroke:'#2f5da8', color:'#1d4f91', weight:400 });
+  tx('Today at L95: not finished yet, or worked on today', 906, 314, { size:18, weight:600, color:'#2b343a' });
+  const h = jobCard(347, { id:'J14', tag:['Part file missing', '#f6dcd8', A.error], line:'33 pieces · 3 part numbers · 3 orders',
+    subs:['St37-80 8 mm · 2,000 × 1,000 mm', 'L95 · arrived 06:10'], note:'No .GEO file for 1045575: drawn as its box. Ask the programmer for the file.' });
+  jobCard(347 + h + 15, { id:'EX-S001', tag:['Example', '#ffd23f', '#1a1400'], line:'26 pieces · 10 part numbers · 4 orders',
+    subs:['S235JR 8 mm · 3,000 × 1,500 mm', 'L95 · arrived 06:10'] });
+  ui.hit.job = [1400, 347 + h / 2];
+}
+function screenCount() {
+  setupFrame(2, 'How many pallets?', [`Suggested: 3, one per order (${PARTNOS.map(n => PART[n].order).join(', ')}). You decide.`]);
+  appBtn(1197, 266, 110, 110, '−', { size:60, weight:400 }); appBtn(1499, 266, 110, 110, '+', { size:60, weight:400 });
+  ui.hit.minus = [1252, 321]; ui.hit.plus = [1554, 321];
+  tx(String(ui.count), 1402, 330, { size:110, weight:800, align:'center' });
+  tx('pallets', 1402, 405, { size:22, color:A.muted, align:'center' });
+  let y = 430;
+  if (ui.count !== 3) { tx('Use the suggestion (3)', 1402, 446, { size:18, weight:600, color:'#1d4f91', align:'center' }); y = 470; }
+  const chips = PALETTE.slice(0, ui.count).map((c, i) => { dx.font = font(22, 800); return { c, label:`${c.name} ${i + 1}`, w:dx.measureText(`${c.name} ${i + 1}`).width + 32 }; });
+  let cx = 1402 - (chips.reduce((s, k) => s + k.w, 0) + 8 * (chips.length - 1)) / 2;
+  chips.forEach(k => { rr(dx, cx, y, k.w, 47, 6, k.c.hex); tx(k.label, cx + k.w / 2, y + 24, { size:22, weight:800, color:k.c.fg, align:'center' }); cx += k.w + 8; });
+  tx('Colours follow a fixed order: pallet 1 is always Blue, 2 Orange, 3 Green … The number is always on the card too.', 1402, y + 72, { size:18, color:A.muted, align:'center' });
+  navButtons(y + 123);
+}
+function screenAssign() {
+  setupFrame(3, 'Which parts go on which pallet?', ["This is the app's proposal. Tap a pallet number to move a whole part there. Split divides a quantity over pallets, one piece at a", 'time.']);
+  let x = 906;
+  plan.forEach(q => {
+    const pcs = `${pieces.filter(p => p.pallet === q).length} pcs`;
+    dx.font = font(19, 700); const lw = dx.measureText(q.label).width; dx.font = font(16); const pw = dx.measureText(pcs).width;
+    const w = 60 + lw + 10 + pw + 62;
+    rr(dx, x, 281, w, 60, 10, A.panel, q.hex, 3);
+    rr(dx, x + 8, 291, 40, 40, 6, q.hex); tx(String(q.num), x + 28, 311, { size:22, weight:800, color:q.fg, align:'center' });
+    tx(q.label, x + 60, 312, { size:19, weight:700 }); tx(pcs, x + 60 + lw + 10, 312, { size:16, color:A.muted });
+    appBtn(x + w - 50, 290, 42, 42, '×', { size:22, weight:400 });
+    x += w + 12;
+  });
+  appBtn(x, 283, 120, 56, '+ Pallet', { dash:true, size:20 });
+  let y = 357;
+  ui.hit.chip = [];
+  PARTNOS.forEach((no, row) => {
+    const P = PART[no], pl = plan.find(q => q.parts.includes(no)), box = BOXONLY(no), h = box ? 88 : 81;
+    rr(dx, 906, y, 994, h, 10, A.panel, A.line, 2);
+    drawPart(no, 922, y + 14, 100, h - 28, pl.hex);
+    tx(no, 1039, y + 31, { size:24, weight:800 });
+    tx(`${P.qty} pcs · order ${P.order}${V.cobot ? (pl.who === 'cobot' ? ' · cobot (≤ 2 kg)' : ' · operator') : ''}`, 1039, y + 57, { size:16, color:pl.who === 'cobot' && V.cobot ? A.cobot : A.muted });
+    if (box) tx('No .GEO file yet: only its box is shown', 1039, y + 78, { size:14, weight:700 });
+    ui.hit.chip[row] = [];
+    plan.forEach((q, k) => {
+      const cx = 1813 - (plan.length - k) * 70, on = q === pl, cyy = y + (h - 62) / 2;
+      rr(dx, cx, cyy, 62, 62, 8, on ? q.hex : A.panel, q.hex, 3);
+      tx(String(q.num), cx + 31, cyy + (on ? 21 : 31), { size:22, weight:800, color:on ? q.fg : A.fg, align:'center' });
+      if (on) tx(`× ${P.qty}`, cx + 31, cyy + 46, { size:15, weight:700, color:q.fg, align:'center' });
+      ui.hit.chip[row][k] = [cx + 31, cyy + 31];
+    });
+    appBtn(1819, y + (h - 62) / 2, 68, 62, 'Split', { size:19, weight:400 });
+    y += h + 12;
+  });
+  navButtons(y + 14);
+}
+function screenCards() {
+  setupFrame(4, 'Place the cards', ['Place one card on each pallet. Then press Ready: sorting starts with pallet 1.']);
+  tx(`Place ${plan.map(q => q.label).join(', ')}.`, 906, 273, { size:24, weight:800 });
+  const hs = plan.map(q => 150 + 34 + q.parts.length * 26 + (q.who === 'cobot' ? 26 : 0));
+  const H = Math.max(...hs);
+  plan.forEach((q, i) => {
+    const x = 906 + i * 252, y = 303, w = 240;
+    rr(dx, x, y, w, H, 10, A.panel, A.line, 2);
+    rr(dx, x + 11, y + 12, w - 22, 150, 6, q.hex);
+    tx(String(q.num), x + w / 2, y + 74, { size:84, weight:800, color:q.fg, align:'center' });
+    tx(q.name.toUpperCase(), x + w / 2, y + 140, { size:20, weight:800, color:q.fg, align:'center', spacing:3 });
+    q.parts.forEach((no, k) => tx(`•  ${PART[no].qty} × ${no} (${PART[no].order})`, x + 14, y + 184 + k * 26, { size:17 }));
+    if (q.who === 'cobot') tx('Cobot pallet (in its zone)', x + 14, y + 184 + q.parts.length * 26, { size:16, weight:700, color:A.cobot });
+  });
+  navButtons(303 + H + 27, 'Ready: start sorting', true);
+}
+function screenSort() {
+  chrome({ sorting:true });
+  drawSheet(MAP, sortStyle);
+  if (ui.mode === 'sort') {
+    if (ui.selected && ui.next && ui.next !== ui.selected) ringPiece(ui.next, A.next, true);
+    if (ui.selected || ui.next) ringPiece(ui.selected || ui.next, A.next);
+    if (ui.cobotNext) ringPiece(ui.cobotNext, '#a78bfa');
+  }
+  zoomTools(1310, 500);
+  tiles();
+  sortPanel();
+}
+function drawScreen() {
+  if (!SCREEN) return;
+  dx.clearRect(0, 0, SW, SH);
+  if (ui.mode === 'off') { dx.fillStyle = '#0b0f14'; dx.fillRect(0, 0, SW, SH); }
+  else ({ list:screenList, count:screenCount, assign:screenAssign, cards:screenCards, sort:screenSort, done:screenSort }[ui.mode])();
+  if (ui.tap) { dx.strokeStyle = 'rgba(255,210,63,0.95)'; dx.lineWidth = 10; dx.beginPath(); dx.arc(ui.tap[0], ui.tap[1], 48, 0, Math.PI * 2); dx.stroke(); }
+  dispTex.needsUpdate = true;
+}
+const redraw = () => SCREEN ? drawScreen() : drawPaper();
+redraw();
+
+// =====================================================================
+// Counters (what the operator has to do in the head)
+// =====================================================================
+const hud = { decisions:0, lookups:0, rechecks:0, setup:0, taps:0 };
+function renderHud() {
+  const rows = [['Decisions while sorting', hud.decisions], ['Look-ups on paper', hud.lookups], ['Re-check walks', hud.rechecks]];
+  if (SCREEN) rows.push(['Setup choices (before sorting)', hud.setup], ['Screen taps while sorting', hud.taps]);
+  document.getElementById('hud').innerHTML = rows.map(([k, v]) => `<span>${k}</span><b>${v}</b>`).join('') +
+    `<span class="note">Counted per piece in this demo: which part is it, and where does it go?</span>`;
+}
+renderHud();
+function placed(p) {
+  p.status = 'picked'; p.pallet.count++; p.pallet.done[p.partNo] = (p.pallet.done[p.partNo] || 0) + 1;
+  if (VID === 'v0') { hud.decisions += 2; hud.lookups += 1; tally[p.partNo] = (tally[p.partNo] || 0) + 1; }
+  if (VID === 'v3') { hud.decisions += 1; hud.lookups += 1; }
+  renderHud(); redraw();
+}
+
+// =====================================================================
+// Clock, tweens and motion
+// =====================================================================
+let simT = 0, speed = 1, paused = false, playing = false;
+const tweens = [];
+const ease = f => f < 0.5 ? 2 * f * f : 1 - Math.pow(-2 * f + 2, 2) / 2;
+const tween = (dur, update, easing = ease) => new Promise(res => tweens.push({ t0:simT, dur:Math.max(dur, 0.0001), update, res, easing }));
+const wait = d => tween(d, () => {});
+async function turnTo(angle, dur = 0.25) {
+  const a0 = worker.rotation.y; const d = Math.atan2(Math.sin(angle - a0), Math.cos(angle - a0));
+  await tween(dur, f => worker.rotation.y = a0 + d * f);
+}
+async function walkTo(x, z, face) {
+  const p0 = worker.position.clone(), p1 = V3(x, 0, z), dist = p0.distanceTo(p1);
+  if (dist > 0.02) {
+    await turnTo(Math.atan2(p1.x - p0.x, p1.z - p0.z));
+    worker.userData.walking = true;
+    await tween(dist / 1.25, f => worker.position.lerpVectors(p0, p1, f), f => f);
+    worker.userData.walking = false; worker.userData.legL.rotation.x = worker.userData.legR.rotation.x = 0;
+  }
+  if (face !== undefined) await turnTo(face);
+}
+async function arms(left, right, dur = 0.35) {
+  const { armL, armR } = worker.userData, l0 = armL.rotation.x, r0 = armR.rotation.x;
+  await tween(dur, f => { armL.rotation.x = l0 + (left - l0) * f; armR.rotation.x = r0 + (right - r0) * f; });
+}
+async function fly(mesh, parent, localPos, dur, arc = 0.25) {
+  scene.attach(mesh); const p0 = mesh.position.clone();
+  parent.updateWorldMatrix(true, false); const p1 = parent.localToWorld(localPos.clone());
+  await tween(dur, f => { mesh.position.lerpVectors(p0, p1, f); mesh.position.y += Math.sin(f * Math.PI) * arc; });
+  parent.attach(mesh);
+}
+function stackPos(t) {
+  t.stack++; const k = t.stack;
+  return V3((((k * 37) % 11) / 11 - 0.5) * 0.22, 0.41 + k * 0.009, (((k * 53) % 7) / 7 - 0.5) * 0.3);
+}
+async function goToDisplay() { const s = dispStandPoint(); await walkTo(s.x, s.z, s.face); }
+async function tapScreen(px, py) {
+  await goToDisplay(); await arms(0, -1.35, 0.3);
+  if (ui.mode === 'sort') { hud.taps++; renderHud(); }
+  ui.tap = [px, py]; drawScreen(); await wait(0.35); ui.tap = null; drawScreen();
+  await arms(0, 0, 0.3);
+}
+async function readPaper(text, dur = 1.0) {
+  await goToDisplay(); think(text); await arms(-0.3, -0.3, 0.25); await wait(dur); await arms(0, 0, 0.25);
+}
+const pickStand = v => V.table ? { x:THREE.MathUtils.clamp(v.x, -1.0, 1.0), z:4.58 } : { x:THREE.MathUtils.clamp(v.x, -1.35, 1.35), z:1.38 };
+function trolleyStand(t) {
+  const h = t.group.position; let s;
+  if (!t.rotY) s = { x:h.x, z:h.z - 0.62 }; else s = { x:h.x - Math.sign(h.x) * 0.62, z:h.z };
+  return { ...s, face:Math.atan2(h.x - s.x, h.z - s.z) };
+}
+const pieceScreenXY = p => toMap(MAP, p.cx, p.cy);
+async function carryToTrolley(p) {
+  const t = p.pallet.trolley;
+  const v = worldOf(p.mesh), st = pickStand(v);
+  await walkTo(st.x, st.z, Math.PI);
+  await arms(-1.15, -1.15, 0.35);
+  await fly(p.mesh, worker.userData.carry, V3(0, 0, 0), 0.5, 0.15);
+  showArrow(null); showQuestionMarks([]);
+  await arms(-0.85, -0.85, 0.25);
+  const ts = trolleyStand(t); await walkTo(ts.x, ts.z, ts.face);
+  await arms(-1, -1, 0.25); await fly(p.mesh, t.group, stackPos(t), 0.35, 0.05); await arms(0, 0, 0.25);
+}
+async function rollTrolleysIn(list, stagger = 0.35) {
+  await Promise.all(list.map((t, i) => wait(i * stagger).then(() => { const p0 = t.group.position.clone(); return tween(2.4, f => t.group.position.lerpVectors(p0, t.home, f)); })));
+}
+async function placeCards() {
+  for (const t of trolleys) {
+    const g = t.group; g.updateWorldMatrix(true, false);
+    const cw = g.localToWorld(V3(0, 0, -1.0));
+    await walkTo(cw.x, cw.z, Math.atan2(g.position.x - cw.x, g.position.z - cw.z));
+    await arms(0, -1.3, 0.25); t.card.visible = true; await tween(0.4, f => t.card.scale.setScalar(0.01 + 0.99 * f)); await arms(0, 0, 0.2);
+  }
+}
+async function ffPieces(list, stagger = 0.22) {
+  await Promise.all(list.map((p, k) => wait(k * stagger).then(async () => {
+    if (!SCREEN) { ui.next = p; redraw(); }
+    await fly(p.mesh, p.pallet.trolley.group, stackPos(p.pallet.trolley), 0.6, 0.35);
+    if (SCREEN) p.onPallet = true; else placed(p);   // with the app: confirmed per pallet afterwards
+  })));
+  if (!SCREEN) { ui.next = null; redraw(); }
+}
+async function palletOut() { await tween(3.5, f => pallet.position.z = -3.4 * (1 - f)); }
+async function palletIn() { await tween(3.5, f => pallet.position.z = -3.4 * f); }
+async function craneToTable() {
+  await tween(2.0, f => bridge.position.z = 3.6 * (1 - f));
+  await tween(1.6, f => spreader.position.y = 3.0 + (GRAB_Y - 3.0) * f);
+  spreader.attach(sheet); await wait(0.3);
+  await tween(1.4, f => spreader.position.y = GRAB_Y + (2.1 - GRAB_Y) * f);
+  const back = palletIn();   // the empty pallet goes straight back: the laser can cut the next sheet
+  await tween(3.0, f => bridge.position.z = TABLE_Z * f);
+  await tween(1.4, f => spreader.position.y = 2.1 + (GRAB_Y - 2.1) * f);
+  scene.attach(sheet); await wait(0.2);
+  await Promise.all([tween(1.4, f => spreader.position.y = GRAB_Y + (3.0 - GRAB_Y) * f), back]);
+  tween(2.5, f => bridge.position.z = TABLE_Z + (7.0 - TABLE_Z) * f);   // park the crane out of the way
+}
+// cobot motion
+async function cobotMove(P, dur) { const p0 = cobotCur.clone(); await tween(dur, f => { cobotCur.lerpVectors(p0, P, f); cobotIK(cobotCur); }); }
+async function cobotPick(p, k = 1) {
+  ui.cobotNext = p; redraw();
+  const v = worldOf(p.mesh), top = v.y + T;
+  await cobotMove(V3(v.x, top + 0.3, v.z), 0.9 * k);
+  await cobotMove(V3(v.x, top + 0.01, v.z), 0.45 * k);
+  if (p.fail) {   // held by a micro-joint: suction lifts nothing, piece handed to the operator
+    await wait(0.5 * k); await cobotMove(V3(v.x, top + 0.3, v.z), 0.4 * k);
+    p.handover = true; ui.cobotNext = null; ui.feedback = `Cobot could not lift ${p.partNo} (micro-joint): handed to you. Place it on ${p.pallet.label}, then tap it and Confirm.`; redraw(); return;
+  }
+  tip.attach(p.mesh);
+  await cobotMove(V3(v.x, top + 0.35, v.z), 0.4 * k);
+  const t = p.pallet.trolley, lp = stackPos(t); t.group.updateWorldMatrix(true, false);
+  const w = t.group.localToWorld(lp.clone());
+  await cobotMove(V3(w.x, w.y + 0.3, w.z), 1.0 * k);
+  await cobotMove(V3(w.x, w.y + 0.02, w.z), 0.35 * k);
+  t.group.attach(p.mesh); p.mesh.position.copy(lp);
+  placed(p); ui.cobotNext = null; redraw();
+  await cobotMove(V3(w.x, w.y + 0.3, w.z), 0.3 * k);
+}
+
+// =====================================================================
+// Cameras
+// =====================================================================
+let camAnim = null;
+const presets = {
+  overview:() => V.table ? [V3(6.6, 5.6, 10.0), V3(0, 0.9, 2.2)] : [V3(6.0, 4.6, 7.2), V3(0, 0.9, 0.9)],
+  operator:() => V.table ? [V3(1.6, 2.6, 7.6), V3(0, 0.9, 3.7)] : [V3(1.4, 2.5, 4.6), V3(-0.1, 0.9, 0.9)],
+  display:() => {
+    const { p, n } = dispStandPoint(); const side = V3(0, 1, 0).cross(n).normalize();
+    return [p.clone().addScaledVector(n, 0.62).addScaledVector(side, 0.62).add(V3(0, 0.12, 0)), p];
+  },
+  top:() => [V3(0.01, 9.5, V.table ? 3.0 : 1.4), V3(0, 0, V.table ? 2.6 : 1.0)],
+};
+function cam(name, dur = 1.4) {
+  const [p, t] = presets[name]();
+  camAnim = { p0:camera.position.clone(), t0:controls.target.clone(), p1:p, t1:t, start:performance.now(), dur:dur * 1000 };
+}
+const autoCam = name => { if (document.getElementById('autocam').checked) cam(name); };
+{ const [p, t] = presets.overview(); camera.position.copy(p); controls.target.copy(t); }
+
+// =====================================================================
+// Scenarios
+// =====================================================================
+const caption = document.getElementById('caption');
+const STEPS = {
+  v0:['Pallet comes out with sheet J14', 'Fetch the paper list from the printer', 'Bring 3 pallets, write the order on notes',
+      'Per piece: read list → search sheet → pick → choose pallet → tally', 'Not sure of a count: re-check walk',
+      'Rest of the sheet (fast-forward)', 'Done: errors only show up at final inspection'],
+  v3:['Pallet comes out with sheet J14', 'Fetch the printed colour layout', 'Place the cards on the pallets as in the print legend',
+      'Sort Blue 1: compare print and sheet, tick off', 'Sort Orange 2 (look-alike marked on the print)', 'Sort Green 3',
+      'Done: plan could not be changed at the machine'],
+  v1:['Pallet comes out with sheet J14', 'Tap J14 in the job list', 'Setup: how many pallets?', 'Setup: which parts on which pallet?',
+      'Setup: place the cards on the pallets', 'Sort Blue 1 without touching the screen (one piece missing)', 'One tap: "✓ Blue 1 done"',
+      'Sort Orange 2, one tap: "✓ Orange 2 done"', 'Summary, pallet goes back in'],
+  v2:['Pallet comes out with sheet J14', 'Crane lifts the sheet to the table; pallet goes back in', 'Roll the screen to the table, tap J14',
+      'Setup: how many pallets?', 'Setup: which parts on which pallet?', 'Setup: place the cards on the pallets',
+      'Sort Blue 1, one tap: "✓ Blue 1 done"', 'Sort Orange 2, one tap: "✓ Orange 2 done"', 'Summary'],
+  v4:['Pallet comes out with sheet J14', 'Crane lifts the sheet to the table; pallet goes back in', 'Tap J14 on the table screen',
+      'Setup: cobot takes parts ≤ 2 kg, operator the rest', 'Setup: place the cards on the pallets',
+      'Sort in parallel: operator Blue 1 (one tap at the end), cobot Orange 2 + Green 3', 'Hand-over: the cobot could not lift a piece', 'Summary'],
+};
+const stepList = document.getElementById('stepList');
+stepList.innerHTML = STEPS[VID].map(s => `<li>${s}</li>`).join('');
+const stepItems = [...stepList.querySelectorAll('li')];
+function step(i, html) { stepItems.forEach((li, k) => li.className = k < i ? 'done' : k === i ? 'active' : ''); caption.innerHTML = html; }
+const piecesOf = pl => pieces.filter(p => p.pallet === pl && p.status === 'open').sort((a, b) => a.cx - b.cx);
+
+async function intro() {
+  step(0, 'Pallet A comes out of the laser with sheet <b>J14</b>: 33 pieces of 3 part numbers for 3 orders.');
+  autoCam('overview'); await palletOut(); await wait(0.3);
+}
+
+async function runV0() {
+  await intro();
+  step(1, 'The operator fetches the printed part list. It lists part numbers and quantities, not where each piece lies on the sheet.');
+  await walkTo(-2.0, 3.0, -Math.PI / 2); await arms(0, -1.2, 0.25);
+  displayGroup.userData.paper.visible = true; drawPaper(); await arms(0, 0, 0.2);
+  autoCam('display'); await goToDisplay(); await wait(1.2);
+  step(2, 'Three pallets are brought in. The order numbers are written on paper notes.');
+  autoCam('overview'); await rollTrolleysIn(trolleys);
+  step(3, 'For every piece: read the list, search the sheet for that part number, pick it, decide which pallet, go back and make a tally mark.');
+  autoCam('operator');
+  const seq = [...pieces].sort((a, b) => a.n - b.n);
+  for (const p of seq.slice(0, 3)) {
+    await readPaper(`Next: ${p.partNo} for ${p.order}`, 1.0);
+    const cands = pieces.filter(q => q.status === 'open' && (q.partNo === p.partNo || q.other === p.partNo)).slice(0, 4);
+    const st = pickStand(worldOf(p.mesh)); await walkTo(st.x, st.z, Math.PI);
+    think(`Which one is ${p.partNo}?`); showQuestionMarks(cands); await wait(1.6); showArrow(p);
+    think(null); await carryToTrolley(p);
+    think(`${p.order} … was that this pallet?`); await wait(0.8);
+    await readPaper('Tally mark', 0.6); placed(p); think(null);
+  }
+  step(4, 'Unsure whether pallet OR13 already has enough pieces: the operator walks back and counts again.');
+  const t0 = trolleys[0], ts = trolleyStand(t0); await walkTo(ts.x, ts.z, ts.face);
+  think('11 … or was it 10?'); await arms(-0.9, -0.9, 0.3); await wait(1.8); await arms(0, 0, 0.3); think(null);
+  hud.rechecks++; renderHud();
+  step(5, 'Fast-forward: the rest of the sheet is sorted the same way, with a look-up, a search and a tally for every piece.');
+  autoCam('overview'); await walkTo(0.2, 1.5, 0);
+  await ffPieces(seq.filter(p => p.status === 'open'));
+  step(6, 'Sheet done. A wrong pallet or a wrong count is only found later, at final inspection.');
+  await walkTo(-1.0, 3.4, Math.PI); await palletIn();
+}
+
+async function runV3() {
+  await intro();
+  step(1, 'The colour layout was printed when the job was released. The office chose the pallets: one per order.');
+  await walkTo(-2.0, 3.0, -Math.PI / 2); await arms(0, -1.2, 0.25);
+  displayGroup.userData.paper.visible = true; drawPaper(); await arms(0, 0, 0.2);
+  autoCam('display'); await goToDisplay(); await wait(1.6);
+  step(2, 'Three pallets are brought in and the operator places the cards shown in the print legend on them: <b>Blue 1</b>, <b>Orange 2</b>, <b>Green 3</b>.');
+  autoCam('overview'); await rollTrolleysIn(trolleys); await placeCards();
+  const names = ['Blue = the long ones', 'Orange = short with the tab', 'Green = the small plates'];
+  for (const [i, pl] of plan.entries()) {
+    step(3 + i, i === 1
+      ? 'Sort <b>Orange 2</b>. The print marks in red where 1045575 differs from its look-alike 1045574, but the operator still compares print and sheet by eye.'
+      : `Sort <b>${pl.label}</b>: compare the print with the sheet, pick the ${pl.name.toLowerCase()} pieces, tick them off on the print.`);
+    autoCam('operator');
+    const list = piecesOf(pl), anim = list.slice(0, i === 2 ? 0 : (i === 0 ? 2 : 1));
+    for (const p of anim) {
+      await readPaper(names[i], 0.9); think(null);
+      showArrow(p); await carryToTrolley(p); await readPaper('Tick ✓', 0.4); placed(p); think(null);
+    }
+    autoCam('overview'); await walkTo(0.2, 1.5, 0); await ffPieces(piecesOf(pl));
+  }
+  step(6, 'Sheet done. Counting is by hand on the print, and the pallet plan could not be changed at the machine.');
+  await walkTo(-1.0, 3.4, Math.PI); await palletIn();
+}
+
+async function screenSetup(stepBase, { cobotAuto = false } = {}) {
+  const iCount = stepBase, iAssign = cobotAuto ? stepBase : stepBase + 1, iCards = cobotAuto ? stepBase + 1 : stepBase + 2;
+  // Setup 2 of 4: how many pallets (the app suggests one per order)
+  ui.mode = 'count'; ui.count = 3; applyPlan(makePlan(PROPOSAL)); drawScreen(); autoCam('display');
+  if (cobotAuto) {
+    step(iAssign, 'Setup: the app suggests 3 pallets, one per order. Parts ≤ 2 kg go to the cobot (Orange 2 and Green 3, in its zone), the heavy 1045574 to the operator (Blue 1).');
+    await wait(1.6); await tapScreen(...ui.hit.next);
+    applyPlan(finalPlan); ui.mode = 'assign'; drawScreen(); await wait(2.6); hud.setup++; renderHud();
+  } else {
+    step(iCount, 'Setup 2 of 4: how many pallets? The app suggests 3, one per order. The operator decides 2 are enough.');
+    await wait(1.6);
+    await tapScreen(...ui.hit.minus); ui.count = 2; applyPlan(makePlan([[['1045574', '1045575']], [['1045572']]])); drawScreen();
+    hud.setup++; renderHud(); await wait(0.8);
+    await tapScreen(...ui.hit.next);
+    // Setup 3 of 4: which parts on which pallet (the app's proposal for 2 pallets, then two taps)
+    ui.mode = 'assign'; drawScreen();
+    step(iAssign, 'Setup 3 of 4: the app proposes 1045574 + 1045575 on Blue 1 and 1045572 on Orange 2. The operator wants 1045575 on a pallet of its own: two taps.');
+    await wait(2.4);
+    await tapScreen(...ui.hit.chip[PARTNOS.indexOf('1045575')][1]);
+    applyPlan(makePlan([[['1045574']], [['1045575', '1045572']]])); drawScreen(); await wait(0.6);
+    await tapScreen(...ui.hit.chip[PARTNOS.indexOf('1045572')][0]);
+    applyPlan(finalPlan); hud.setup++; renderHud(); drawScreen(); await wait(1.4);
+  }
+  await tapScreen(...ui.hit.next);
+  // Setup 4 of 4: place the cards on the pallets, then Ready
+  ui.mode = 'cards'; drawScreen();
+  step(iCards, `Setup 4 of 4: the operator places the reusable cards on the pallets: ${plan.map(q => `<b>${q.label}</b>`).join(', ')}. Then Ready.`);
+  await wait(1.4);
+  autoCam('overview');
+  await rollTrolleysIn(trolleys); await placeCards();
+  await tapScreen(...ui.hit.ready);
+}
+
+// The pieces of a pallet still to be carried (picked up, not yet on the pallet).
+const toCarry = pl => pieces.filter(p => p.pallet === pl && p.status === 'open' && !p.onPallet && p.mesh.visible).sort((a, b) => a.cx - b.cx);
+
+// "✓ Blue 1 done": every piece still open on the pallet counts as picked (missing ones stay missing).
+function confirmPallet(pl) {
+  const list = pieces.filter(p => p.pallet === pl && p.status === 'open');
+  list.forEach(p => placed(p));
+  const miss = pieces.filter(p => p.pallet === pl && p.status === 'missing').length;
+  const nextPl = plan.find(q => q.who === 'human' && pieces.some(p => p.pallet === q && p.status === 'open'));
+  ui.feedback = !nextPl ? `✓ ${pl.label} done: ${list.length} pieces picked.`
+    : miss ? `${pl.label} done but incomplete: ${miss} missing or scrap. Now: ${nextPl.label}.`
+      : `✓ ${pl.label} complete. Now: ${nextPl.label}.`;
+  if (nextPl && !V.cobot) ui.active = [nextPl.num];
+  ui.next = nextPl ? firstOpen(nextPl) : null;
+  redraw();
+}
+
+// A piece is not on the sheet: the only time the operator touches the screen while sorting.
+async function reportMissing(p, stepIdx) {
+  step(stepIdx, `One <b>${p.partNo}</b> is not on the sheet (it dropped through the grid). Only now does the operator touch the screen: tap the piece, then <b>Missing</b>.`);
+  autoCam('operator'); showQuestionMarks([p]); think(`Where is this ${p.partNo}?`); await wait(1.6); think(null);
+  autoCam('display');
+  await tapScreen(...pieceScreenXY(p));
+  ui.selected = p; ui.feedback = `${p.partNo} selected. Press Confirm or tap it again to pick it.`; drawScreen(); await wait(0.8);
+  await tapScreen(...ui.hit.missing);
+  p.status = 'missing'; ui.selected = null; ui.feedback = `${p.partNo} marked as missing`; ui.next = firstOpen(p.pallet);
+  showQuestionMarks([]); drawScreen(); await wait(1.2);
+}
+
+// One pallet, as in the app: carry all its pieces without touching the screen, then one tap on "✓ Blue 1 done".
+async function sortHumanPallet(pl, nAnim, stepIdx, html, { missing = null, doneStep = stepIdx } = {}) {
+  ui.mode = 'sort'; ui.active = V.cobot ? plan.map(q => q.num) : [pl.num]; ui.selected = null;
+  ui.next = firstOpen(pl); drawScreen();
+  step(stepIdx, html); autoCam('operator');
+  for (const p of toCarry(pl).slice(0, nAnim)) {
+    showArrow(p); think(`Follow the ${pl.name.toLowerCase()}`);
+    await carryToTrolley(p); think(null); p.onPallet = true;
+  }
+  if (missing) await reportMissing(missing, stepIdx);
+  autoCam('overview'); await walkTo(0.2, V.table ? 4.6 : 1.5, Math.PI);
+  await ffPieces(toCarry(pl));
+  step(doneStep, `All <b>${pl.label}</b> pieces are on the pallet. One tap on <b>✓ ${pl.label} done</b> confirms them all${missing ? ' (the missing piece stays missing)' : ''}.`);
+  autoCam('display'); await tapScreen(...ui.hit.palletDone);
+  confirmPallet(pl);
+  await wait(1.6);
+}
+
+async function summary(stepIdx, html) {
+  ui.mode = 'done'; ui.active = []; ui.next = null; drawScreen();
+  step(stepIdx, html);
+  autoCam('display'); await wait(2.5); autoCam('overview');
+}
+
+async function runV1() {
+  const lost = pieces.find(p => p.n === 25);   // demo case: one 1045572 has dropped through the grid
+  lost.mesh.visible = false;
+  await intro();
+  step(1, 'The operator walks to the touchscreen next to the pallet changer and taps <b>J14</b> in today\'s job list.');
+  ui.mode = 'list'; drawScreen(); autoCam('display'); await tapScreen(...ui.hit.job);
+  await screenSetup(2);
+  await sortHumanPallet(plan[0], 3, 5, 'Sort <b>Blue 1</b>: only its pieces are highlighted, the rest is grey. The operator sorts the whole pallet without touching the screen.', { missing:lost, doneStep:6 });
+  await sortHumanPallet(plan[1], 2, 7, 'The app moved on to <b>Orange 2</b> by itself. 1045575 has no part file yet, so the screen shows its box.');
+  await summary(8, `Sheet complete with ${hud.taps} taps while sorting 33 pieces. The summary is honest: Blue 1 is incomplete (1 missing). Pallet A goes back into the laser.`);
+  await walkTo(-1.0, 3.4, Math.PI); await palletIn();
+}
+
+async function runV2() {
+  await intro();
+  step(1, 'The crane lifts the whole sheet onto the sorting table. The empty pallet goes straight back, so the laser can cut the next sheet.');
+  await craneToTable();
+  step(2, 'The operator rolls the screen stand to the table (Wi-Fi, no cable) and taps <b>J14</b>.');
+  ui.mode = 'list'; drawScreen();
+  const s0 = standGroup.position.clone(), r0 = standGroup.rotation.y, r1 = yawTo(DISP_TABLE, DISP_TABLE_STAND);
+  await walkTo(s0.x + 0.35, s0.z + 0.35, yawTo(worker.position, s0));
+  const w0 = worker.position.clone(), w1 = DISP_TABLE.clone().add(V3(0.35, 0, -0.45));
+  worker.userData.walking = true;
+  await tween(3.2, f => { standGroup.position.lerpVectors(s0, DISP_TABLE, f); standGroup.rotation.y = r0 + (r1 - r0) * f; worker.position.lerpVectors(w0, w1, f); worker.rotation.y = Math.atan2(w1.x - w0.x, w1.z - w0.z); }, f => f);
+  worker.userData.walking = false; worker.userData.legL.rotation.x = worker.userData.legR.rotation.x = 0;
+  autoCam('display'); await tapScreen(...ui.hit.job);
+  await screenSetup(3);
+  await sortHumanPallet(plan[0], 3, 6, 'Sort <b>Blue 1</b> at the table: only its pieces are highlighted. No taps while sorting.');
+  await sortHumanPallet(plan[1], 2, 7, 'The app moved on to <b>Orange 2</b> by itself.');
+  await summary(8, `Sheet complete with ${hud.taps} taps while sorting. Meanwhile the laser has already been cutting the next sheet.`);
+}
+
+async function runV4() {
+  await intro();
+  step(1, 'The crane lifts the sheet onto the sorting table, between the operator and the cobot. The pallet goes straight back into the laser.');
+  await craneToTable();
+  step(2, 'The operator taps <b>J14</b> on the screen at the table.');
+  ui.mode = 'list'; drawScreen(); autoCam('display'); await tapScreen(...ui.hit.job);
+  await screenSetup(3, { cobotAuto:true });
+  // parallel sorting
+  const human = plan[0], cobotPieces = [...piecesOf(plan[1]), ...piecesOf(plan[2])];
+  cobotPieces[2].fail = true;
+  ui.mode = 'sort'; ui.active = plan.map(q => q.num); ui.next = firstOpen(human); drawScreen();
+  step(5, 'Parallel sorting: the cobot takes the light parts and reports every piece itself; the operator sorts the heavy <b>1045574</b> onto Blue 1 and confirms it once at the end. (Cobot cycle shortened in the demo.)');
+  autoCam('overview');
+  let fast = false;
+  const cobotJob = (async () => { for (const p of cobotPieces) await cobotPick(p, fast ? 0.3 : 1); await cobotMove(V3(0, 1.15, 2.95), 1.0); })();
+  const humanJob = (async () => {
+    for (const p of toCarry(human).slice(0, 3)) { showArrow(p); await carryToTrolley(p); p.onPallet = true; }
+    fast = true; await walkTo(0.2, 4.6, Math.PI); await ffPieces(toCarry(human), 0.3);
+    await tapScreen(...ui.hit.palletDone); confirmPallet(human);
+  })();
+  await Promise.all([cobotJob, humanJob]);
+  const h = pieces.find(p => p.handover);
+  if (h) {
+    step(6, `Hand-over: the cobot could not lift one <b>${h.partNo}</b> (a micro-joint held it). The cobot is parked, so the operator can enter its zone, break the piece free, place it on <b>${h.pallet.label}</b>, then tap it on the screen and <b>Confirm pick</b>.`);
+    autoCam('operator'); showArrow(h);
+    think('Break the micro-joint'); await carryToTrolley(h); think(null);
+    autoCam('display');
+    await tapScreen(...pieceScreenXY(h)); ui.selected = h; ui.feedback = `${h.partNo} selected. Press Confirm or tap it again to pick it.`; drawScreen(); await wait(0.6);
+    await tapScreen(...ui.hit.confirm); h.handover = false; ui.selected = null; placed(h); ui.feedback = `✓ ${h.partNo} placed on ${h.pallet.label}`; drawScreen(); await wait(1.2);
+  }
+  await summary(7, `Sheet complete. Operator and cobot sorted in parallel with ${hud.taps} taps on the screen, and the laser kept cutting.`);
+}
+
+async function scenario() {
+  playing = true;
+  await ({ v0:runV0, v1:runV1, v2:runV2, v3:runV3, v4:runV4 }[VID])();
+  stepItems.forEach(li => li.className = 'done');
+  caption.innerHTML = 'Done. Try another variant in the tabs above, or <b>Restart</b>.';
+  showArrow(null); think(null);
+  playing = false;
+}
+
+// =====================================================================
+// UI wiring and render loop
+// =====================================================================
+document.getElementById('play').onclick = () => { if (!playing) { paused = false; scenario(); } else paused = false; };
+document.getElementById('pause').onclick = () => paused = !paused;
+document.getElementById('restart').onclick = () => location.reload();
+document.querySelectorAll('[data-speed]').forEach(b => b.onclick = () => {
+  speed = +b.dataset.speed; document.querySelectorAll('[data-speed]').forEach(x => x.classList.toggle('on', x === b));
+});
+document.querySelectorAll('[data-cam]').forEach(b => b.onclick = () => cam(b.dataset.cam));
+document.getElementById('labels').onchange = e => labels.forEach(l => l.visible = e.target.checked);
+window.__disp = dispCanvas;
+if (new URLSearchParams(location.search).has('autoplay')) setTimeout(() => document.getElementById('play').click(), 300);
+
+const clock = new THREE.Clock();
+renderer.setAnimationLoop(() => {
+  const dt = Math.min(clock.getDelta(), 0.05);
+  if (!paused) {
+    simT += dt * speed;
+    for (let i = tweens.length - 1; i >= 0; i--) {
+      const tw = tweens[i], f = Math.min((simT - tw.t0) / tw.dur, 1);
+      tw.update(tw.easing(f));
+      if (f >= 1) { tweens.splice(i, 1); tw.res(); }
+    }
+    const u = worker.userData;
+    if (u.walking) { u.phase += dt * speed * 9; u.legL.rotation.x = Math.sin(u.phase) * 0.5; u.legR.rotation.x = -Math.sin(u.phase) * 0.5; }
+    if (arrow.visible) arrow.position.y = 1.2 + Math.sin(simT * 5) * 0.05;
+  }
+  const top = 3.65, bot = spreader.position.y + 0.09;
+  cable.scale.y = Math.max(top - bot, 0.01); cable.position.y = (top + bot) / 2;
+  if (camAnim) {
+    const f = Math.min((performance.now() - camAnim.start) / camAnim.dur, 1), e = ease(f);
+    camera.position.lerpVectors(camAnim.p0, camAnim.p1, e); controls.target.lerpVectors(camAnim.t0, camAnim.t1, e);
+    if (f >= 1) camAnim = null;
+  }
+  controls.update();
+  renderer.render(scene, camera);
+});
+</script>
+</body>
+</html>

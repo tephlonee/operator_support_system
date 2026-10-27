@@ -45,9 +45,10 @@ What the service keeps, in `dataDir`: `picking.db` (one SQLite file: catalog, ru
 
 **B. Sorting, one pallet at a time**
 - Only the pallet being sorted is highlighted on the sheet; everything else is grey. Look-alike pieces carry a small red marker on the feature that tells them apart.
-- Pick a piece and tap it on the sheet (or press Confirm). Took several? Press **2 / 3 / 4 / All**.
+- **Confirm per pallet (the default):** sort all the highlighted pieces onto the pallet, then press **✓ Blue 1 done** once (or the **Enter** key: a push button or foot pedal that sends Enter can be fitted at the station). Every piece still open on that pallet counts as picked. Tap a piece on the sheet only when something is wrong: it is shown in the panel with **Missing**, **Scrap** and **Confirm pick** (tapping it again also picks it). A tap never picks a piece by itself, so a glove brushing the screen does nothing. **Confirm this piece only** under the big button picks the highlighted piece on its own.
+- **Confirm per piece** (⚙ Station → Confirming picks): the earlier way. Pick a piece and tap it on the sheet (or press Confirm). Took several? Press **2 / 3 / 4 / All**. A pallet with a missing or scrapped piece is reported as "done but incomplete", never "complete".
 - When a pallet is complete, the next one starts by itself. If a pallet is full early, press **Pallet full → new pallet**: the next colour and number is assigned and the remaining pieces move to it.
-- Always on screen: the count per pallet broken down by part, the sheet's progress in the header, and **Undo** (it also takes back "picked N" and "pallet full").
+- Always on screen: the count per pallet broken down by part, the sheet's progress in the header, and **Undo** (it also takes back "pallet done", "picked N" and "pallet full").
 
 **C. Summary:** "3 pallets · 33 pieces · 0 corrections", then **Next job**.
 
@@ -64,6 +65,13 @@ Progress (setup and sorting) survives a page reload. **☰ Jobs** goes back to t
 
 A job without runs opens straight into setup, as before. Runs are never deleted once something happened in them; a run left during setup before anything was done is simply cancelled. **📋 Test → Start new session** starts a new run too, so every participant has their own run and log (a sorted sheet stays sorted).
 
+## Laser projector concept (3D, for the presentation and report)
+A concept visualisation, **not an optical simulation**: a laser outline projector on a pillar bracket, beside the sheet and outside the overhead crane's path, draws the outlines of the pallet being sorted onto the cut sheet.
+- Open it with either server running: http://localhost:8000/tools/projector-3d.html (`python tools/serve.py`) or http://localhost:8080/tools/projector-3d.html (`npm run demo`). It works offline: three.js is in `tools/vendor/three/`.
+- **◀ / ▶** change the pallet (its colour and number as in the app); **Show all pallets at once** draws everything and compares the total line length with the projector budget (red warning when over: the image would flicker). **− / +** move the outline closer to or further from the cut line; **Outline / Centre cross** chooses what is drawn. **Operator / Side (crane) / Projector** move the camera (drag to orbit, wheel to zoom). **Settings** hold the assumptions (projector position, crane envelope, budget); the line under them says whether the projector is clear of the crane.
+- For a screen recording: **Hide controls** (or the H key), then **Auto-tour** (operator view → pallet 1 → 2 → 3 → side view).
+- The default job is the invented example sheet. J14 can be chosen too; the page then says it is real company data that must not be shared.
+
 ## Running a usability test session
 1. Press **📋 Test**. Enter the participant ID, the condition (e.g. "with auto-zoom") and an optional note.
 2. Press **Start new session**. The job's setup starts again (from "How many pallets?") and a new log starts.
@@ -71,7 +79,7 @@ A job without runs opens straight into setup, as before. Runs are never deleted 
 4. Press **📋 Test** → **Export log (CSV)**. The file lands in your Downloads folder, named after the participant. With the service, the same rows are also on the server: **Download this job's log from the server** (or `http://<server>:8080/api/log.csv?session=<session id>`), with the station and run added.
 5. Repeat from step 1 for the next participant.
 
-The log and the picking progress survive a page reload. Useful CSV columns: `ms_since_shown` (time from when the suggested part was shown to the action, i.e. time per pick), `out_of_order`, `via` (button, tap, or batch for "picked N"), and the `undo`/`reopen` rows (corrections, for the error rate). Setup is logged too (`job_selected`, `pallet_count`, `plan_move`, `plan_split`, `plan_add_pallet`, `plan_remove_pallet`, `cards_ready`), as are `pallet` (a new pallet is being sorted) and `pallet_full`. If Excel shows everything in one column, open the file via Data → From Text/CSV and choose comma as the separator.
+The log and the picking progress survive a page reload. Useful CSV columns: `ms_since_shown` (time from when the suggested part was shown to the action, i.e. time per pick), `out_of_order`, `via` (button, tap, key, batch for "picked N", or pallet for "pallet done"), and the `undo`/`reopen` rows (corrections, for the error rate). Setup is logged too (`job_selected`, `pallet_count`, `plan_move`, `plan_split`, `plan_add_pallet`, `plan_remove_pallet`, `cards_ready`), as are `pallet` (a new pallet is being sorted), `pallet_done` (with the number of pieces and the time since the pallet started) and `pallet_full`. Confirming per pallet, time per pallet replaces time per pick. Questions and their answers are `dialog` rows. If Excel shows everything in one column, open the file via Data → From Text/CSV and choose comma as the separator.
 
 ## Files
 | File | What it does |
@@ -81,7 +89,7 @@ The log and the picking progress survive a page reload. Useful CSV columns: `ms_
 | `src/setup-view.js` | The setup screens: choose the job, number of pallets, which parts on which pallet (with the look-alike comparison), hang the cards. |
 | `src/plan.js` | The pallet plan, no screen code: the fixed colour order (Blue 1, Orange 2, …), the proposal, move / split / add / remove, and which physical piece goes on which pallet. |
 | `src/lookalike.js` | Finds look-alike parts from their .GEO outlines (size, area, holes, overlap), where they differ, and whether they are mirror images. No screen code. |
-| `src/picking.js` | The picking rules, no screen code: one pallet at a time, which piece is next, confirm, "picked N", "pallet full", missing, scrap, picked out of order, undo, undo of one specific piece (reopen), count per pallet and per part, save/restore. |
+| `src/picking.js` | The picking rules, no screen code: one pallet at a time, which piece is next, confirm, "picked N", "pallet done", "pallet full", missing, scrap, picked out of order, undo, undo of one specific piece (reopen), count per pallet and per part, save/restore. |
 | `src/sheet-view.js` | Draws the sheet from above: every part in place, coloured by pallet (other pallets grey), labelled; rings the current part, marks look-alike features, shows each part's status (picked, missing, scrap), handles taps, zooms in on small parts (with an overview map), and zooming and moving by hand (＋ / − / Fit, mouse wheel, the hand tool). Also draws the close-up of the current part and the part pictures of the setup screens. |
 | `src/log.js` | The test log for the usability study: every action with a timestamp, exported as CSV. Survives page reloads; with the service every row also goes to the server's event log. |
 | `src/nest-loader.js` | The only file that knows the job formats: reads the real TruTops `.LST` file (sheet, part positions, orders) and the example JSON. A part whose .GEO file is missing, or fails the integrity check (`geoProblem`: area vs its header and the LST, size vs the LST), is shown as its box. Also reads the job list. |
@@ -94,7 +102,8 @@ The log and the picking progress survive a page reload. Useful CSV columns: `ms_
 | `server/test/scenarios.test.js` | The acceptance test: scenarios S1–S18 of the design doc, S19–S21 (restart a run, one open run per job, a run per test session) and the upgrade of an older database, against the real J14 files (`npm test`). |
 | `tools/make-demo-z.mjs` | Builds the demo Z:\ folder (`demo-z/`): the real J14 and the invented example sheet written as an LST. |
 | `src/geo-parser.js` | Reads a TRUMPF .GEO part file: outline, holes, marked part number, exact net area. |
-| `src/settings.js` | Station settings (station ID, turn/mirror the view, pick order, zoom on small parts), saved in this browser so each station screen keeps its own. |
+| `src/dialog.js` | The app's own questions and messages (restart, leave a job, new session, taken over …): big buttons that say what they do, the safe choice first. Replaces the browser's small confirm/alert boxes. |
+| `src/settings.js` | Station settings (station ID, turn/mirror the view, pick order, confirm per pallet or per piece, zoom on small parts), saved in this browser so each station screen keeps its own. |
 | `src/matrix.js` | Small maths helpers to move, rotate and mirror shapes. |
 | `src/i18n.js` | All screen text in English and Swedish, and the language switch. The Swedish is a draft to be checked. |
 | `test/index.html` | Test page: checks the parser, the example data, the job loader (incl. J14.LST), the pallet plan, the look-alike check, the picking rules, the station settings and the test log, and draws every part. (It never touches a real study log.) |
@@ -104,6 +113,7 @@ The log and the picking progress survive a page reload. Useful CSV columns: `ms_
 | `data/jobs/example-sheet.json` | **Invented** example job: where each part sits on a 3000×1500 sheet and which order it belongs to. |
 | `data/jobs/index.json` | The list of jobs shown at the start. Add a line here to make another job choosable. |
 | `tools/make_examples.py` | Creates the example parts and the example job. Run `python tools/make_examples.py` after changing it. |
+| `tools/projector-3d.html`, `src/projector-3d.js` | The laser projector concept in 3D (page) and its geometry: outlines a few mm inside each part, centre crosses, line length per pallet, budget check (no 3D code, tested). `tools/vendor/three/` is the vendored three.js 0.186.1 with its licence. |
 | `tools/serve.py` | The local web server for the demo without the pipeline. Like `python -m http.server`, but tells the browser not to keep old copies of the files. |
 | `package.json` | Only the start and test commands (`npm start`, `npm run demo`, `npm test`); no dependencies. |
 | `docs/report-brief.md` | Project summary for writing the report (decisions, findings, open questions). |

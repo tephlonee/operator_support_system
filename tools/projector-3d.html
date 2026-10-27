@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Laser Projector Concept</title>
+<!-- Concept visualisation for the presentation and report: a wall/pillar-mounted laser projector drawing the
+     outlines of the active pallet's pieces on the cut sheet. Not an optical simulation.
+     three.js is vendored in tools/vendor/three (see its README), so this page works offline. -->
+<script type="importmap">
+{ "imports": { "three": "./vendor/three/three.module.js", "three/addons/": "./vendor/three/addons/" } }
+</script>
+<style>
+  :root {
+    --bg: #1b2126; --panel: rgba(255, 255, 255, 0.95); --fg: #0f1417; --muted: #45525a; --line: #c3ccd2;
+    --go: #1f7a3a; --error: #b3261e; --warn-bg: #fff4d6; --laser: #39ff6a; --touch: 60px;
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); color: var(--fg); }
+  #view { position: fixed; inset: 0; display: block; width: 100vw; height: 100vh; }
+  .panel { position: fixed; background: var(--panel); border-radius: 14px; box-shadow: 0 6px 24px rgba(0, 0, 0, .35); }
+  .btn {
+    min-height: var(--touch); min-width: var(--touch); padding: 0 18px; border: 2px solid var(--fg); border-radius: 10px;
+    background: #fff; color: var(--fg); font-family: inherit; font-size: 19px; font-weight: 600; line-height: 1; cursor: pointer;
+  }
+  .btn:focus-visible { outline: 4px solid #2f5da8; outline-offset: 2px; }
+  .btn[aria-pressed="true"] { background: var(--fg); color: #fff; }
+  .btn:disabled { opacity: .35; cursor: default; }
+  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+  #title { left: 16px; top: 16px; padding: 14px 18px; max-width: 470px; }
+  #title h1 { margin: 0; font-size: 26px; }
+  .concept { display: inline-block; margin-top: 8px; padding: 5px 10px; border-radius: 6px; background: #ffd23f; color: #1a1400;
+             font-size: 15px; font-weight: 800; letter-spacing: .04em; }
+  #job-row { margin-top: 12px; }
+  #job { min-height: 52px; font-family: inherit; font-size: 19px; font-weight: 600; padding: 0 10px; border: 2px solid var(--fg); border-radius: 10px; background: #fff; }
+  .tag { padding: 4px 10px; border-radius: 6px; font-size: 14px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+  .tag.example { background: #ffd23f; color: #1a1400; }
+  .tag.real { background: #f6dcd8; color: var(--error); }
+  #real-note { margin: 10px 0 0; padding: 8px 12px; border-radius: 8px; background: var(--error); color: #fff; font-weight: 700; font-size: 16px; }
+  #job-note { margin: 8px 0 0; font-size: 15px; color: var(--muted); }
+
+  #controls { right: 16px; top: 16px; width: 430px; padding: 16px; display: grid; gap: 14px; max-height: calc(100vh - 32px); overflow: auto; }
+  #controls h2 { margin: 0; font-size: 14px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  #pallet-chip { flex: 1; min-height: var(--touch); display: flex; align-items: center; gap: 12px; padding: 6px 12px; border-radius: 10px; border: 3px solid var(--line); }
+  #pallet-swatch { width: 46px; height: 46px; border-radius: 8px; display: grid; place-items: center; font-size: 24px; font-weight: 800; flex: none; }
+  #pallet-name { font-size: 22px; font-weight: 800; }
+  #pallet-sub { font-size: 15px; color: var(--muted); }
+  #budget { display: grid; gap: 6px; font-size: 17px; }
+  #budget-bar { height: 14px; border-radius: 7px; background: var(--line); overflow: hidden; }
+  #budget-bar span { display: block; height: 100%; background: var(--go); }
+  #budget.over #budget-bar span { background: var(--error); }
+  #budget-warn { padding: 8px 10px; border-radius: 8px; background: var(--warn-bg); border: 2px solid var(--error); color: var(--error); font-weight: 700; font-size: 15px; line-height: 1.35; }
+  #inset-val { min-width: 90px; text-align: center; font-size: 22px; font-weight: 800; }
+  .wide { flex: 1; }
+  details summary { cursor: pointer; font-size: 17px; font-weight: 700; min-height: 40px; display: flex; align-items: center; }
+  .setting { display: grid; grid-template-columns: 1fr 110px; gap: 8px; align-items: center; font-size: 16px; margin-top: 8px; }
+  .setting input { min-height: 44px; font-family: inherit; font-size: 18px; font-weight: 600; padding: 0 8px; border: 2px solid var(--line); border-radius: 8px; width: 100%; }
+  #clear { font-size: 16px; font-weight: 700; }
+  #clear.bad { color: var(--error); }
+  #clear.ok { color: var(--go); }
+
+  #notes { left: 16px; bottom: 16px; padding: 12px 16px; max-width: 520px; font-size: 15px; line-height: 1.4; }
+  #notes h2 { margin: 0 0 4px; font-size: 14px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  #notes ul { margin: 0; padding-left: 18px; }
+  #caption { left: 50%; transform: translateX(-50%); bottom: 28px; padding: 12px 26px; font-size: 26px; font-weight: 800; text-align: center; }
+  #concept-mark { position: fixed; left: 16px; bottom: 12px; color: rgba(255, 255, 255, .8); font-size: 15px; font-weight: 700; letter-spacing: .04em; text-shadow: 0 1px 2px #000; }
+  #show-btn { position: fixed; right: 12px; bottom: 12px; opacity: .25; min-height: 40px; font-size: 14px; }
+  #show-btn:hover, #show-btn:focus-visible { opacity: 1; }
+  #error { left: 50%; top: 50%; transform: translate(-50%, -50%); padding: 20px 24px; max-width: 640px; font-size: 18px; color: var(--error); font-weight: 600; }
+  @media (max-width: 900px), (max-height: 760px) {
+    #controls { width: 360px; gap: 10px; padding: 12px; }
+    #notes { max-width: 400px; font-size: 13px; }
+    #title { max-width: 380px; }
+    .btn { font-size: 17px; }
+  }
+</style>
+</head>
+<body>
+<canvas id="view" aria-label="3D concept: a laser projector draws the outlines of one pallet's pieces on the cut sheet"></canvas>
+
+<div class="panel ui" id="title">
+  <h1>Laser projector at the sorting station</h1>
+  <div class="concept">CONCEPT VISUALISATION – NOT AN OPTICAL SIMULATION</div>
+  <div class="row" id="job-row">
+    <select id="job" aria-label="Job"></select>
+    <span class="tag" id="job-tag"></span>
+  </div>
+  <p id="real-note" hidden>Real company data (Brålanda) – do not share.</p>
+  <p id="job-note"></p>
+</div>
+
+<div class="panel ui" id="controls">
+  <h2>Pallet</h2>
+  <div class="row">
+    <button class="btn" id="prev-btn" type="button" aria-label="Previous pallet">◀</button>
+    <div id="pallet-chip"><span id="pallet-swatch"></span><span><div id="pallet-name"></div><div id="pallet-sub"></div></span></div>
+    <button class="btn" id="next-btn" type="button" aria-label="Next pallet">▶</button>
+  </div>
+  <button class="btn" id="all-btn" type="button" aria-pressed="false">Show all pallets at once</button>
+  <div id="budget">
+    <div id="budget-text"></div>
+    <div id="budget-bar"><span></span></div>
+    <div id="budget-warn" hidden>Too much line for one image: a real galvo projector redraws every line many times a second, so this image would flicker and look dim. That is why the app shows one pallet at a time.</div>
+  </div>
+
+  <h2>What is drawn</h2>
+  <div class="row">
+    <button class="btn" id="inset-minus" type="button" aria-label="Less inset">−</button>
+    <span id="inset-val"></span>
+    <button class="btn" id="inset-plus" type="button" aria-label="More inset">+</button>
+    <span style="font-size:15px;color:var(--muted)">inside the cut line</span>
+  </div>
+  <div class="row">
+    <button class="btn wide" id="mode-outline" type="button" aria-pressed="true">Outline</button>
+    <button class="btn wide" id="mode-cross" type="button" aria-pressed="false">Centre cross</button>
+  </div>
+
+  <h2>Camera</h2>
+  <div class="row">
+    <button class="btn wide" data-cam="operator" type="button">Operator</button>
+    <button class="btn wide" data-cam="side" type="button">Side (crane)</button>
+    <button class="btn wide" data-cam="projector" type="button">Projector</button>
+  </div>
+  <div class="row">
+    <button class="btn wide" id="tour-btn" type="button">▶ Auto-tour</button>
+    <button class="btn wide" id="hide-btn" type="button">Hide controls</button>
+  </div>
+
+  <details>
+    <summary>Settings (assumptions)</summary>
+    <label class="setting">Projector height above floor (m)<input id="s-height" type="number" step="0.1" min="1.5" max="8"></label>
+    <label class="setting">Projector distance behind the sheet's far edge (m)<input id="s-dist" type="number" step="0.1" min="0" max="5"></label>
+    <label class="setting">Projector position along the sheet (m from centre)<input id="s-along" type="number" step="0.1" min="-3" max="3"></label>
+    <label class="setting">Crane envelope width (m)<input id="s-crane-w" type="number" step="0.1" min="0.5" max="8"></label>
+    <label class="setting">Crane envelope: lowest point above floor (m; the crane lifts the sheet, so down to it)<input id="s-crane-low" type="number" step="0.1" min="0.9" max="6"></label>
+    <label class="setting">Crane envelope: top above floor (m)<input id="s-crane-top" type="number" step="0.1" min="1.5" max="10"></label>
+    <label class="setting">Projector budget (m of line per image)<input id="s-budget" type="number" step="1" min="1" max="200"></label>
+  </details>
+  <div id="clear"></div>
+</div>
+
+<div class="panel ui" id="notes">
+  <h2>Assumptions and limits</h2>
+  <ul>
+    <li>Mounting position, crane size and the line budget are assumptions, not measured at Brålanda.</li>
+    <li>A real laser projector must be calibrated on fixed reference points, e.g. the sheet's corner stops on the table.</li>
+    <li>Lines are well visible on black steel, less so on polished aluminium or stainless steel.</li>
+    <li>Industrial outline projectors are typically laser class 2 (do not stare into the beam).</li>
+  </ul>
+</div>
+
+<div class="panel" id="caption" hidden></div>
+<div id="concept-mark" hidden>Concept visualisation – not an optical simulation</div>
+<button class="btn" id="show-btn" type="button" hidden>Show controls (H)</button>
+<div class="panel" id="error" hidden></div>
+
+<script type="module">
+// The 3D scene. Geometry (inset outlines, lengths, pallets) comes from src/projector-3d.js; jobs and
+// parts are read with the app's own nest-loader.js / geo-parser.js. World units: metres, y up.
+// Sheet x runs along world X, sheet y away from the operator (world −Z); the operator stands at sheet y = 0.
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { loadJobIndex, loadJob } from '../src/nest-loader.js';
+import { outerOnSheet, proposedPallets, palletLines, budgetCheck } from '../src/projector-3d.js';
+import * as M from '../src/matrix.js';
+
+const $ = id => document.getElementById(id);
+const TABLE_TOP = 0.9;            // m, top of the laser table's slats
+const LASER = 0x39ff6a;           // a green line laser
+const S = {                       // settings (assumptions), changeable on the page
+  height: 3.0, dist: 1.0, along: 0, craneW: 0, craneLow: 0.9, craneTop: 5.0, budget: 15,
+  inset: 3, mode: 'outline', all: false,
+};
+
+// ---------- renderer, scene, camera ----------
+const canvas = $('view');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x2a3036);
+scene.fog = new THREE.Fog(0x2a3036, 14, 40);
+const camera = new THREE.PerspectiveCamera(52, 1, 0.05, 100);
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true;
+scene.add(new THREE.HemisphereLight(0xdfe8f0, 0x30363c, 0.55));
+const sun = new THREE.DirectionalLight(0xffffff, 0.9); sun.position.set(-4, 9, 6); scene.add(sun);
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.MeshStandardMaterial({ color: 0x4a5056, roughness: 0.95 }));
+floor.rotation.x = -Math.PI / 2; scene.add(floor);
+const grid = new THREE.GridHelper(40, 40, 0x5d646b, 0x535a60); grid.position.y = 0.002; scene.add(grid);
+function resize() {
+  const w = innerWidth, h = innerHeight;
+  renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+}
+addEventListener('resize', resize); resize();
+
+const mat = (color, o = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.6, metalness: 0.3, ...o });
+function label(text, { size = 0.16, bg = 'rgba(15,20,23,0.85)', fg = '#fff' } = {}) {
+  const c = document.createElement('canvas'), x = c.getContext('2d'), fs = 44;
+  x.font = `700 ${fs}px Segoe UI, Arial`; const w = Math.ceil(x.measureText(text).width) + 36;
+  c.width = w; c.height = fs + 28;
+  x.fillStyle = bg; x.beginPath(); x.roundRect(0, 0, w, c.height, 14); x.fill();
+  x.font = `700 ${fs}px Segoe UI, Arial`; x.fillStyle = fg; x.textBaseline = 'middle'; x.fillText(text, 18, c.height / 2 + 2);
+  const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true }));
+  s.scale.set(size * w / c.height, size, 1); s.renderOrder = 10;
+  return s;
+}
+
+// ---------- the job: table, sheet, pieces ----------
+let job = null, pallets = [], palletOf = null, active = 0, W = 2, H = 1, operator = null;
+const jobGroup = new THREE.Group(); scene.add(jobGroup);
+const linesGroup = new THREE.Group(); scene.add(linesGroup);
+const rigGroup = new THREE.Group(); scene.add(rigGroup);     // projector, crane envelope, operator marker
+const toWorld = (p, y = TABLE_TOP) => new THREE.Vector3(p.x / 1000 - W / 2, y, H / 2 - p.y / 1000);
+const shapeOf = (poly, holes = []) => {
+  const sh = new THREE.Shape(poly.map(p => new THREE.Vector2(p.x / 1000 - W / 2, p.y / 1000 - H / 2)));
+  holes.forEach(h => sh.holes.push(new THREE.Path(h.map(p => new THREE.Vector2(p.x / 1000 - W / 2, p.y / 1000 - H / 2)))));
+  return sh;
+};
+const flat = (shape, depth) => {
+  const g = new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: false, curveSegments: 4 });
+  g.rotateX(-Math.PI / 2); return g;   // shape (x, y) → world (x, ·, −y); extruded upwards
+};
+
+function buildJob() {
+  jobGroup.clear();
+  W = job.size.w / 1000; H = job.size.h / 1000;
+  const t = (job.thickness || 8) / 1000;
+  // The laser table: a frame with slats under the sheet.
+  const frame = mat(0x22303d, { metalness: 0.5 });
+  const tbl = new THREE.Mesh(new THREE.BoxGeometry(W + 0.5, TABLE_TOP - 0.08, H + 0.4), frame);
+  tbl.position.y = (TABLE_TOP - 0.08) / 2; jobGroup.add(tbl);
+  const slat = mat(0x3a3f44, { metalness: 0.6 });
+  for (let x = -W / 2 - 0.15; x <= W / 2 + 0.15; x += 0.1) {
+    const s = new THREE.Mesh(new THREE.BoxGeometry(0.006, 0.07, H + 0.3), slat); s.position.set(x, TABLE_TOP - 0.035, 0); jobGroup.add(s);
+  }
+  // The skeleton (grey, with the pieces' outlines cut out) and the pieces as thin flat shapes in place.
+  const outers = job.parts.map(p => outerOnSheet(p));
+  const skel = shapeOf([{ x: 0, y: 0 }, { x: job.size.w, y: 0 }, { x: job.size.w, y: job.size.h }, { x: 0, y: job.size.h }], outers.flat());
+  const sk = new THREE.Mesh(flat(skel, t), mat(0x5c6166, { metalness: 0.55, roughness: 0.5 }));
+  sk.position.y = TABLE_TOP; jobGroup.add(sk);
+  const steel = mat(0x8b9198, { metalness: 0.6, roughness: 0.38 });
+  job.parts.forEach((p, i) => {
+    const holes = p.geo.contours.filter(c => c.kind !== 'outer').map(c => c.poly.map(q => M.apply(p.matrix, q)));
+    outers[i].forEach(o => {
+      const m = new THREE.Mesh(flat(shapeOf(o, holes), t), steel);
+      m.position.y = TABLE_TOP; jobGroup.add(m);
+    });
+  });
+  const pl = proposedPallets(job); pallets = pl.pallets; palletOf = pl.palletOf; active = 0;
+  if (!S.craneW) S.craneW = +(H + 1.0).toFixed(1);   // default: 0.5 m wider than the sheet on each side
+}
+
+// ---------- projector, crane envelope, operator ----------
+const projectorPos = () => new THREE.Vector3(S.along, S.height, -(H / 2 + S.dist));
+const sheetCentre = () => new THREE.Vector3(0, TABLE_TOP, 0);
+function craneBox() {
+  const min = new THREE.Vector3(-(W / 2 + 0.5), S.craneLow, -S.craneW / 2), max = new THREE.Vector3(W / 2 + 0.5, S.craneTop, S.craneW / 2);
+  return new THREE.Box3(min, max);
+}
+function buildRig() {
+  rigGroup.clear();
+  // Crane envelope: where the crane and its load can be (assumed). Transparent box with edges.
+  const cb = craneBox(), size = cb.getSize(new THREE.Vector3()), mid = cb.getCenter(new THREE.Vector3());
+  if (size.y > 0) {
+    const geo = new THREE.BoxGeometry(size.x, size.y, size.z);
+    const box = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: 0xf5c518, transparent: true, opacity: 0.06, depthWrite: false }));
+    box.position.copy(mid); rigGroup.add(box);
+    const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geo), new THREE.LineBasicMaterial({ color: 0xf5c518 }));
+    edges.position.copy(mid); rigGroup.add(edges);
+    const l = label('Overhead crane envelope (assumed)', { bg: 'rgba(133,96,0,0.9)' }); l.position.set(mid.x, cb.max.y + 0.15, mid.z); rigGroup.add(l);
+  }
+  // The projector on a bracket from a pillar behind the sheet, pointing at the sheet centre.
+  const P = projectorPos();
+  const pillar = new THREE.Mesh(new THREE.BoxGeometry(0.3, S.height + 0.6, 0.3), mat(0x7b8590, { metalness: 0.2 }));
+  pillar.position.set(P.x, (S.height + 0.6) / 2, P.z - 0.55); rigGroup.add(pillar);
+  const arm = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 0.5), mat(0x222222));
+  arm.position.set(P.x, P.y + 0.12, P.z - 0.28); rigGroup.add(arm);
+  const head = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.16, 0.22), mat(0x1d1d1d, { metalness: 0.4 }));
+  head.position.copy(P); head.lookAt(sheetCentre()); rigGroup.add(head);
+  const lens = new THREE.Mesh(new THREE.CircleGeometry(0.035, 20), new THREE.MeshBasicMaterial({ color: LASER }));
+  lens.position.set(0, 0, 0.111); head.add(lens);
+  const pl = label('Laser projector (concept)'); pl.position.set(P.x, P.y + 0.42, P.z); rigGroup.add(pl);
+  // The projection area: a faint pyramid from the projector to the sheet's corners.
+  const corners = [[0, 0], [job.size.w, 0], [job.size.w, job.size.h], [0, job.size.h]].map(([x, y]) => toWorld({ x, y }, TABLE_TOP + t2()));
+  const pos = [];
+  for (let i = 0; i < 4; i++) { const a = corners[i], b = corners[(i + 1) % 4]; pos.push(P.x, P.y, P.z, a.x, a.y, a.z, b.x, b.y, b.z); }
+  const pg = new THREE.BufferGeometry(); pg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  rigGroup.add(new THREE.Mesh(pg, new THREE.MeshBasicMaterial({ color: LASER, transparent: true, opacity: 0.02, side: THREE.DoubleSide, depthWrite: false })));
+  const edgePos = corners.flatMap(c => [P.x, P.y, P.z, c.x, c.y, c.z]);
+  const eg = new THREE.BufferGeometry(); eg.setAttribute('position', new THREE.Float32BufferAttribute(edgePos, 3));
+  rigGroup.add(new THREE.LineSegments(eg, new THREE.LineBasicMaterial({ color: LASER, transparent: true, opacity: 0.18 })));
+  // The operator at the unloading side (sheet y = 0).
+  const op = new THREE.Group(); op.position.set(0, 0, H / 2 + 0.75);
+  const disc = new THREE.Mesh(new THREE.CircleGeometry(0.35, 32), new THREE.MeshBasicMaterial({ color: 0x56b4e9, transparent: true, opacity: 0.45 }));
+  disc.rotation.x = -Math.PI / 2; disc.position.y = 0.01; op.add(disc);
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.2, 1.45, 16), mat(0xe69f00, { metalness: 0 })); body.position.y = 0.73; op.add(body);
+  const headM = new THREE.Mesh(new THREE.SphereGeometry(0.12, 16, 12), mat(0xf0f0f0, { metalness: 0 })); headM.position.y = 1.6; op.add(headM);
+  const ol = label('Operator (unloading side)', { size: 0.14 }); ol.position.y = 1.95; op.add(ol);
+  rigGroup.add(op); operator = op;
+  // Is the projector clear of the crane envelope?
+  const clear = !cb.expandByScalar(0.15).containsPoint(P);
+  $('clear').textContent = clear ? '✓ Projector is outside the crane envelope' : '✗ Projector is inside the crane envelope: move it';
+  $('clear').className = clear ? 'ok' : 'bad';
+}
+const t2 = () => (job?.thickness || 8) / 1000 + 0.0015;   // just above the sheet surface
+
+// ---------- the laser lines ----------
+// A line is drawn as a flat ribbon on the sheet (WebGL lines are only 1 px wide), with a wider faint glow.
+function ribbon(points, closed, width, y) {
+  const pts = closed ? [...points, points[0]] : points, pos = [];
+  for (let i = 0; i + 1 < pts.length; i++) {
+    const a = toWorld(pts[i], y), b = toWorld(pts[i + 1], y);
+    const d = new THREE.Vector3().subVectors(b, a); const len = d.length(); if (len < 1e-6) continue;
+    const n = new THREE.Vector3(-d.z, 0, d.x).multiplyScalar(width / 2 / len);
+    const a1 = a.clone().add(n), a2 = a.clone().sub(n), b1 = b.clone().add(n), b2 = b.clone().sub(n);
+    pos.push(a1.x, y, a1.z, a2.x, y, a2.z, b1.x, y, b1.z, b1.x, y, b1.z, a2.x, y, a2.z, b2.x, y, b2.z);
+  }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  return g;
+}
+const coreMat = new THREE.MeshBasicMaterial({ color: LASER, side: THREE.DoubleSide });
+const glowMat = new THREE.MeshBasicMaterial({ color: LASER, transparent: true, opacity: 0.28, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending });
+const beamMat = new THREE.LineBasicMaterial({ color: LASER, transparent: true, opacity: 0.35 });
+
+function drawLines() {
+  linesGroup.clear();
+  if (!job) return;
+  const opts = { inset: S.inset, mode: S.mode };
+  const shown = S.all ? pallets : [pallets[active]];
+  let total = 0, pieces = 0;
+  const y = TABLE_TOP + t2();
+  for (const pl of shown) {
+    const r = palletLines(job, palletOf, pl.id, opts);
+    total += r.length; pieces += r.pieces.length;
+    for (const pc of r.pieces) for (const path of pc.paths) {
+      linesGroup.add(new THREE.Mesh(ribbon(path.points, path.closed, 0.004, y + 0.0004), coreMat));
+      linesGroup.add(new THREE.Mesh(ribbon(path.points, path.closed, 0.016, y + 0.0002), glowMat));
+    }
+    // A few faint beams from the projector to the outlines (a real beam is invisible in clean air).
+    const P = projectorPos(), beams = [];
+    r.pieces.filter((_, i) => i % Math.max(1, Math.ceil(r.pieces.length / 4)) === 0).forEach(pc => {
+      const q = toWorld(pc.paths[0]?.points[0] ?? { x: 0, y: 0 }, y); beams.push(P.x, P.y, P.z, q.x, q.y, q.z);
+    });
+    const bg = new THREE.BufferGeometry(); bg.setAttribute('position', new THREE.Float32BufferAttribute(beams, 3));
+    linesGroup.add(new THREE.LineSegments(bg, beamMat));
+  }
+  // Pallet chip and line budget.
+  const pl = pallets[active];
+  $('pallet-swatch').textContent = S.all ? '∑' : pl.num;
+  $('pallet-swatch').style.background = S.all ? '#0f1417' : pl.hex;
+  $('pallet-swatch').style.color = S.all ? '#fff' : pl.ink;
+  $('pallet-chip').style.borderColor = S.all ? '#0f1417' : pl.hex;
+  $('pallet-name').textContent = S.all ? `All ${pallets.length} pallets` : pl.name;
+  const orders = [...new Set(job.parts.filter(p => S.all || palletOf(p.uid) === pl.id).map(p => p.order))];
+  $('pallet-sub').textContent = `${pieces} pieces · order ${orders.join(', ')}`;
+  const b = budgetCheck(total, S.budget);
+  $('budget-text').innerHTML = `Line length in this image: <b>${b.metres.toFixed(1)} m</b> of ${S.budget} m budget (${Math.round(b.ratio * 100)} %)`;
+  $('budget-bar').firstElementChild.style.width = `${Math.min(100, b.ratio * 100)}%`;
+  $('budget').classList.toggle('over', b.over);
+  $('budget-warn').hidden = !b.over;
+  $('inset-val').textContent = `${S.inset} mm`;
+  $('inset-minus').disabled = S.mode !== 'outline' || S.inset <= 1; $('inset-plus').disabled = S.mode !== 'outline' || S.inset >= 15;
+  $('mode-outline').setAttribute('aria-pressed', String(S.mode === 'outline'));
+  $('mode-cross').setAttribute('aria-pressed', String(S.mode === 'cross'));
+  $('all-btn').setAttribute('aria-pressed', String(S.all));
+  $('prev-btn').disabled = $('next-btn').disabled = S.all;
+}
+
+// ---------- cameras ----------
+const VIEWS = {
+  operator: () => [new THREE.Vector3(0, 1.85, H / 2 + 1.15), new THREE.Vector3(0, TABLE_TOP - 0.1, -0.2)],   // the operator's eyes
+  side: () => [new THREE.Vector3(W / 2 + 6.5, 2.6, 0.6), new THREE.Vector3(0, 2.0, -0.4)],
+  projector: () => { const P = projectorPos(); return [P.clone().add(new THREE.Vector3(0, 0.25, -0.35)), sheetCentre()]; },
+  overview: () => [new THREE.Vector3(W / 2 + 3.2, 4.2, H / 2 + 4.2), new THREE.Vector3(0, 1.4, -0.3)],
+};
+let camAnim = null;
+function goView(name, secs = 1.6) {
+  const [p, t] = VIEWS[name]();
+  return new Promise(res => { camAnim = { p0: camera.position.clone(), t0: controls.target.clone(), p1: p, t1: t, start: performance.now(), dur: secs * 1000, res }; });
+}
+{ const [p, t] = VIEWS.overview(); camera.position.copy(p); controls.target.copy(t); }
+
+// ---------- controls ----------
+function setPallet(i) { active = (i + pallets.length) % pallets.length; drawLines(); }
+$('prev-btn').onclick = () => setPallet(active - 1);
+$('next-btn').onclick = () => setPallet(active + 1);
+$('all-btn').onclick = () => { S.all = !S.all; drawLines(); };
+$('inset-minus').onclick = () => { S.inset = Math.max(1, S.inset - 1); drawLines(); };
+$('inset-plus').onclick = () => { S.inset = Math.min(15, S.inset + 1); drawLines(); };
+$('mode-outline').onclick = () => { S.mode = 'outline'; drawLines(); };
+$('mode-cross').onclick = () => { S.mode = 'cross'; drawLines(); };
+document.querySelectorAll('[data-cam]').forEach(b => b.onclick = () => goView(b.dataset.cam));
+const SETTINGS = { 's-height': 'height', 's-dist': 'dist', 's-along': 'along', 's-crane-w': 'craneW', 's-crane-low': 'craneLow', 's-crane-top': 'craneTop', 's-budget': 'budget' };
+function fillSettings() { for (const [id, k] of Object.entries(SETTINGS)) $(id).value = S[k]; }
+for (const [id, k] of Object.entries(SETTINGS)) $(id).addEventListener('change', () => {
+  const v = parseFloat($(id).value); if (Number.isFinite(v)) S[k] = v; fillSettings(); buildRig(); drawLines();
+});
+
+function setUiHidden(hide) {
+  document.querySelectorAll('.ui').forEach(e => e.hidden = hide);
+  $('show-btn').hidden = !hide; $('concept-mark').hidden = !hide;
+}
+$('hide-btn').onclick = () => setUiHidden(true);
+$('show-btn').onclick = () => setUiHidden(false);
+addEventListener('keydown', e => { if (e.key.toLowerCase() === 'h' && !e.target.closest('input, select')) setUiHidden($('show-btn').hidden); });
+
+// Auto-tour for a screen recording: operator view → pallet 1 → 2 → 3 → side view.
+let touring = false;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+function caption(text) { $('caption').hidden = !text; $('caption').textContent = text || ''; }
+async function tour() {
+  if (touring || !job) return;
+  touring = true; $('tour-btn').disabled = true; S.all = false;
+  setPallet(0); caption('Operator view: the projector draws only the pallet being sorted');
+  await goView('operator', 2.5); await sleep(2200);
+  for (let i = 0; i < Math.min(3, pallets.length); i++) {
+    setPallet(i);
+    const pl = pallets[i], n = job.parts.filter(p => palletOf(p.uid) === pl.id).length;
+    caption(`${pl.name}: ${n} pieces outlined on the sheet`);
+    await sleep(3200);
+  }
+  caption('Side view: the projector hangs beside the sheet, outside the crane\'s path');
+  await goView('side', 3); await sleep(3500);
+  caption(''); touring = false; $('tour-btn').disabled = false;
+}
+$('tour-btn').onclick = tour;
+
+// ---------- jobs ----------
+async function openJob(entry) {
+  try {
+    job = await loadJob(entry.url);
+  } catch (e) { showError(`Could not load ${entry.title}: ${e.message}`); return; }
+  const real = !job.example;
+  $('job-tag').textContent = job.example ? 'Example' : 'Real job';
+  $('job-tag').className = `tag ${job.example ? 'example' : 'real'}`;
+  $('real-note').hidden = !real;
+  const box = [...job.geos.values()].filter(g => g.boxOnly).map(g => g.partNo);
+  $('job-note').textContent = (job.example ? 'Invented example sheet, not Brålanda data. ' : '') +
+    `${job.size.w} × ${job.size.h} mm, ${job.parts.length} pieces, pallets as the app proposes them (one per order).` +
+    (box.length ? ` ${box.join(', ')}: no .GEO file, its box is used.` : '');
+  S.craneW = 0;   // default width follows the sheet
+  buildJob(); fillSettings(); buildRig(); drawLines();
+}
+function showError(msg) { $('error').hidden = false; $('error').textContent = msg; }
+
+try {
+  const list = await loadJobIndex('../data/jobs/index.json');
+  $('job').replaceChildren(...list.map((j, i) => { const o = document.createElement('option'); o.value = i; o.textContent = j.title; return o; }));
+  const start = Math.max(0, list.findIndex(j => /example/i.test(j.file)));
+  $('job').value = start;
+  $('job').onchange = () => openJob(list[+$('job').value]);
+  await openJob(list[start]);
+  window.__projector = { S, tour, goView, setPallet, get pallets() { return pallets; } };
+} catch (e) { showError(e.message); }
+
+// ---------- render loop ----------
+const ease = f => f < 0.5 ? 2 * f * f : 1 - Math.pow(-2 * f + 2, 2) / 2;
+renderer.setAnimationLoop(() => {
+  if (camAnim) {
+    const f = Math.min((performance.now() - camAnim.start) / camAnim.dur, 1), e = ease(f);
+    camera.position.lerpVectors(camAnim.p0, camAnim.p1, e); controls.target.lerpVectors(camAnim.t0, camAnim.t1, e);
+    if (f >= 1) { const r = camAnim.res; camAnim = null; r(); }
+  }
+  controls.update();
+  // Seen through the operator's eyes, the operator figure itself is hidden (its floor mark stays).
+  if (operator) operator.children.slice(1).forEach(c => c.visible = camera.position.distanceTo(operator.position.clone().setY(1.6)) > 1.0);
+  renderer.render(scene, camera);
+});
+</script>
+</body>
+</html>

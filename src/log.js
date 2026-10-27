@@ -1,6 +1,6 @@
 // log.js
 // The test log for the usability study. Records every action with a timestamp (job chosen, every setup
-// change, part shown, confirm, "picked N", pallet started, pallet full, missing, scrap, undo, reopen,
+// change, part shown, confirm, "picked N", pallet started, pallet done, pallet full, missing, scrap, undo, reopen,
 // taps on the sheet, setting changes) and exports it as a CSV file,
 // so time per pick and error rate can be worked out. The log is saved in the browser after every
 // row, so a page reload during a test loses nothing. With the pipeline service, every row is also sent
@@ -72,8 +72,9 @@ export class TestLog {
       : e.type === 'complete' ? `picked=${e.picked}; missing=${e.missing}; scrap=${e.scrap}; total=${e.total}; pallets=${e.pallets}; corrections=${e.corrections}`
       : e.type === 'pallet' ? `now sorting ${palletName(e.pallet)}${e.previous ? `; after ${palletName(e.previous)}` : ''}`
       : e.type === 'pallet_full' ? `${e.moved} pieces moved from ${palletName(e.fromPallet)} to the new pallet`
+      : e.type === 'pallet_done' ? `${e.count} pieces picked at once${e.msSincePallet != null ? `; ${e.msSincePallet} ms since the pallet started` : ''}`
       : e.type === 'undo' ? `undid ${e.undid}${e.count > 1 ? ` (${e.count} pieces)` : ''}${e.removed ? `; removed ${palletName(e.pallet)}` : ''}`
-      : e.batch ? `picked several at once (${e.batch})`
+      : e.batch ? (e.via === 'pallet' ? `pallet done (${e.batch})` : `picked several at once (${e.batch})`)
       : '';
     const pallet = p?.pallet ?? e.pallet;
     return this.record(e.type, {

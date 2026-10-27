@@ -13,8 +13,9 @@ export async function testSettings() {
   // Saved settings come from the browser and may be old or broken: only known values get through.
   const bad = sanitize({ rotation: 45, mirror: 'yes', order: 'random', zoomSmall: 'maybe' });
   check('Settings: unknown values fall back to the defaults', JSON.stringify(bad) === JSON.stringify(DEFAULTS), JSON.stringify(bad));
-  const good = sanitize({ rotation: 270, mirror: true, order: 'nearest', zoomSmall: false });
-  check('Settings: valid values are kept', good.rotation === 270 && good.mirror === true && good.order === 'nearest' && good.zoomSmall === false, JSON.stringify(good));
+  const good = sanitize({ rotation: 270, mirror: true, order: 'nearest', confirm: 'piece', zoomSmall: false });
+  check('Settings: valid values are kept', good.rotation === 270 && good.mirror === true && good.order === 'nearest' && good.confirm === 'piece' && good.zoomSmall === false, JSON.stringify(good));
+  check('Settings: picks are confirmed per pallet unless the station says otherwise', DEFAULTS.confirm === 'pallet' && sanitize({ confirm: 'sometimes' }).confirm === 'pallet', '');
   check('Settings: nothing saved yet gives the defaults', JSON.stringify(sanitize(null)) === JSON.stringify(DEFAULTS), JSON.stringify(sanitize(null)));
 
   // The sheet edge at the bottom of the screen (= nearest the operator) for every orientation.

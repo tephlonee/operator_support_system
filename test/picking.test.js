@@ -1,5 +1,5 @@
 // picking.test.js
-// Checks the picking rules: one pallet at a time, confirm, "picked N", "pallet full", progress per pallet
+// Checks the picking rules: one pallet at a time, confirm, "picked N", "pallet done", "pallet full", progress per pallet
 // and per part, undo, the exceptions (missing, scrap, picked out of order), save/restore, and the events
 // the test log uses. The job is the example sheet with the app's proposed pallet plan (one per order).
 
@@ -125,4 +125,50 @@ export async function testPicking() {
   check('Complete: a "complete" event reports pieces, problems, pallets and corrections',
     s.isComplete && done.type === 'complete' && done.missing === 1 && done.pallets === s.pallets.length && done.corrections === s.corrections,
     `${done.picked} picked, ${done.missing} missing, ${done.pallets} pallets, ${done.corrections} corrections`);
+
+  check('Pallet done: on a finished sheet it does nothing', s.palletDone() === 0 && s.history.at(-1).kind !== 'pallet_done', '');
+  testPalletDone(job, first, second);
+}
+
+// "Blue 1 done": confirming per pallet. Pieces already marked missing or scrap stay as they are.
+function testPalletDone(job, first, second) {
+  const pd = new PickSession(job, { order: 'pallet', operatorEdge: 'bottom' });
+  const dEvents = [];
+  pd.on(e => dEvents.push(e));
+  pd.start();
+  const onFirst = pd.openOnActive().map(p => p.uid);
+  const gone = onFirst[1], broken = onFirst[2];
+  pd.markMissing(gone); pd.markScrap(broken);
+  const n = pd.palletDone('key');
+  check('Pallet done: every piece still open on the pallet is picked; missing and scrap stay',
+    n === onFirst.length - 2 && onFirst.every(uid => [gone, broken].includes(uid) || pd.status.get(uid) === 'picked') &&
+    pd.status.get(gone) === 'missing' && pd.status.get(broken) === 'scrap', `${n} picked of ${onFirst.length}`);
+  const doneRow = dEvents.find(e => e.type === 'pallet_done');
+  check('Pallet done: one "pallet_done" event with the count, how it was pressed and the time on the pallet',
+    doneRow && doneRow.pallet === first && doneRow.count === n && doneRow.via === 'key' && Number.isFinite(doneRow.msSincePallet), JSON.stringify(doneRow && { ...doneRow, time: undefined }));
+  check('Pallet done: each piece is logged as picked "via pallet", in one batch',
+    dEvents.filter(e => e.type === 'confirm' && e.via === 'pallet').length === n && new Set(dEvents.filter(e => e.via === 'pallet').map(e => e.batch)).size === 1, '');
+  const order = dEvents.map(e => e.type);
+  check('Pallet done: the next pallet starts by itself, after the "pallet_done" event',
+    pd.activePallet === second && order.lastIndexOf('pallet') > order.indexOf('pallet_done'), `now ${pd.activePallet}`);
+  pd.undo();
+  check('Undo of pallet done: one Undo opens the whole pallet again (missing and scrap stay) and it is sorted again',
+    onFirst.every(uid => [gone, broken].includes(uid) || pd.status.get(uid) === 'open') && pd.status.get(gone) === 'missing' &&
+    pd.status.get(broken) === 'scrap' && pd.activePallet === first &&
+    dEvents.some(e => e.type === 'undo' && e.undid === 'pallet_done' && e.count === n && e.pallet === first),
+    `now ${pd.activePallet}; ${pd.count('open', first)} open`);
+  const r = new PickSession(job, { order: 'pallet', operatorEdge: 'bottom' });
+  pd.palletDone();
+  r.restore(JSON.parse(JSON.stringify(pd.snapshot())));
+  r.undo();
+  check('Pallet done survives a page reload, and can still be undone after it', r.activePallet === first && r.count('open', first) === n, `${r.count('open', first)} open`);
+
+  // Per pallet, a tap only selects; the suggested piece itself can be selected too.
+  const sel = new PickSession(job, { order: 'pallet', operatorEdge: 'bottom' });
+  sel.start();
+  const sug = sel.next.uid;
+  sel.select(sug);
+  const plain = sel.selectedUid;
+  sel.select(sug, { keepSuggested: true });
+  check('Select: the suggested piece can be selected when a tap must not confirm (per pallet)', plain === null && sel.selectedUid === sug && sel.status.get(sug) === 'open', `${sel.selectedUid}`);
 }

@@ -9,7 +9,10 @@
 // itself. "Pallet full" adds a pallet with the next number and colour and moves the pieces that were
 // still left for the full pallet onto it; it is sorted next.
 //
-// Piece status:  open → picked            (confirm, or "picked N" for several at once)
+// Two ways to confirm (a station setting, kept in ui.js): piece by piece, or a whole pallet at once
+// ("Blue 1 done": every piece still open on it is picked), tapping only the pieces that went wrong.
+//
+// Piece status:  open → picked            (confirm, "picked N" for several at once, or "pallet done")
 //                open → missing           (not on the sheet, e.g. dropped through the grid)
 //                missing → picked         (found after all)
 //                open/picked/missing → scrap   (damaged, cannot be used)
@@ -160,10 +163,11 @@ export class PickSession {
   }
 
   // Work on another piece than the suggested one (the operator tapped it on the sheet).
-  select(uid) {
+  // keepSuggested: also select the suggested piece itself (confirming per pallet, a tap only ever selects).
+  select(uid, { keepSuggested = false } = {}) {
     if (!this.parts.has(uid)) return false;
     const suggested = this.next?.uid ?? null;
-    this.selectedUid = uid === suggested ? null : uid;
+    this.selectedUid = uid === suggested && !keepSuggested ? null : uid;
     this.emit({ type: 'select', uid, suggested });
     return true;
   }
@@ -198,19 +202,34 @@ export class PickSession {
 
   // "Picked 4": the operator took several pieces of the active pallet at once. The n nearest open
   // pieces are confirmed together; one Undo takes them all back.
-  confirmMany(n) {
-    const take = this.openOnActive().slice(0, Math.max(0, Math.floor(n)));
+  confirmMany(n) { return this.pickAll(this.openOnActive().slice(0, Math.max(0, Math.floor(n))), 'batch'); }
+
+  // "Blue 1 done": every piece still open on the pallet being sorted is picked; pieces marked missing or
+  // scrap stay as they are. One Undo takes the whole pallet back. Then the next pallet starts by itself.
+  // via: 'button' or 'key' (a push button at the station). Returns the number of pieces picked (0 if none open).
+  palletDone(via = 'button') {
+    const pallet = this.activePallet;
+    const startedAt = this.palletStartedAt;
+    const take = this.openOnActive();
+    return this.pickAll(take, 'pallet', () =>
+      this.emit({ type: 'pallet_done', pallet, via, count: take.length, msSincePallet: startedAt ? Date.now() - startedAt : null }));
+  }
+
+  // Pick several pieces as one action (one undo step). via: 'batch' (picked N) or 'pallet' (pallet done).
+  // before(): called after the pieces are picked, before the next piece or pallet is announced.
+  pickAll(take, via, before = null) {
     if (!take.length) return 0;
-    const batch = `B${Date.now().toString(36)}`;
+    const batch = `${via === 'pallet' ? 'P' : 'B'}${Date.now().toString(36)}`;
     const changes = [];
     for (const p of take) {
       const suggested = this.next?.uid ?? null;
       this.status.set(p.uid, 'picked');
       changes.push({ uid: p.uid, from: 'open', to: 'picked' });
-      this.emit({ type: 'confirm', uid: p.uid, from: 'open', to: 'picked', via: 'batch', batch, suggested, outOfOrder: false });
+      this.emit({ type: 'confirm', uid: p.uid, from: 'open', to: 'picked', via, batch, suggested, outOfOrder: false });
     }
-    this.history.push({ kind: 'batch', changes });
+    this.history.push({ kind: via === 'pallet' ? 'pallet_done' : 'batch', changes });
     this.selectedUid = null;
+    if (before) before();
     this.announceNext();
     return take.length;
   }
@@ -252,7 +271,8 @@ export class PickSession {
       for (const c of last.changes) this.status.set(c.uid, c.from);
       this.selectedUid = null;
       const c = last.changes[0];
-      this.emit({ type: 'undo', uid: c.uid, from: c.to, to: c.from, undid: last.kind === 'batch' ? 'batch' : c.to, restored: c.from, count: last.changes.length });
+      const undid = last.kind === 'batch' || last.kind === 'pallet_done' ? last.kind : c.to;
+      this.emit({ type: 'undo', uid: c.uid, from: c.to, to: c.from, undid, restored: c.from, count: last.changes.length, pallet: this.parts.get(c.uid).pallet });
     }
     this.announceNext('undo');
     return true;
@@ -267,6 +287,7 @@ export class PickSession {
     if (pal !== this.shownPallet) {
       const prev = this.shownPallet;
       this.shownPallet = pal;
+      this.palletStartedAt = pal ? Date.now() : null;   // for "time per pallet" (counts from a reload after one)
       if (pal) this.emit({ type: 'pallet', pallet: pal, previous: prev ?? null, reason });
     }
     if (uid === this.shownUid) return;

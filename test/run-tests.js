@@ -10,6 +10,7 @@ import { testLog } from './log.test.js';
 import { testPlan } from './plan.test.js';
 import { testLookAlike } from './lookalike.test.js';
 import { testZoom } from './zoom.test.js';
+import { testProjector } from './projector.test.js';
 
 try {
   const parts = await testGeoParser();
@@ -20,6 +21,7 @@ try {
   await testLog();
   await testPlan();
   await testLookAlike();
+  await testProjector();
   renderGallery(parts);
 } catch (e) {
   check('Test run finished without crashing', false, e.message);
