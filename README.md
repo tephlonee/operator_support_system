@@ -118,3 +118,13 @@ The log and the picking progress survive a page reload. Useful CSV columns: `ms_
 | `package.json` | Only the start and test commands (`npm start`, `npm run demo`, `npm test`); no dependencies. |
 | `docs/report-brief.md` | Project summary for writing the report (decisions, findings, open questions). |
 | `reference/geo-viewer.html` | The earlier 3D part viewer that the parser code comes from. |
+
+
+
+## Cobot Integration
+
+ `cobot/` contains all integration code. `out` contains geometry code for components such as tables, pieces, pallets, etc
+
+ Utilised the ABB Cobot. Ran simulation on RobotStudio 2025. 
+
+ [**Simulation of the Cobot Pick and Palace**](https://drive.google.com/file/d/1qDC4fV2mGH0j8RJOZA6kmrtQidTtiHvV/view?usp=sharing)
